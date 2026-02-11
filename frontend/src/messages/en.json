@@ -1,0 +1,52 @@
+{
+  "nav": {
+    "home": "Home",
+    "classes": "Classes",
+    "teachers": "Teachers",
+    "yogaTypes": "Yoga Types",
+    "register": "Register"
+  },
+  "home": {
+    "title": "Welcome to enjoyyoga",
+    "subtitle": "Discover your practice. Find your peace.",
+    "ctaClasses": "Browse Classes",
+    "ctaRegister": "Register Now"
+  },
+  "classes": {
+    "title": "Our Classes",
+    "schedule": "Schedule",
+    "duration": "Duration",
+    "difficulty": "Difficulty",
+    "capacity": "Capacity",
+    "minutes": "min",
+    "teacher": "Teacher",
+    "type": "Type",
+    "viewDetails": "View Details"
+  },
+  "teachers": {
+    "title": "Our Teachers",
+    "qualifications": "Qualifications",
+    "viewProfile": "View Profile"
+  },
+  "yogaTypes": {
+    "title": "Yoga Types"
+  },
+  "register": {
+    "title": "Register for a Class",
+    "selectClass": "Select a class",
+    "name": "Your Name",
+    "email": "Email Address",
+    "phone": "Phone Number (optional)",
+    "message": "Message (optional)",
+    "submit": "Submit Registration",
+    "success": "Registration submitted successfully!",
+    "error": "Something went wrong. Please try again."
+  },
+  "footer": {
+    "rights": "All rights reserved."
+  },
+  "common": {
+    "loading": "Loading...",
+    "backToList": "Back to list"
+  }
+}

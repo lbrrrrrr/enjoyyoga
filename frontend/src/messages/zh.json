@@ -1,0 +1,52 @@
+{
+  "nav": {
+    "home": "首页",
+    "classes": "课程",
+    "teachers": "老师",
+    "yogaTypes": "瑜伽类型",
+    "register": "报名"
+  },
+  "home": {
+    "title": "欢迎来到 enjoyyoga",
+    "subtitle": "发现你的练习，找到你的平静。",
+    "ctaClasses": "浏览课程",
+    "ctaRegister": "立即报名"
+  },
+  "classes": {
+    "title": "我们的课程",
+    "schedule": "时间表",
+    "duration": "时长",
+    "difficulty": "难度",
+    "capacity": "容量",
+    "minutes": "分钟",
+    "teacher": "老师",
+    "type": "类型",
+    "viewDetails": "查看详情"
+  },
+  "teachers": {
+    "title": "我们的老师",
+    "qualifications": "资质",
+    "viewProfile": "查看简介"
+  },
+  "yogaTypes": {
+    "title": "瑜伽类型"
+  },
+  "register": {
+    "title": "课程报名",
+    "selectClass": "选择课程",
+    "name": "您的姓名",
+    "email": "电子邮箱",
+    "phone": "电话号码（选填）",
+    "message": "留言（选填）",
+    "submit": "提交报名",
+    "success": "报名提交成功！",
+    "error": "出现错误，请重试。"
+  },
+  "footer": {
+    "rights": "版权所有。"
+  },
+  "common": {
+    "loading": "加载中...",
+    "backToList": "返回列表"
+  }
+}
