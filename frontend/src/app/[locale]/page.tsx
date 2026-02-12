@@ -1,14 +1,14 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-export default function HomePage({
+export default async function HomePage({
   params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
-  const t = useTranslations("home");
-  const locale = params.locale;
+  const { locale } = await params;
+  const t = await getTranslations("home");
 
   return (
     <div className="container mx-auto px-4 py-24 text-center">
