@@ -40,7 +40,26 @@
     "message": "留言（选填）",
     "submit": "提交报名",
     "success": "报名提交成功！",
-    "error": "出现错误，请重试。"
+    "error": "出现错误，请重试。",
+    "classSchedule": "课程时间表",
+    "scheduleNotAvailable": "时间表不可用",
+    "selectDate": "选择日期和时间",
+    "selectTime": "选择时间",
+    "selectTimeSlot": "选择时间段",
+    "loadingDates": "正在加载可用日期...",
+    "noDatesAvailable": "此课程暂无可用日期",
+    "noTimesAvailable": "暂无可用时间",
+    "spotsAvailable": "个名额",
+    "classFull": "课程已满",
+    "at": "在",
+    "and": "和",
+    "monday": "周一",
+    "tuesday": "周二",
+    "wednesday": "周三",
+    "thursday": "周四",
+    "friday": "周五",
+    "saturday": "周六",
+    "sunday": "周日"
   },
   "footer": {
     "rights": "版权所有。"

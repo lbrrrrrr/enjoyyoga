@@ -56,6 +56,19 @@ export interface Registration {
   created_at: string;
 }
 
+export interface RegistrationWithSchedule extends Registration {
+  target_date: string | null;
+  target_time: string | null;
+  status: string;
+}
+
+export interface AvailableDate {
+  date_time: string;
+  formatted_date: string;
+  formatted_time: string;
+  available_spots: number;
+}
+
 export function getClasses() {
   return fetchAPI<YogaClass[]>("/api/classes");
 }
@@ -92,4 +105,40 @@ export async function createRegistration(data: {
     throw new Error(`API error: ${res.status}`);
   }
   return res.json();
+}
+
+export async function createRegistrationWithSchedule(data: {
+  class_id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  message?: string;
+  target_date?: string;
+  target_time?: string;
+}): Promise<RegistrationWithSchedule> {
+  const res = await fetch(`${API_BASE}/api/registrations/with-schedule`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `API error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function getAvailableDates(
+  classId: string,
+  fromDate?: string,
+  limit?: number
+): Promise<AvailableDate[]> {
+  const params = new URLSearchParams();
+  if (fromDate) params.append('from_date', fromDate);
+  if (limit) params.append('limit', limit.toString());
+
+  const queryString = params.toString();
+  const url = `/api/registrations/classes/${classId}/available-dates${queryString ? `?${queryString}` : ''}`;
+
+  return fetchAPI<AvailableDate[]>(url);
 }

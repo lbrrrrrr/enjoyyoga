@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { createRegistration, type YogaClass } from "@/lib/api";
+import { createRegistration, createRegistrationWithSchedule, type YogaClass } from "@/lib/api";
+import { ScheduleDisplay } from "./ScheduleDisplay";
+import { AvailableDatesSelector } from "./AvailableDatesSelector";
 
 interface RegistrationFormProps {
   classes: YogaClass[];
@@ -18,26 +20,60 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
   const t = useTranslations("register");
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [selectedClass, setSelectedClass] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setStatus("idle");
+    setErrorMessage("");
 
     const formData = new FormData(e.currentTarget);
+
     try {
-      await createRegistration({
-        class_id: formData.get("class_id") as string,
-        name: formData.get("name") as string,
-        email: formData.get("email") as string,
-        phone: (formData.get("phone") as string) || undefined,
-        message: (formData.get("message") as string) || undefined,
-      });
+      // Use enhanced registration API if date is selected
+      if (selectedDate && selectedTime) {
+        await createRegistrationWithSchedule({
+          class_id: formData.get("class_id") as string,
+          name: formData.get("name") as string,
+          email: formData.get("email") as string,
+          phone: (formData.get("phone") as string) || undefined,
+          message: (formData.get("message") as string) || undefined,
+          target_date: selectedDate,
+          target_time: selectedTime,
+        });
+      } else {
+        // Fallback to basic registration
+        await createRegistration({
+          class_id: formData.get("class_id") as string,
+          name: formData.get("name") as string,
+          email: formData.get("email") as string,
+          phone: (formData.get("phone") as string) || undefined,
+          message: (formData.get("message") as string) || undefined,
+        });
+      }
+
       setStatus("success");
       e.currentTarget.reset();
       setSelectedClass("");
-    } catch {
+      setSelectedDate("");
+      setSelectedTime("");
+    } catch (error) {
       setStatus("error");
+      setErrorMessage(error instanceof Error ? error.message : "Registration failed");
     }
+  };
+
+  const handleClassChange = (classId: string) => {
+    setSelectedClass(classId);
+    setSelectedDate("");
+    setSelectedTime("");
+  };
+
+  const handleDateSelect = (date: string, time: string) => {
+    setSelectedDate(date);
+    setSelectedTime(time);
   };
 
   const getName = (cls: YogaClass) =>
@@ -57,7 +93,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
               name="class_id"
               required
               value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
+              onChange={(e) => handleClassChange(e.target.value)}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
               <option value="">{t("selectClass")}</option>
@@ -68,6 +104,22 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
               ))}
             </select>
           </div>
+
+          {selectedClass && (
+            <>
+              <ScheduleDisplay
+                schedule={classes.find(cls => cls.id === selectedClass)?.schedule || ""}
+                className="mt-4"
+              />
+
+              <AvailableDatesSelector
+                classId={selectedClass}
+                selectedDate={selectedDate}
+                onDateSelect={handleDateSelect}
+                className="mt-4"
+              />
+            </>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="name">{t("name")}</Label>
@@ -97,7 +149,9 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
             <p className="text-sm text-green-600">{t("success")}</p>
           )}
           {status === "error" && (
-            <p className="text-sm text-destructive">{t("error")}</p>
+            <p className="text-sm text-destructive">
+              {errorMessage || t("error")}
+            </p>
           )}
         </form>
       </CardContent>

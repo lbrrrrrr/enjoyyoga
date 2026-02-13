@@ -40,7 +40,26 @@
     "message": "Message (optional)",
     "submit": "Submit Registration",
     "success": "Registration submitted successfully!",
-    "error": "Something went wrong. Please try again."
+    "error": "Something went wrong. Please try again.",
+    "classSchedule": "Class Schedule",
+    "scheduleNotAvailable": "Schedule not available",
+    "selectDate": "Select Date & Time",
+    "selectTime": "Select Time",
+    "selectTimeSlot": "Choose a time slot",
+    "loadingDates": "Loading available dates...",
+    "noDatesAvailable": "No dates available for this class",
+    "noTimesAvailable": "No times available",
+    "spotsAvailable": "spots available",
+    "classFull": "Class full",
+    "at": "at",
+    "and": "and",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday"
   },
   "footer": {
     "rights": "All rights reserved."

@@ -1,5 +1,6 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, date, time
+from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 
@@ -12,6 +13,17 @@ class RegistrationCreate(BaseModel):
     message: str | None = None
 
 
+class RegistrationCreateWithSchedule(BaseModel):
+    """Enhanced registration schema with schedule support."""
+    class_id: uuid.UUID
+    name: str
+    email: str
+    phone: str | None = None
+    message: str | None = None
+    target_date: Optional[date] = None  # When user wants to attend
+    target_time: Optional[time] = None  # Specific time slot
+
+
 class RegistrationOut(BaseModel):
     id: uuid.UUID
     class_id: uuid.UUID
@@ -22,3 +34,28 @@ class RegistrationOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class RegistrationOutWithSchedule(BaseModel):
+    """Enhanced registration output schema with schedule fields."""
+    id: uuid.UUID
+    class_id: uuid.UUID
+    name: str
+    email: str
+    phone: str | None
+    message: str | None
+    created_at: datetime
+    # New schedule fields
+    target_date: Optional[date]
+    target_time: Optional[time]
+    status: str
+
+    model_config = {"from_attributes": True}
+
+
+class AvailableDateOut(BaseModel):
+    """Schema for available class dates."""
+    date_time: datetime
+    formatted_date: str
+    formatted_time: str
+    available_spots: int

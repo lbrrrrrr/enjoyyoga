@@ -1,7 +1,7 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, date, time
 
-from sqlalchemy import String, Text, DateTime, ForeignKey, func
+from sqlalchemy import String, Text, DateTime, Date, Time, ForeignKey, func, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.yoga_type import Base
@@ -17,5 +17,11 @@ class Registration(Base):
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     message: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    # NEW FIELDS for schedule integration
+    target_date: Mapped[date | None] = mapped_column(Date, nullable=True)  # When user wants to attend
+    target_time: Mapped[time | None] = mapped_column(Time, nullable=True)  # Specific time slot
+    session_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("class_sessions.id"), nullable=True)  # Future session reference
+    status: Mapped[str] = mapped_column(String(50), default="confirmed")  # confirmed, waitlist, cancelled
 
     yoga_class: Mapped["YogaClass"] = relationship(back_populates="registrations")
