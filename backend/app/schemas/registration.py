@@ -22,6 +22,10 @@ class RegistrationCreateWithSchedule(BaseModel):
     message: str | None = None
     target_date: Optional[date] = None  # When user wants to attend
     target_time: Optional[time] = None  # Specific time slot
+    # New notification preferences
+    preferred_language: str = "en"
+    email_notifications: bool = True
+    sms_notifications: bool = False
 
 
 class RegistrationOut(BaseModel):
@@ -45,10 +49,16 @@ class RegistrationOutWithSchedule(BaseModel):
     phone: str | None
     message: str | None
     created_at: datetime
-    # New schedule fields
+    # Schedule fields
     target_date: Optional[date]
     target_time: Optional[time]
     status: str
+    # Notification fields
+    email_confirmation_sent: bool
+    reminder_sent: bool
+    preferred_language: str
+    email_notifications: bool
+    sms_notifications: bool
 
     model_config = {"from_attributes": True}
 

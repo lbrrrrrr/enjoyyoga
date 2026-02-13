@@ -24,4 +24,11 @@ class Registration(Base):
     session_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("class_sessions.id"), nullable=True)  # Future session reference
     status: Mapped[str] = mapped_column(String(50), default="confirmed")  # confirmed, waitlist, cancelled
 
+    # NEW FIELDS for notifications
+    email_confirmation_sent: Mapped[bool] = mapped_column(Boolean, default=False)
+    reminder_sent: Mapped[bool] = mapped_column(Boolean, default=False)
+    preferred_language: Mapped[str] = mapped_column(String(5), default="en")
+    email_notifications: Mapped[bool] = mapped_column(Boolean, default=True)
+    sms_notifications: Mapped[bool] = mapped_column(Boolean, default=False)
+
     yoga_class: Mapped["YogaClass"] = relationship(back_populates="registrations")

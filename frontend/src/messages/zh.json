@@ -59,7 +59,58 @@
     "thursday": "周四",
     "friday": "周五",
     "saturday": "周六",
-    "sunday": "周日"
+    "sunday": "周日",
+    "preferredLanguage": "首选语言",
+    "emailNotifications": "邮件通知",
+    "smsNotifications": "短信提醒"
+  },
+  "admin": {
+    "login": {
+      "title": "管理员登录",
+      "username": "用户名",
+      "password": "密码",
+      "submit": "登录",
+      "error": "凭据无效"
+    },
+    "nav": {
+      "dashboard": "仪表板",
+      "registrations": "报名管理",
+      "teachers": "教师",
+      "notifications": "通知",
+      "logout": "登出"
+    },
+    "dashboard": {
+      "title": "管理员仪表板",
+      "totalRegistrations": "总报名数",
+      "totalTeachers": "总教师数",
+      "totalClasses": "总课程数",
+      "recentActivity": "最近活动"
+    },
+    "registrations": {
+      "title": "报名管理",
+      "status": "状态",
+      "confirmed": "已确认",
+      "waitlist": "候补",
+      "cancelled": "已取消"
+    },
+    "teachers": {
+      "title": "教师管理",
+      "addTeacher": "添加教师",
+      "email": "电子邮件",
+      "phone": "电话",
+      "edit": "编辑",
+      "viewClasses": "查看课程",
+      "noTeachers": "未找到教师"
+    },
+    "notifications": {
+      "title": "通知管理",
+      "createTemplate": "创建模板",
+      "emailTemplates": "邮件模板",
+      "notificationSettings": "通知设置",
+      "recentNotifications": "最近通知",
+      "edit": "编辑",
+      "preview": "预览"
+    }
   },
   "footer": {
     "rights": "版权所有。"

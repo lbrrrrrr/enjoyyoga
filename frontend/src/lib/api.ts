@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
 async function fetchAPI<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
@@ -75,6 +75,10 @@ export function getClasses() {
 
 export function getClass(id: string) {
   return fetchAPI<YogaClass>(`/api/classes/${id}`);
+}
+
+export function getClassesByTeacher(teacherId: string) {
+  return fetchAPI<YogaClass[]>(`/api/classes/teacher/${teacherId}`);
 }
 
 export function getTeachers() {

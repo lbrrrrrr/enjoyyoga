@@ -17,6 +17,7 @@ from app.schemas.registration import (
 )
 from app.services.registration_service import RegistrationService
 from app.services.schedule_parser import ScheduleParserService
+from app.services.notification_service import NotificationService
 
 router = APIRouter(prefix="/api/registrations", tags=["registrations"])
 
@@ -38,11 +39,21 @@ async def create_registration_with_schedule(
 ):
     """Enhanced registration endpoint with schedule validation."""
     registration_service = RegistrationService()
+    notification_service = NotificationService()
 
     try:
         registration = await registration_service.create_registration_with_schedule(
             data.model_dump(), db
         )
+
+        # Send confirmation email if notifications are enabled
+        if registration.email_notifications:
+            await notification_service.send_confirmation_email(registration, db)
+
+        # Schedule reminder if notifications are enabled
+        if registration.email_notifications or registration.sms_notifications:
+            await notification_service.schedule_reminder(registration)
+
         return registration
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

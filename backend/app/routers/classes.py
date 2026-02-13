@@ -21,6 +21,17 @@ async def list_classes(db: AsyncSession = Depends(get_db)):
     return result.scalars().all()
 
 
+@router.get("/teacher/{teacher_id}", response_model=list[YogaClassOut])
+async def get_classes_by_teacher(teacher_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(YogaClass)
+        .where(YogaClass.teacher_id == teacher_id)
+        .options(selectinload(YogaClass.teacher), selectinload(YogaClass.yoga_type))
+        .order_by(YogaClass.name_en)
+    )
+    return result.scalars().all()
+
+
 @router.get("/{class_id}", response_model=YogaClassOut)
 async def get_class(class_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     result = await db.execute(

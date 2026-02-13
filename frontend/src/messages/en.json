@@ -59,7 +59,58 @@
     "thursday": "Thursday",
     "friday": "Friday",
     "saturday": "Saturday",
-    "sunday": "Sunday"
+    "sunday": "Sunday",
+    "preferredLanguage": "Preferred Language",
+    "emailNotifications": "Email notifications",
+    "smsNotifications": "SMS reminders"
+  },
+  "admin": {
+    "login": {
+      "title": "Admin Login",
+      "username": "Username",
+      "password": "Password",
+      "submit": "Sign In",
+      "error": "Invalid credentials"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "registrations": "Registrations",
+      "teachers": "Teachers",
+      "notifications": "Notifications",
+      "logout": "Logout"
+    },
+    "dashboard": {
+      "title": "Admin Dashboard",
+      "totalRegistrations": "Total Registrations",
+      "totalTeachers": "Total Teachers",
+      "totalClasses": "Total Classes",
+      "recentActivity": "Recent Activity"
+    },
+    "registrations": {
+      "title": "Registration Management",
+      "status": "Status",
+      "confirmed": "Confirmed",
+      "waitlist": "Waitlist",
+      "cancelled": "Cancelled"
+    },
+    "teachers": {
+      "title": "Teacher Management",
+      "addTeacher": "Add Teacher",
+      "email": "Email",
+      "phone": "Phone",
+      "edit": "Edit",
+      "viewClasses": "View Classes",
+      "noTeachers": "No teachers found"
+    },
+    "notifications": {
+      "title": "Notification Management",
+      "createTemplate": "Create Template",
+      "emailTemplates": "Email Templates",
+      "notificationSettings": "Notification Settings",
+      "recentNotifications": "Recent Notifications",
+      "edit": "Edit",
+      "preview": "Preview"
+    }
   },
   "footer": {
     "rights": "All rights reserved."

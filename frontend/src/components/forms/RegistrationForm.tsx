@@ -42,6 +42,9 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
           message: (formData.get("message") as string) || undefined,
           target_date: selectedDate,
           target_time: selectedTime,
+          preferred_language: formData.get("preferred_language") as string || "en",
+          email_notifications: formData.get("email_notifications") === "on",
+          sms_notifications: formData.get("sms_notifications") === "on",
         });
       } else {
         // Fallback to basic registration
@@ -139,6 +142,46 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
           <div className="space-y-2">
             <Label htmlFor="message">{t("message")}</Label>
             <Textarea id="message" name="message" rows={3} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="preferred_language">{t("preferredLanguage")}</Label>
+            <select
+              id="preferred_language"
+              name="preferred_language"
+              defaultValue="en"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="en">English</option>
+              <option value="zh">中文</option>
+            </select>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="email_notifications"
+                name="email_notifications"
+                defaultChecked
+                className="rounded border-gray-300"
+              />
+              <Label htmlFor="email_notifications" className="text-sm">
+                {t("emailNotifications")}
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="sms_notifications"
+                name="sms_notifications"
+                className="rounded border-gray-300"
+              />
+              <Label htmlFor="sms_notifications" className="text-sm">
+                {t("smsNotifications")}
+              </Label>
+            </div>
           </div>
 
           <Button type="submit" className="w-full">
