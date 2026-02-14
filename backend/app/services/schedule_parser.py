@@ -79,7 +79,7 @@ class ScheduleParserService:
                 "timezone": self.default_timezone
             },
             "date_range": {
-                "start_date": date.today().isoformat(),
+                "start_date": date.today().replace(day=1).isoformat(),
                 "end_date": None
             },
             "exceptions": []

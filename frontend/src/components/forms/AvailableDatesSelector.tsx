@@ -81,13 +81,14 @@ export function AvailableDatesSelector({
   }
 
   const formatDateTime = (date: AvailableDate) => {
-    const dateTime = new Date(date.date_time);
-    return dateTime.toISOString().split('T')[0]; // YYYY-MM-DD format
+    // Extract date directly from ISO string to avoid timezone conversion
+    return date.date_time.split('T')[0]; // YYYY-MM-DD format
   };
 
   const getTimeFromDateTime = (date: AvailableDate) => {
-    const dateTime = new Date(date.date_time);
-    return dateTime.toTimeString().split(' ')[0]; // HH:MM:SS format
+    // Extract time directly from ISO string to avoid timezone conversion
+    const timePart = date.date_time.split('T')[1];
+    return timePart ? timePart.split(/[+-]/)[0] : '00:00:00'; // HH:MM:SS format, ignore timezone offset
   };
 
   const handleDateClick = (date: AvailableDate) => {

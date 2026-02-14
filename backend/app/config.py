@@ -10,6 +10,15 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 1440  # 24 hours
 
+    # SMTP settings for email notifications
+    smtp_host: str = "smtp.gmail.com"  # Default to Gmail
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = ""
+    smtp_from_name: str = "enjoyyoga"
+    smtp_use_tls: bool = True
+
     model_config = {"env_file": ".env"}
 
 

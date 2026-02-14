@@ -1,10 +1,14 @@
 import uuid
 import json
+import aiosmtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.models.notification_template import NotificationTemplate
 from app.models.registration import Registration
+from app.config import settings
 
 
 class NotificationService:
@@ -42,18 +46,61 @@ class NotificationService:
                 subject = subject.replace(f"{{{{{key}}}}}", str(value))
                 content = content.replace(f"{{{{{key}}}}}", str(value))
 
-            # TODO: Implement actual email sending (SendGrid, SMTP, etc.)
-            # For now, just log the email
-            print(f"SENDING EMAIL:")
-            print(f"To: {registration.email}")
-            print(f"Subject: {subject}")
-            print(f"Content: {content}")
+            # Send actual email
+            email_sent = await self._send_smtp_email(
+                to_email=registration.email,
+                subject=subject,
+                content=content
+            )
 
-            # Mark as sent
-            registration.email_confirmation_sent = True
-            await db.commit()
+            if email_sent:
+                # Mark as sent
+                registration.email_confirmation_sent = True
+                await db.commit()
+                print(f"✅ Email sent successfully to {registration.email}")
+                return True
+            else:
+                print(f"❌ Failed to send email to {registration.email}")
+                return False
+
+        except Exception as e:
+            print(f"Error sending confirmation email: {e}")
+            return False
+
+    async def _send_smtp_email(self, to_email: str, subject: str, content: str) -> bool:
+        """Send email via SMTP."""
+        try:
+            # Skip sending if SMTP is not configured
+            if not settings.smtp_username or not settings.smtp_password:
+                print(f"📧 SMTP not configured. Email would be sent to: {to_email}")
+                print(f"Subject: {subject}")
+                print(f"Content: {content}")
+                return True  # Return true for development
+
+            # Create message
+            message = MIMEMultipart()
+            message["From"] = f"{settings.smtp_from_name} <{settings.smtp_from_email}>"
+            message["To"] = to_email
+            message["Subject"] = subject
+
+            # Add body to email
+            message.attach(MIMEText(content, "plain"))
+
+            # Send email
+            await aiosmtplib.send(
+                message,
+                hostname=settings.smtp_host,
+                port=settings.smtp_port,
+                start_tls=settings.smtp_use_tls,
+                username=settings.smtp_username,
+                password=settings.smtp_password,
+            )
 
             return True
+
+        except Exception as e:
+            print(f"Error sending email via SMTP: {e}")
+            return False
 
         except Exception as e:
             print(f"Error sending confirmation email: {e}")
@@ -130,3 +177,38 @@ enjoyyoga团队""",
                 db.add(template)
 
         await db.commit()
+
+    async def _send_smtp_email(self, to_email: str, subject: str, content: str) -> bool:
+        """Send email via SMTP."""
+        try:
+            # Skip sending if SMTP is not configured
+            if not settings.smtp_username or not settings.smtp_password:
+                print(f"📧 SMTP not configured. Email would be sent to: {to_email}")
+                print(f"Subject: {subject}")
+                print(f"Content: {content}")
+                return True  # Return true for development
+
+            # Create message
+            message = MIMEMultipart()
+            message["From"] = f"{settings.smtp_from_name} <{settings.smtp_from_email}>"
+            message["To"] = to_email
+            message["Subject"] = subject
+
+            # Add body to email
+            message.attach(MIMEText(content, "plain"))
+
+            # Send email
+            await aiosmtplib.send(
+                message,
+                hostname=settings.smtp_host,
+                port=settings.smtp_port,
+                start_tls=settings.smtp_use_tls,
+                username=settings.smtp_username,
+                password=settings.smtp_password,
+            )
+
+            return True
+
+        except Exception as e:
+            print(f"Error sending email via SMTP: {e}")
+            return False

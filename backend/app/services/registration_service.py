@@ -68,6 +68,11 @@ class RegistrationService:
                     schedule_data = self.schedule_parser.parse_schedule_string(
                         yoga_class.schedule
                     )
+            else:
+                # If schedule_data is NULL, parse from schedule string
+                schedule_data = self.schedule_parser.parse_schedule_string(
+                    yoga_class.schedule
+                )
 
             # Validate target date against schedule
             if not self.schedule_parser.validate_target_date(

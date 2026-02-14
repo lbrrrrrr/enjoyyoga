@@ -77,6 +77,48 @@ For full-stack development, you'll need **two terminal windows**:
 
 Both servers support hot reloading, so changes will be reflected automatically.
 
+## Email Configuration (SMTP)
+
+The application supports email notifications for class registrations. To configure email sending:
+
+### Development Mode (Current)
+Without SMTP configuration, emails are printed to the backend console for testing purposes.
+
+### Production SMTP Setup
+
+**TODO: Configure SMTP for actual email sending**
+
+Add the following environment variables to your `.env` file:
+
+```bash
+# SMTP Email Settings
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+SMTP_FROM_EMAIL=your-email@gmail.com
+SMTP_FROM_NAME=enjoyyoga
+SMTP_USE_TLS=true
+```
+
+#### Gmail Configuration
+1. Enable 2-factor authentication on your Gmail account
+2. Go to Google Account Settings → Security → App passwords
+3. Generate an app password for "Mail"
+4. Use the 16-character app password (not your regular Gmail password)
+
+#### Other SMTP Providers
+- **Outlook**: `smtp.live.com:587`
+- **Yahoo**: `smtp.mail.yahoo.com:587`
+- **SendGrid**: Configure with SendGrid SMTP settings
+- **Mailgun**: Configure with Mailgun SMTP settings
+- **AWS SES**: Configure with SES SMTP settings
+
+#### Testing Email Configuration
+- **Development**: Check backend console for `📧 SMTP not configured` messages
+- **With SMTP**: Look for `✅ Email sent successfully` or `❌ Failed to send email` messages
+- Register for a class to trigger a confirmation email
+
 ## Production Deployment
 
 The above setup is **for development only**. For production, you'll need to consider:

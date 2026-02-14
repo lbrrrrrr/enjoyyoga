@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ interface RegistrationFormProps {
 
 export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
   const t = useTranslations("register");
+  const formRef = useRef<HTMLFormElement>(null);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
@@ -58,7 +59,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
       }
 
       setStatus("success");
-      e.currentTarget.reset();
+      formRef.current?.reset();
       setSelectedClass("");
       setSelectedDate("");
       setSelectedTime("");
@@ -88,7 +89,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
         <CardTitle>{t("title")}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="class_id">{t("selectClass")}</Label>
             <select
