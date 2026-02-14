@@ -77,6 +77,78 @@ For full-stack development, you'll need **two terminal windows**:
 
 Both servers support hot reloading, so changes will be reflected automatically.
 
+## Testing
+
+### Backend Unit Tests
+
+The backend includes a comprehensive unit testing suite covering all business logic:
+
+#### Running Tests
+
+```bash
+cd backend
+
+# Run all unit tests
+uv run pytest
+
+# Run with verbose output
+uv run pytest -v
+
+# Run specific test categories
+uv run pytest -m unit                    # Unit tests only
+uv run pytest tests/unit/services/       # Service layer tests
+uv run pytest tests/unit/test_auth.py    # Authentication tests
+
+# Run with coverage report
+uv run pytest --cov=app --cov-report=html
+uv run pytest --cov=app --cov-report=term-missing
+```
+
+#### Test Coverage (128 total tests)
+
+- ✅ **ScheduleParserService** (30 tests) - Schedule parsing and validation logic
+- ✅ **RegistrationService** (17 tests) - Registration management with capacity validation
+- ✅ **NotificationService** (16 tests) - Email notifications and template management
+- ✅ **Authentication** (26 tests) - JWT tokens, password hashing, admin auth
+- ✅ **Admin Router** (21 tests) - Protected routes, dashboard statistics
+- ✅ **Registrations Router** (18 tests) - Registration endpoints, validation
+
+#### Key Features
+
+- **Fast Execution**: In-memory SQLite database for speed
+- **Comprehensive Coverage**: All critical business logic tested
+- **Async Support**: Full async/await testing with pytest-asyncio
+- **Mocked Dependencies**: External services (SMTP, etc.) properly mocked
+- **Edge Cases**: Comprehensive error handling and boundary condition testing
+
+#### Test Structure
+
+```
+backend/tests/
+├── conftest.py                          # Test configuration & fixtures
+├── unit/
+│   ├── test_auth.py                     # Authentication & security tests
+│   ├── services/
+│   │   ├── test_schedule_parser.py      # Schedule parsing logic
+│   │   ├── test_registration_service.py # Registration business logic
+│   │   └── test_notification_service.py # Email notification logic
+│   └── routers/
+│       ├── test_admin.py                # Admin API endpoints
+│       └── test_registrations.py        # Registration API endpoints
+└── README.md                            # Detailed testing documentation
+```
+
+#### Business Logic Covered
+
+- Schedule string parsing with regex validation
+- Registration capacity management and waitlist logic
+- Email template variable substitution and bilingual support
+- JWT authentication and password security
+- Admin dashboard statistics and user management
+- Input validation, error handling, and edge cases
+
+See `backend/tests/README.md` for detailed testing documentation.
+
 ## Email Configuration (SMTP)
 
 The application supports email notifications for class registrations. To configure email sending:

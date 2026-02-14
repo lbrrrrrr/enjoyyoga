@@ -31,6 +31,14 @@ uv run python setup_admin.py
 
 # Seed database with sample data
 uv run python seed.py
+
+# Run unit tests
+uv run pytest                    # All tests
+uv run pytest -v               # Verbose output
+uv run pytest -m unit          # Unit tests only
+uv run pytest --cov=app        # With coverage report
+uv run pytest tests/unit/services/  # Service layer tests
+uv run pytest tests/unit/test_auth.py  # Authentication tests
 ```
 
 ### Frontend (Next.js 15 + TypeScript)
@@ -157,3 +165,55 @@ Business logic isolated in service classes:
 - API calls through custom hooks in `src/lib/`
 - Form handling with controlled components
 - Loading and error states managed at component level
+
+## Testing
+
+### Backend Unit Tests
+
+The backend includes comprehensive unit tests covering all business logic:
+
+**Test Coverage (128 tests)**:
+- ✅ `ScheduleParserService` - Schedule parsing and validation logic (30 tests)
+- ✅ `RegistrationService` - Registration management with capacity validation (17 tests)
+- ✅ `NotificationService` - Email notifications and template management (16 tests)
+- ✅ `Authentication` - JWT tokens, password hashing, admin auth (26 tests)
+- ✅ `Admin Router` - Protected routes, dashboard stats (21 tests)
+- ✅ `Registrations Router` - Registration endpoints, validation (18 tests)
+
+**Key Features**:
+- In-memory SQLite database for fast test execution
+- Complete fixtures for all models and relationships
+- Async test support with pytest-asyncio
+- Mocked external dependencies (SMTP, etc.)
+- Comprehensive error handling and edge case coverage
+
+**Test Structure**:
+```
+backend/tests/
+├── conftest.py                 # Test configuration & fixtures
+├── unit/
+│   ├── test_auth.py           # Authentication & security tests
+│   ├── services/
+│   │   ├── test_schedule_parser.py     # Schedule parsing logic
+│   │   ├── test_registration_service.py # Registration business logic
+│   │   └── test_notification_service.py # Email notification logic
+│   └── routers/
+│       ├── test_admin.py       # Admin API endpoints
+│       └── test_registrations.py # Registration API endpoints
+└── README.md                   # Detailed testing documentation
+```
+
+**Running Tests**:
+- All tests: `uv run pytest`
+- Verbose output: `uv run pytest -v`
+- Specific test file: `uv run pytest tests/unit/test_auth.py`
+- With coverage: `uv run pytest --cov=app --cov-report=html`
+- Service tests only: `uv run pytest tests/unit/services/`
+
+**Business Logic Coverage**:
+- Schedule string parsing with regex validation
+- Registration capacity management and waitlist logic
+- Email template variable substitution and bilingual support
+- JWT authentication and password security
+- Admin dashboard statistics and user management
+- Input validation, error handling, and edge cases

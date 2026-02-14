@@ -1,5 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
+import uuid
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer
@@ -28,9 +29,9 @@ def get_password_hash(password: str) -> str:
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.jwt_access_token_expire_minutes)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_access_token_expire_minutes)
 
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
@@ -57,9 +58,17 @@ async def get_current_admin(token = Depends(security), db: AsyncSession = Depend
     )
 
     try:
-        payload = jwt.decode(token.credentials, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
-        admin_id: str = payload.get("sub")
-        if admin_id is None:
+        # Handle both string tokens (for testing) and HTTPBearer tokens (for production)
+        token_str = token.credentials if hasattr(token, 'credentials') else token
+        payload = jwt.decode(token_str, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+        admin_id_str: str = payload.get("sub")
+        if admin_id_str is None:
+            raise credentials_exception
+
+        # Convert string ID to UUID for database query
+        try:
+            admin_id = uuid.UUID(admin_id_str)
+        except ValueError:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
