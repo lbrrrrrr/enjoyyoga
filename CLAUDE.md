@@ -141,6 +141,13 @@ Requires two terminals running simultaneously:
 
 ## Development Notes
 
+### Debugging Protocol
+**IMPORTANT**: When debugging issues that require starting backend/frontend servers or components:
+- Always stop both backend and frontend servers after debugging is complete
+- Use `Ctrl+C` to stop running processes in terminals
+- Ensure no processes are left running unnecessarily after debugging sessions
+- This prevents resource consumption and port conflicts for future development
+
 ### Database Migrations
 Use Alembic for all schema changes. Models inherit from `Base` defined in `app/models/yoga_type.py`.
 
