@@ -1,4 +1,4 @@
-import { getTeachers } from "@/lib/api";
+import { getTeachers, Teacher } from "@/lib/api";
 import { TeachersClient } from "@/components/admin/TeachersClient";
 
 export default async function AdminTeachers({
@@ -8,7 +8,7 @@ export default async function AdminTeachers({
 }) {
   const { locale } = await params;
 
-  let teachers;
+  let teachers: Teacher[];
   try {
     teachers = await getTeachers();
   } catch (error) {

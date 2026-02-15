@@ -13,6 +13,7 @@ export function AdminSidebar() {
     { href: `/${locale}/admin/dashboard`, label: t("nav.dashboard") },
     { href: `/${locale}/admin/registrations`, label: t("nav.registrations") },
     { href: `/${locale}/admin/teachers`, label: t("nav.teachers") },
+    { href: `/${locale}/admin/inquiries`, label: t("nav.inquiries") },
     { href: `/${locale}/admin/notifications`, label: t("nav.notifications") },
   ];
 

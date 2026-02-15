@@ -5,5 +5,7 @@ from app.models.registration import Registration
 from app.models.class_session import ClassSession
 from app.models.admin_user import AdminUser
 from app.models.notification_template import NotificationTemplate
+from app.models.contact_inquiry import ContactInquiry
+from app.models.inquiry_reply import InquiryReply
 
-__all__ = ["YogaType", "Teacher", "YogaClass", "Registration", "ClassSession", "AdminUser", "NotificationTemplate"]
+__all__ = ["YogaType", "Teacher", "YogaClass", "Registration", "ClassSession", "AdminUser", "NotificationTemplate", "ContactInquiry", "InquiryReply"]

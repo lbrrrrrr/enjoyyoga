@@ -76,6 +76,7 @@
       "dashboard": "Dashboard",
       "registrations": "Registrations",
       "teachers": "Teachers",
+      "inquiries": "Inquiries",
       "notifications": "Notifications",
       "logout": "Logout"
     },
@@ -110,6 +111,123 @@
       "recentNotifications": "Recent Notifications",
       "edit": "Edit",
       "preview": "Preview"
+    },
+    "inquiries": {
+      "title": "Contact Inquiries",
+      "description": "Manage customer inquiries and contact requests",
+      "stats": {
+        "total": "Total Inquiries",
+        "open": "Open",
+        "inProgress": "In Progress",
+        "resolved": "Resolved"
+      },
+      "filters": {
+        "title": "Filters",
+        "status": "Status",
+        "category": "Category",
+        "allStatuses": "All Statuses",
+        "allCategories": "All Categories",
+        "refresh": "Refresh"
+      },
+      "status": {
+        "open": "Open",
+        "inProgress": "In Progress",
+        "resolved": "Resolved",
+        "closed": "Closed"
+      },
+      "category": {
+        "scheduling": "Class Scheduling",
+        "general": "General Yoga Questions",
+        "business": "Business Inquiries"
+      },
+      "list": {
+        "title": "Inquiry List",
+        "loading": "Loading inquiries...",
+        "empty": "No inquiries found",
+        "from": "From",
+        "view": "View Details"
+      },
+      "detail": {
+        "title": "Inquiry Details",
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone",
+        "noPhone": "Not provided",
+        "language": "Preferred Language",
+        "category": "Category",
+        "subject": "Subject",
+        "message": "Message",
+        "created": "Created",
+        "status": "Status",
+        "adminNotes": "Admin Notes",
+        "adminNotesPlaceholder": "Add notes about this inquiry...",
+        "save": "Save Changes",
+        "cancel": "Cancel"
+      },
+      "replies": {
+        "title": "Reply History",
+        "noReplies": "No replies yet",
+        "compose": "Compose Reply",
+        "subject": "Subject",
+        "message": "Message",
+        "send": "Send Reply",
+        "sending": "Sending...",
+        "cancel": "Cancel",
+        "success": "Reply sent successfully!",
+        "error": "Failed to send reply. Please try again.",
+        "status": {
+          "pending": "Pending",
+          "sent": "Sent",
+          "failed": "Failed"
+        },
+        "sentAt": "Sent at",
+        "errorMessage": "Error",
+        "subjectPlaceholder": "Reply subject...",
+        "messagePlaceholder": "Type your reply message..."
+      }
+    }
+  },
+  "contact": {
+    "button": "Contact Us",
+    "title": "Contact Us",
+    "form": {
+      "category": {
+        "label": "What can we help you with?",
+        "placeholder": "Select a category",
+        "options": {
+          "scheduling": "Class Scheduling & Booking",
+          "general": "General Yoga Questions",
+          "business": "Business & Partnership Inquiries"
+        }
+      },
+      "name": {
+        "label": "Your Name",
+        "placeholder": "Enter your full name"
+      },
+      "email": {
+        "label": "Email Address",
+        "placeholder": "Enter your email address"
+      },
+      "phone": {
+        "label": "Phone Number (Optional)",
+        "placeholder": "Enter your phone number"
+      },
+      "subject": {
+        "label": "Subject",
+        "placeholder": "Brief description of your inquiry"
+      },
+      "message": {
+        "label": "Message",
+        "placeholder": "Please provide details about your inquiry..."
+      },
+      "submit": "Send Message",
+      "submitting": "Sending...",
+      "cancel": "Cancel",
+      "error": "Something went wrong. Please try again."
+    },
+    "success": {
+      "title": "Message Sent!",
+      "message": "Thank you for contacting us. We'll get back to you within 24-48 hours."
     }
   },
   "footer": {

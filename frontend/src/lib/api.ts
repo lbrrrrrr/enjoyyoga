@@ -119,6 +119,9 @@ export async function createRegistrationWithSchedule(data: {
   message?: string;
   target_date?: string;
   target_time?: string;
+  preferred_language?: string;
+  email_notifications?: boolean;
+  sms_notifications?: boolean;
 }): Promise<RegistrationWithSchedule> {
   const res = await fetch(`${API_BASE}/api/registrations/with-schedule`, {
     method: "POST",
@@ -145,4 +148,174 @@ export async function getAvailableDates(
   const url = `/api/registrations/classes/${classId}/available-dates${queryString ? `?${queryString}` : ''}`;
 
   return fetchAPI<AvailableDate[]>(url);
+}
+
+// Contact Inquiry interfaces and functions
+export interface InquiryReply {
+  id: string;
+  inquiry_id: string;
+  admin_id: string;
+  subject: string;
+  message: string;
+  email_status: string;
+  error_message: string | null;
+  created_at: string;
+  sent_at: string | null;
+}
+
+export interface ContactInquiry {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  subject: string;
+  message: string;
+  category: string;
+  status: string;
+  preferred_language: string;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+  replies?: InquiryReply[];
+}
+
+export interface ContactInquirySummary {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  category: string;
+  status: string;
+  preferred_language: string;
+  created_at: string;
+}
+
+export async function createContactInquiry(data: {
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+  category: string;
+  preferred_language?: string;
+}): Promise<ContactInquiry> {
+  const res = await fetch(`${API_BASE}/api/contact/inquiries`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `API error: ${res.status}`);
+  }
+  return res.json();
+}
+
+// Admin functions for managing contact inquiries
+export async function getContactInquiries(
+  status?: string,
+  category?: string,
+  limit: number = 50,
+  offset: number = 0
+): Promise<ContactInquirySummary[]> {
+  const params = new URLSearchParams();
+  if (status) params.append('status', status);
+  if (category) params.append('category', category);
+  params.append('limit', limit.toString());
+  params.append('offset', offset.toString());
+
+  const queryString = params.toString();
+  const url = `/api/admin/contact/inquiries${queryString ? `?${queryString}` : ''}`;
+
+  const token = localStorage.getItem('admin_token');
+  const res = await fetch(`${API_BASE}${url}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function getContactInquiry(inquiryId: string): Promise<ContactInquiry> {
+  const token = localStorage.getItem('admin_token');
+  const res = await fetch(`${API_BASE}/api/admin/contact/inquiries/${inquiryId}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function updateContactInquiry(
+  inquiryId: string,
+  data: { status?: string; admin_notes?: string }
+): Promise<ContactInquiry> {
+  const token = localStorage.getItem('admin_token');
+  const res = await fetch(`${API_BASE}/api/admin/contact/inquiries/${inquiryId}`, {
+    method: "PUT",
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `API error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function getContactInquiryStats(): Promise<{
+  total_inquiries: number;
+  by_status: Record<string, number>;
+  by_category: Record<string, number>;
+}> {
+  const token = localStorage.getItem('admin_token');
+  const res = await fetch(`${API_BASE}/api/admin/contact/stats`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function createInquiryReply(
+  inquiryId: string,
+  data: {
+    subject: string;
+    message: string;
+  }
+): Promise<InquiryReply> {
+  const token = localStorage.getItem('admin_token');
+  const res = await fetch(`${API_BASE}/api/admin/contact/inquiries/${inquiryId}/replies`, {
+    method: "POST",
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `API error: ${res.status}`);
+  }
+  return res.json();
 }
