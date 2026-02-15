@@ -201,11 +201,17 @@ tests/
 
 ## TODO: Future Enhancements
 
-1. **Integration Tests**: Add tests for full API workflows
-2. **Performance Tests**: Add tests for capacity and load scenarios
-3. **Contract Tests**: Add API contract validation
-4. **Coverage Reports**: Set up automated coverage reporting
-5. **Continuous Integration**: GitHub Actions for automated testing
+1. **Contact Inquiry Tests**: Add comprehensive unit tests for the new contact inquiry system:
+   - ContactService business logic (inquiry creation, status updates, statistics)
+   - Contact notification emails (confirmation, admin alerts, replies)
+   - Admin contact API endpoints and authentication
+   - Contact form validation and error handling
+
+2. **Integration Tests**: Add tests for full API workflows
+3. **Performance Tests**: Add tests for capacity and load scenarios
+4. **Contract Tests**: Add API contract validation
+5. **Coverage Reports**: Set up automated coverage reporting
+6. **Continuous Integration**: GitHub Actions for automated testing
 
 ## Known Issues
 

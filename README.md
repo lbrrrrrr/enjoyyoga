@@ -1,6 +1,6 @@
 # enjoyyoga
 
-A bilingual (English/Chinese) web application for a yoga business, featuring class listings, teacher profiles, yoga type descriptions, and a class registration system.
+A bilingual (English/Chinese) web application for a yoga business, featuring class listings, teacher profiles, yoga type descriptions, a class registration system, and a contact inquiry management system with admin reply functionality.
 
 ## Tech Stack
 
@@ -20,6 +20,11 @@ cd backend
 uv sync
 cp .env.example .env  # Edit with your database credentials
 uv run alembic upgrade head
+
+# Setup initial data and email templates
+uv run python setup_admin.py          # Create admin user
+uv run python seed.py                 # Seed sample data (optional)
+uv run python setup_contact_templates.py  # Setup contact inquiry email templates
 ```
 
 2. **Start the development server** (run in a dedicated terminal):
@@ -151,7 +156,7 @@ See `backend/tests/README.md` for detailed testing documentation.
 
 ## Email Configuration (SMTP)
 
-The application supports email notifications for class registrations. To configure email sending:
+The application supports email notifications for class registrations and contact inquiries. To configure email sending:
 
 ### Development Mode (Current)
 Without SMTP configuration, emails are printed to the backend console for testing purposes.
@@ -189,7 +194,74 @@ SMTP_USE_TLS=true
 #### Testing Email Configuration
 - **Development**: Check backend console for `📧 SMTP not configured` messages
 - **With SMTP**: Look for `✅ Email sent successfully` or `❌ Failed to send email` messages
-- Register for a class to trigger a confirmation email
+- **Testing Methods**:
+  - Register for a class to trigger a confirmation email
+  - Submit a contact inquiry to trigger user confirmation and admin notification emails
+  - Reply to an inquiry from the admin panel to trigger reply emails
+
+## Contact Inquiry System
+
+The application includes a comprehensive contact inquiry management system that allows users to submit inquiries and administrators to manage and respond to them.
+
+### Features
+
+#### For Users
+- **Floating Contact Widget**: Always available contact button in the bottom-right corner of the website
+- **Bilingual Contact Form**: Supports both English and Chinese with automatic language detection
+- **Categorized Inquiries**: Users can categorize inquiries as "Scheduling", "General", or "Business"
+- **Email Confirmations**: Automatic confirmation emails sent to users upon form submission
+
+#### For Administrators
+- **Admin Dashboard**: Dedicated `/admin/inquiries` page for managing all contact inquiries
+- **Statistics Overview**: Real-time counts showing total inquiries and breakdown by status
+- **Status Management**: Track inquiries through workflow: Open → In Progress → Resolved → Closed
+- **Reply System**: Send replies to users directly from the admin panel with email delivery
+- **Filtering & Search**: Filter inquiries by status, category, and pagination support
+- **Admin Notes**: Add internal notes to inquiries for team coordination
+
+### User Experience Flow
+
+1. **Contact Submission**:
+   - User clicks the floating "Contact Us" button
+   - Modal opens with bilingual contact form
+   - User selects category, fills in details, and submits
+   - User receives immediate confirmation email
+   - Admin receives notification email about new inquiry
+
+2. **Admin Management**:
+   - Admin navigates to `/admin/inquiries`
+   - Views statistics dashboard and inquiry list
+   - Clicks on inquiry to view full details and conversation history
+   - Updates status and adds admin notes as needed
+   - Composes and sends replies directly to users
+   - Tracks email delivery status for all communications
+
+### Database Structure
+
+The system uses two main database tables:
+
+- **`contact_inquiries`**: Stores user inquiries with fields for categorization, status tracking, and language preferences
+- **`inquiry_replies`**: Stores admin responses with email delivery tracking and conversation threading
+
+### Email Templates
+
+Four email templates handle all contact inquiry communications:
+
+1. **User Confirmation** (`inquiry_confirmation`): Bilingual confirmation sent to users
+2. **Admin Notification** (`admin_inquiry_notification`): Alert sent to admins for new inquiries
+3. **Inquiry Reply** (`inquiry_reply`): Responses from admins to users with conversation threading
+4. **Registration Confirmation**: Existing template reused for class registrations
+
+### API Endpoints
+
+- **Public API** (`/api/contact/inquiries`): For user form submissions
+- **Admin API** (`/api/admin/contact/*`): Protected endpoints for inquiry management, statistics, and replies
+
+### Access Control
+
+- Contact form is publicly accessible to all website visitors
+- Admin management requires JWT authentication
+- All admin actions are logged and tracked for accountability
 
 ## Production Deployment
 

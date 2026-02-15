@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-enjoyyoga is a bilingual (English/Chinese) yoga business management application with class listings, teacher profiles, yoga type descriptions, and a class registration system with email notifications.
+enjoyyoga is a bilingual (English/Chinese) yoga business management application with class listings, teacher profiles, yoga type descriptions, class registration system, and contact inquiry management with email notifications and admin reply functionality.
 
 ## Development Commands
 
@@ -31,6 +31,9 @@ uv run python setup_admin.py
 
 # Seed database with sample data
 uv run python seed.py
+
+# Setup contact inquiry email templates
+uv run python setup_contact_templates.py
 
 # Run unit tests
 uv run pytest                    # All tests
@@ -73,10 +76,10 @@ Requires two terminals running simultaneously:
 **Framework**: FastAPI with async SQLAlchemy ORM, PostgreSQL database
 
 **Key Directories**:
-- `app/models/` - SQLAlchemy models (yoga_class.py, teacher.py, registration.py, etc.)
-- `app/routers/` - FastAPI route handlers (classes.py, teachers.py, admin.py, etc.)
-- `app/schemas/` - Pydantic models for request/response validation
-- `app/services/` - Business logic (registration_service.py, notification_service.py, schedule_parser.py)
+- `app/models/` - SQLAlchemy models (yoga_class.py, teacher.py, registration.py, contact_inquiry.py, inquiry_reply.py, etc.)
+- `app/routers/` - FastAPI route handlers (classes.py, teachers.py, admin.py, contact.py, etc.)
+- `app/schemas/` - Pydantic models for request/response validation (contact.py, etc.)
+- `app/services/` - Business logic (registration_service.py, notification_service.py, schedule_parser.py, contact_service.py)
 - `alembic/` - Database migration files
 
 **Authentication**: JWT-based admin authentication in `app/auth.py`
@@ -92,13 +95,13 @@ Requires two terminals running simultaneously:
 **Internationalization**: next-intl with English/Chinese locales using `[locale]` dynamic routing
 
 **Key Directories**:
-- `src/app/[locale]/` - Internationalized pages (admin/, classes/, teachers/, etc.)
-- `src/components/` - Reusable UI components (built with shadcn/ui)
+- `src/app/[locale]/` - Internationalized pages (admin/, classes/, teachers/, admin/inquiries/, etc.)
+- `src/components/` - Reusable UI components (built with shadcn/ui, includes contact/ and admin/ subdirectories)
 - `src/lib/` - Utility functions and API clients
 - `src/messages/` - Translation files for English/Chinese
 - `src/i18n/` - Internationalization configuration
 
-**Admin Panel**: Located at `/[locale]/admin/` with protected routes for dashboard, teachers, registrations, notifications
+**Admin Panel**: Located at `/[locale]/admin/` with protected routes for dashboard, teachers, registrations, contact inquiries, and notifications
 
 ### Database Schema
 
@@ -108,10 +111,12 @@ Requires two terminals running simultaneously:
 - `Teacher` - Teacher profiles with bilingual bios and credentials
 - `YogaType` - Yoga style categories (Hatha, Vinyasa, etc.)
 - `Registration` - Student class registrations with contact info
+- `ContactInquiry` - Contact form submissions with categorization, status tracking, and admin notes
+- `InquiryReply` - Admin replies to contact inquiries with email delivery tracking
 - `AdminUser` - Admin authentication
 - `NotificationTemplate` - Email template management
 
-**Relationships**: Classes belong to teachers and yoga types; registrations link students to specific class sessions
+**Relationships**: Classes belong to teachers and yoga types; registrations link students to specific class sessions; contact inquiries have many replies from admin users
 
 ## Key Features
 
@@ -127,16 +132,30 @@ Requires two terminals running simultaneously:
 - Email confirmation notifications
 - Admin dashboard for registration management
 
+### Contact Inquiry System
+- Floating contact widget available site-wide for user inquiries
+- Bilingual contact form with categorization (scheduling, general, business)
+- Automatic email confirmations to users and admin notifications
+- Admin panel for inquiry management with status tracking (open/in_progress/resolved/closed)
+- Reply functionality with email delivery tracking and conversation history
+- Statistics dashboard showing inquiry counts by status and category
+- Filtering and pagination for inquiry list management
+
 ### Email Notifications
 - SMTP configuration for production email sending
 - Development mode prints emails to console
 - Customizable notification templates
 - Registration confirmation emails
+- Contact inquiry confirmation emails (bilingual)
+- Admin notification emails for new inquiries
+- Reply emails with conversation threading
 
 ### Admin Panel
 - JWT-protected admin routes
 - Teacher management
 - Class and registration oversight
+- Contact inquiry management with reply functionality
+- Statistics dashboard for inquiries
 - Notification template editing
 
 ## Development Notes
@@ -165,7 +184,8 @@ Use Alembic for all schema changes. Models inherit from `Base` defined in `app/m
 ### Service Layer
 Business logic isolated in service classes:
 - `RegistrationService` - Handles class registration with email notifications
-- `NotificationService` - Manages email sending (SMTP or console output)
+- `ContactService` - Manages contact inquiries, replies, and statistics
+- `NotificationService` - Manages email sending (SMTP or console output) including inquiry notifications
 - `ScheduleParser` - Parses complex scheduling strings into class sessions
 
 ### Frontend State Management
@@ -224,3 +244,102 @@ backend/tests/
 - JWT authentication and password security
 - Admin dashboard statistics and user management
 - Input validation, error handling, and edge cases
+
+## Contact Inquiry System
+
+### Complete Feature Implementation
+
+The contact inquiry system provides a comprehensive solution for managing customer inquiries with bilingual support, admin management, and email notifications.
+
+### Database Models
+
+**ContactInquiry** (`app/models/contact_inquiry.py`):
+- **Fields**: id (UUID), name, email, phone, subject, message, category, status, preferred_language, admin_notes, timestamps
+- **Categories**: "scheduling", "general", "business"
+- **Status Flow**: "open" → "in_progress" → "resolved" → "closed"
+- **Languages**: "en" (English), "zh" (Chinese)
+
+**InquiryReply** (`app/models/inquiry_reply.py`):
+- **Fields**: id (UUID), inquiry_id, admin_id, subject, message, email_status, error_message, timestamps
+- **Email Status**: "pending" → "sent" or "failed"
+- **Relationships**: Many-to-one with ContactInquiry and AdminUser
+
+### API Endpoints
+
+**Public Contact API** (`/api/contact`):
+- `POST /inquiries` - Submit new contact inquiry (auto-sends confirmation and admin notification)
+
+**Admin Contact API** (`/api/admin/contact` - JWT protected):
+- `GET /inquiries` - List inquiries with filtering (status, category) and pagination
+- `GET /inquiries/{id}` - Get specific inquiry with reply history
+- `PUT /inquiries/{id}` - Update inquiry status and admin notes
+- `GET /stats` - Get inquiry statistics (total, by status, by category)
+- `POST /inquiries/{id}/replies` - Create reply (auto-sends email to user)
+
+### Frontend Components
+
+**Public Interface**:
+- **ContactWidget** (`src/components/contact/ContactWidget.tsx`) - Floating contact button (bottom-right)
+- **ContactModal** (`src/components/contact/ContactModal.tsx`) - Contact form modal with bilingual support
+
+**Admin Interface**:
+- **InquiriesClient** (`src/components/admin/InquiriesClient.tsx`) - Complete inquiry management with:
+  - Statistics cards (total, open, in_progress, resolved counts)
+  - Filterable list view (status, category)
+  - Detail modal with inquiry info and reply composition
+  - Reply history with email delivery status
+- **Admin Page** (`src/app/[locale]/admin/inquiries/page.tsx`) - Admin inquiries route
+
+### Email Templates
+
+**Template Types** (setup via `setup_contact_templates.py`):
+1. **inquiry_confirmation** - User confirmation (bilingual)
+2. **admin_inquiry_notification** - Admin alert (English only)
+3. **inquiry_reply** - Admin reply to user (respects user's language preference)
+
+**Template Variables**: name, email, subject, category, inquiry_id, message, phone, preferred_language, etc.
+
+### Service Layer
+
+**ContactService** (`app/services/contact_service.py`):
+- `create_inquiry()` - Creates inquiry with email notifications
+- `get_inquiry_by_id()` - Retrieves inquiry with replies
+- `get_all_inquiries()` - Lists with filtering and pagination
+- `update_inquiry()` - Updates status and admin notes
+- `get_inquiry_stats()` - Returns statistics object
+- `create_reply()` - Creates reply with email sending
+- `update_reply_status()` - Updates email delivery status
+
+**NotificationService Extensions**:
+- `send_inquiry_confirmation_email()` - User confirmation (language-aware)
+- `send_admin_inquiry_notification()` - Admin alert
+- `send_inquiry_reply_email()` - Reply delivery (language-aware)
+
+### User Flow
+
+1. **Contact Submission**:
+   - User clicks floating "Contact Us" button
+   - Modal opens with categorized form
+   - User submits inquiry
+   - System sends confirmation email to user
+   - System sends notification email to admin
+   - Modal shows success message and auto-closes
+
+2. **Admin Management**:
+   - Admin navigates to `/admin/inquiries`
+   - Views statistics dashboard and inquiry list
+   - Filters by status/category as needed
+   - Clicks inquiry to view details and reply history
+   - Updates status and adds admin notes
+   - Composes and sends replies to users
+   - Tracks email delivery status
+
+### Key Features
+
+- **Bilingual Support**: Forms, emails, and admin interface support English/Chinese
+- **Categorization**: Inquiries categorized as scheduling/general/business for better organization
+- **Status Tracking**: Complete lifecycle from open to closed with admin notes
+- **Email Integration**: Automatic confirmations and notifications with delivery tracking
+- **Statistics Dashboard**: Real-time counts and filtering for admin efficiency
+- **Reply System**: Full conversation history with email threading
+- **Responsive Design**: Mobile-friendly contact widget and admin interface
