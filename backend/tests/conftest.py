@@ -152,6 +152,7 @@ def sample_admin_user():
 @pytest.fixture
 def sample_notification_template():
     """Sample notification template for testing."""
+    import json
     return {
         "id": uuid.uuid4(),
         "template_type": "registration_confirmation",
@@ -160,7 +161,7 @@ def sample_notification_template():
         "subject_zh": "注册确认",
         "content_en": "Dear {name}, your registration for {class_name} is confirmed.",
         "content_zh": "亲爱的 {name}，您对 {class_name} 的注册已确认。",
-        "variables": ["name", "class_name", "date", "time"],
+        "variables": json.dumps(["name", "class_name", "date", "time"]),
         "is_active": True,
     }
 

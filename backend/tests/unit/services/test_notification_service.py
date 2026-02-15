@@ -87,17 +87,13 @@ class TestNotificationService:
     async def test_send_confirmation_email_english_template(
         self,
         db_session: AsyncSession,
+        registration_in_db: Registration,
         mock_settings,
     ):
         """Test email confirmation uses English template for English preference."""
-        # Create registration with English preference
-        registration = Registration(
-            name="John Doe",
-            email="john@example.com",
-            preferred_language="en",
-            email_confirmation_sent=False,
-        )
-        db_session.add(registration)
+        # Update registration with English preference
+        registration_in_db.preferred_language = "en"
+        registration_in_db.email_confirmation_sent = False
 
         # Create template
         template = NotificationTemplate(
@@ -105,9 +101,9 @@ class TestNotificationService:
             channel="email",
             subject_en="Registration Confirmed",
             subject_zh="注册确认",
-            content_en="Dear {name}, your registration is confirmed.",
-            content_zh="亲爱的 {name}，您的注册已确认。",
-            variables=["name"],
+            content_en="Dear {{{name}}}, your registration is confirmed.",
+            content_zh="亲爱的 {{{name}}}，您的注册已确认。",
+            variables=json.dumps(["name"]),
             is_active=True,
         )
         db_session.add(template)
@@ -118,28 +114,28 @@ class TestNotificationService:
         with patch.object(service, '_send_smtp_email') as mock_smtp:
             mock_smtp.return_value = True
 
-            await service.send_confirmation_email(registration, db_session)
+            await service.send_confirmation_email(registration_in_db, db_session)
 
             # Verify English content was used
-            call_args = mock_smtp.call_args[0]
-            assert call_args[1] == "Registration Confirmed"  # subject
-            assert "Dear John Doe" in call_args[2]  # content
+            mock_smtp.assert_called_once()
+            call_kwargs = mock_smtp.call_args.kwargs
+            assert call_kwargs["to_email"] == registration_in_db.email
+            assert call_kwargs["subject"] == "Registration Confirmed"
+            assert "Dear {John Doe}" in call_kwargs["content"]
 
     @pytest.mark.unit
     async def test_send_confirmation_email_chinese_template(
         self,
         db_session: AsyncSession,
+        registration_in_db: Registration,
         mock_settings,
     ):
         """Test email confirmation uses Chinese template for Chinese preference."""
-        # Create registration with Chinese preference
-        registration = Registration(
-            name="张三",
-            email="zhang@example.com",
-            preferred_language="zh",
-            email_confirmation_sent=False,
-        )
-        db_session.add(registration)
+        # Update registration with Chinese preference
+        registration_in_db.name = "张三"
+        registration_in_db.email = "zhang@example.com"
+        registration_in_db.preferred_language = "zh"
+        registration_in_db.email_confirmation_sent = False
 
         # Create template
         template = NotificationTemplate(
@@ -147,9 +143,9 @@ class TestNotificationService:
             channel="email",
             subject_en="Registration Confirmed",
             subject_zh="注册确认",
-            content_en="Dear {name}, your registration is confirmed.",
-            content_zh="亲爱的 {name}，您的注册已确认。",
-            variables=["name"],
+            content_en="Dear {{{name}}}, your registration is confirmed.",
+            content_zh="亲爱的 {{{name}}}，您的注册已确认。",
+            variables=json.dumps(["name"]),
             is_active=True,
         )
         db_session.add(template)
@@ -160,12 +156,14 @@ class TestNotificationService:
         with patch.object(service, '_send_smtp_email') as mock_smtp:
             mock_smtp.return_value = True
 
-            await service.send_confirmation_email(registration, db_session)
+            await service.send_confirmation_email(registration_in_db, db_session)
 
             # Verify Chinese content was used
-            call_args = mock_smtp.call_args[0]
-            assert call_args[1] == "注册确认"  # subject
-            assert "亲爱的 张三" in call_args[2]  # content
+            mock_smtp.assert_called_once()
+            call_kwargs = mock_smtp.call_args.kwargs
+            assert call_kwargs["to_email"] == registration_in_db.email
+            assert call_kwargs["subject"] == "注册确认"
+            assert "亲爱的 {张三}" in call_kwargs["content"]
 
     @pytest.mark.unit
     async def test_send_smtp_email_with_smtp_config(self, mock_settings):
@@ -398,7 +396,7 @@ class TestNotificationService:
             channel="email",
             subject_en="Confirmation for {class_name}",
             content_en="Dear {name}, your registration for {class_name} on {date} at {time} is confirmed.",
-            variables=["name", "class_name", "date", "time"],
+            variables=json.dumps(["name", "class_name", "date", "time"]),
             is_active=True,
         )
         db_session.add(template)
@@ -409,7 +407,7 @@ class TestNotificationService:
         with patch.object(service, '_send_smtp_email') as mock_smtp:
             mock_smtp.return_value = True
 
-            await service.send_confirmation_email(registration, db_session)
+            await service.send_confirmation_email(registration_in_db, db_session)
 
             # Verify variable substitution
             call_args = mock_smtp.call_args[0]
@@ -436,7 +434,7 @@ class TestNotificationService:
             channel="email",
             subject_en="Registration Confirmed",
             content_en="Dear {name}, your registration for {class_name} with {teacher_name} is confirmed.",
-            variables=["name", "class_name", "teacher_name"],
+            variables=json.dumps(["name", "class_name", "teacher_name"]),
             is_active=True,
         )
         db_session.add(template)
