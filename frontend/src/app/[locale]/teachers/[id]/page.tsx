@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getTeacher } from "@/lib/api";
+import { TeacherPhoto } from "@/components/TeacherPhoto";
 
 export default async function TeacherDetailPage({
   params,
@@ -35,7 +36,16 @@ export default async function TeacherDetailPage({
         </Link>
       </Button>
       <Card>
-        <CardHeader>
+        <CardHeader className="text-center">
+          {teacher.photo_url && (
+            <div className="flex justify-center mb-4">
+              <TeacherPhoto
+                src={teacher.photo_url}
+                alt={name}
+                className="w-32 h-32 object-cover rounded-full border-4 border-gray-200"
+              />
+            </div>
+          )}
           <CardTitle className="text-2xl">{name}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">

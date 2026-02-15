@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getTeachers, type Teacher } from "@/lib/api";
+import { TeacherPhoto } from "@/components/TeacherPhoto";
 
 export default async function TeachersPage({
   params,
@@ -34,7 +35,16 @@ export default async function TeachersPage({
           {teachers.map((teacher) => (
             <Card key={teacher.id}>
               <CardHeader>
-                <CardTitle>{name(teacher)}</CardTitle>
+                <div className="flex items-center gap-4">
+                  {teacher.photo_url && (
+                    <TeacherPhoto
+                      src={teacher.photo_url}
+                      alt={name(teacher)}
+                      className="w-20 h-20 object-cover rounded-full border-2 border-gray-200"
+                    />
+                  )}
+                  <CardTitle>{name(teacher)}</CardTitle>
+                </div>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 <p className="text-muted-foreground">{bio(teacher)}</p>
