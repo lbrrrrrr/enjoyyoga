@@ -20,6 +20,7 @@ from app.schemas.admin import (
     AdminStatsOut
 )
 from app.schemas.registration import RegistrationOutWithSchedule
+from app.schemas.teacher import TeacherOut, TeacherUpdate
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -145,3 +146,32 @@ async def update_registration_status(
     await db.refresh(registration)
 
     return RegistrationOutWithSchedule.model_validate(registration)
+
+
+@router.put("/teachers/{teacher_id}", response_model=TeacherOut)
+async def update_teacher(
+    teacher_id: uuid.UUID,
+    teacher_data: TeacherUpdate,
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update teacher information."""
+    query = select(Teacher).where(Teacher.id == teacher_id)
+    result = await db.execute(query)
+    teacher = result.scalar_one_or_none()
+
+    if not teacher:
+        raise HTTPException(status_code=404, detail="Teacher not found")
+
+    # Update teacher fields
+    teacher.name_en = teacher_data.name_en
+    teacher.name_zh = teacher_data.name_zh
+    teacher.bio_en = teacher_data.bio_en
+    teacher.bio_zh = teacher_data.bio_zh
+    teacher.qualifications = teacher_data.qualifications
+    teacher.photo_url = teacher_data.photo_url
+
+    await db.commit()
+    await db.refresh(teacher)
+
+    return TeacherOut.model_validate(teacher)

@@ -4,17 +4,8 @@ import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useTranslations, useLocale } from "next-intl";
-import { getClassesByTeacher, YogaClass } from "@/lib/api";
-
-interface Teacher {
-  id: string;
-  name_en: string;
-  name_zh?: string;
-  email: string;
-  phone?: string;
-  description_en: string;
-  description_zh?: string;
-}
+import { getClassesByTeacher, YogaClass, Teacher } from "@/lib/api";
+import { updateTeacher } from "@/lib/admin-api";
 
 interface TeachersClientProps {
   initialTeachers: Teacher[];
@@ -28,13 +19,33 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
   const [teacherClasses, setTeacherClasses] = useState<{ [teacherId: string]: YogaClass[] }>({});
   const [loadingClasses, setLoadingClasses] = useState<string | null>(null);
 
+  // Form state for editing
+  const [formData, setFormData] = useState({
+    name_en: "",
+    name_zh: "",
+    bio_en: "",
+    bio_zh: "",
+    qualifications: "",
+    photo_url: ""
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
   const t = useTranslations("admin.teachers");
   const locale = useLocale();
 
   const handleEditTeacher = (teacher: Teacher) => {
     setSelectedTeacher(teacher);
+    setFormData({
+      name_en: teacher.name_en,
+      name_zh: teacher.name_zh,
+      bio_en: teacher.bio_en,
+      bio_zh: teacher.bio_zh,
+      qualifications: teacher.qualifications,
+      photo_url: teacher.photo_url || ""
+    });
+    setSaveError(null);
     setIsEditModalOpen(true);
-    console.log("Edit teacher:", teacher.name_en);
   };
 
   const handleViewClasses = async (teacher: Teacher) => {
@@ -75,6 +86,45 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
   const closeEditModal = () => {
     setIsEditModalOpen(false);
     setSelectedTeacher(null);
+    setSaveError(null);
+  };
+
+  const handleSaveTeacher = async () => {
+    if (!selectedTeacher) return;
+
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      const updatedTeacher = await updateTeacher(selectedTeacher.id, {
+        name_en: formData.name_en,
+        name_zh: formData.name_zh,
+        bio_en: formData.bio_en,
+        bio_zh: formData.bio_zh,
+        qualifications: formData.qualifications,
+        photo_url: formData.photo_url || null
+      });
+
+      // Update the teachers list with the updated teacher
+      setTeachers(prev =>
+        prev.map(teacher =>
+          teacher.id === selectedTeacher.id ? updatedTeacher : teacher
+        )
+      );
+
+      closeEditModal();
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Failed to save teacher");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleFormChange = (field: keyof typeof formData, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   return (
@@ -94,19 +144,17 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <p className="text-sm text-gray-600">
-                  <strong>{t("email")}:</strong> {teacher.email}
-                </p>
-                {teacher.phone && (
-                  <p className="text-sm text-gray-600">
-                    <strong>{t("phone")}:</strong> {teacher.phone}
-                  </p>
-                )}
                 <div className="text-sm text-gray-700 max-h-20 overflow-hidden">
+                  <strong>Bio:</strong>{" "}
                   {locale === "zh"
-                    ? teacher.description_zh || teacher.description_en
-                    : teacher.description_en}
+                    ? teacher.bio_zh || teacher.bio_en
+                    : teacher.bio_en}
                 </div>
+                {teacher.qualifications && (
+                  <div className="text-sm text-gray-600">
+                    <strong>Qualifications:</strong> {teacher.qualifications}
+                  </div>
+                )}
                 <div className="flex gap-2 mt-4">
                   <Button
                     variant="outline"
@@ -196,11 +244,18 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
             <h3 className="text-lg font-medium mb-4">Edit Teacher</h3>
 
             <div className="space-y-4">
+              {saveError && (
+                <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                  {saveError}
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium mb-1">Name (English)</label>
                 <input
                   type="text"
-                  defaultValue={selectedTeacher.name_en}
+                  value={formData.name_en}
+                  onChange={(e) => handleFormChange("name_en", e.target.value)}
                   className="w-full p-2 border rounded-md"
                 />
               </div>
@@ -209,35 +264,65 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
                 <label className="block text-sm font-medium mb-1">Name (Chinese)</label>
                 <input
                   type="text"
-                  defaultValue={selectedTeacher.name_zh || ""}
+                  value={formData.name_zh}
+                  onChange={(e) => handleFormChange("name_zh", e.target.value)}
                   className="w-full p-2 border rounded-md"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Email</label>
-                <input
-                  type="email"
-                  defaultValue={selectedTeacher.email}
+                <label className="block text-sm font-medium mb-1">Bio (English)</label>
+                <textarea
+                  value={formData.bio_en}
+                  onChange={(e) => handleFormChange("bio_en", e.target.value)}
                   className="w-full p-2 border rounded-md"
+                  rows={3}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Phone</label>
+                <label className="block text-sm font-medium mb-1">Bio (Chinese)</label>
+                <textarea
+                  value={formData.bio_zh}
+                  onChange={(e) => handleFormChange("bio_zh", e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Qualifications</label>
+                <textarea
+                  value={formData.qualifications}
+                  onChange={(e) => handleFormChange("qualifications", e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Photo URL</label>
                 <input
-                  type="text"
-                  defaultValue={selectedTeacher.phone || ""}
+                  type="url"
+                  value={formData.photo_url}
+                  onChange={(e) => handleFormChange("photo_url", e.target.value)}
                   className="w-full p-2 border rounded-md"
                 />
               </div>
             </div>
 
             <div className="flex gap-2 mt-6">
-              <Button onClick={() => console.log("Save teacher changes")}>
-                Save Changes
+              <Button
+                onClick={handleSaveTeacher}
+                disabled={isSaving}
+              >
+                {isSaving ? "Saving..." : "Save Changes"}
               </Button>
-              <Button variant="outline" onClick={closeEditModal}>
+              <Button
+                variant="outline"
+                onClick={closeEditModal}
+                disabled={isSaving}
+              >
                 Cancel
               </Button>
             </div>

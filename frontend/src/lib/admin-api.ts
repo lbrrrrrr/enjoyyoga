@@ -89,3 +89,31 @@ export function updateRegistrationStatus(id: string, status: string): Promise<Re
     body: JSON.stringify({ status }),
   });
 }
+
+export interface Teacher {
+  id: string;
+  name_en: string;
+  name_zh: string;
+  bio_en: string;
+  bio_zh: string;
+  qualifications: string;
+  photo_url: string | null;
+  created_at: string;
+}
+
+export function updateTeacher(
+  id: string,
+  data: {
+    name_en: string;
+    name_zh: string;
+    bio_en: string;
+    bio_zh: string;
+    qualifications: string;
+    photo_url?: string | null;
+  }
+): Promise<Teacher> {
+  return fetchAdminAPI<Teacher>(`/api/admin/teachers/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
