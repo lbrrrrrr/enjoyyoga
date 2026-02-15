@@ -1,13 +1,16 @@
 import uuid
 from datetime import timedelta
 from typing import List
+from pathlib import Path
+import shutil
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
 from app.database import get_db
 from app.auth import authenticate_admin, create_access_token, get_current_admin
+from app.config import settings
 from app.models.admin_user import AdminUser
 from app.models.registration import Registration
 from app.models.teacher import Teacher
@@ -175,3 +178,80 @@ async def update_teacher(
     await db.refresh(teacher)
 
     return TeacherOut.model_validate(teacher)
+
+
+@router.post("/teachers/{teacher_id}/photo")
+async def upload_teacher_photo(
+    teacher_id: uuid.UUID,
+    file: UploadFile = File(...),
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Upload a photo for a teacher."""
+    # Validate file type
+    if not file.content_type or not file.content_type.startswith('image/'):
+        raise HTTPException(
+            status_code=400,
+            detail="File must be an image (jpg, png, gif, etc.)"
+        )
+
+    # Validate file size (5MB limit)
+    max_size = 5 * 1024 * 1024  # 5MB
+    if file.size and file.size > max_size:
+        raise HTTPException(
+            status_code=400,
+            detail="File size must be less than 5MB"
+        )
+
+    # Check if teacher exists
+    query = select(Teacher).where(Teacher.id == teacher_id)
+    result = await db.execute(query)
+    teacher = result.scalar_one_or_none()
+
+    if not teacher:
+        raise HTTPException(status_code=404, detail="Teacher not found")
+
+    # Create upload directory
+    upload_dir = Path("uploads/teachers")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    # Generate unique filename
+    file_extension = ""
+    if file.filename and "." in file.filename:
+        file_extension = file.filename.split('.')[-1]
+    else:
+        # Default extension based on content type
+        if file.content_type == "image/jpeg":
+            file_extension = "jpg"
+        elif file.content_type == "image/png":
+            file_extension = "png"
+        elif file.content_type == "image/gif":
+            file_extension = "gif"
+        else:
+            file_extension = "jpg"
+
+    filename = f"{teacher_id}_{uuid.uuid4().hex}.{file_extension}"
+    file_path = upload_dir / filename
+
+    # Save file
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to save uploaded file"
+        )
+    finally:
+        await file.close()
+
+    # Update teacher record with new photo URL (use absolute URL)
+    teacher.photo_url = f"{settings.server_url}/uploads/teachers/{filename}"
+    await db.commit()
+    await db.refresh(teacher)
+
+    return {
+        "message": "Photo uploaded successfully",
+        "photo_url": teacher.photo_url,
+        "teacher": TeacherOut.model_validate(teacher)
+    }

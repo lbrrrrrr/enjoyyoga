@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useTranslations, useLocale } from "next-intl";
 import { getClassesByTeacher, YogaClass, Teacher } from "@/lib/api";
-import { updateTeacher } from "@/lib/admin-api";
+import { updateTeacher, uploadTeacherPhoto } from "@/lib/admin-api";
 
 interface TeachersClientProps {
   initialTeachers: Teacher[];
@@ -31,6 +31,10 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  // Photo upload state
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoUploadError, setPhotoUploadError] = useState<string | null>(null);
+
   const t = useTranslations("admin.teachers");
   const locale = useLocale();
 
@@ -45,6 +49,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
       photo_url: teacher.photo_url || ""
     });
     setSaveError(null);
+    setPhotoUploadError(null);
     setIsEditModalOpen(true);
   };
 
@@ -87,6 +92,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
     setIsEditModalOpen(false);
     setSelectedTeacher(null);
     setSaveError(null);
+    setPhotoUploadError(null);
   };
 
   const handleSaveTeacher = async () => {
@@ -127,6 +133,37 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
     }));
   };
 
+  const handlePhotoUpload = async (file: File) => {
+    if (!selectedTeacher) return;
+
+    setUploadingPhoto(true);
+    setPhotoUploadError(null);
+
+    try {
+      const result = await uploadTeacherPhoto(selectedTeacher.id, file);
+
+      // Update form data with new photo URL
+      setFormData(prev => ({
+        ...prev,
+        photo_url: result.photo_url
+      }));
+
+      // Update the teachers list immediately so user sees the change
+      setTeachers(prev =>
+        prev.map(teacher =>
+          teacher.id === selectedTeacher.id
+            ? { ...teacher, photo_url: result.photo_url }
+            : teacher
+        )
+      );
+
+    } catch (error) {
+      setPhotoUploadError(error instanceof Error ? error.message : "Failed to upload photo");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -144,6 +181,20 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
+                {/* Teacher photo */}
+                {teacher.photo_url && (
+                  <div className="flex justify-center mb-3">
+                    <img
+                      src={teacher.photo_url}
+                      alt={locale === "zh" ? teacher.name_zh || teacher.name_en : teacher.name_en}
+                      className="w-16 h-16 object-cover rounded-full border-2 border-gray-200"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+
                 <div className="text-sm text-gray-700 max-h-20 overflow-hidden">
                   <strong>Bio:</strong>{" "}
                   {locale === "zh"
@@ -301,13 +352,62 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Photo URL</label>
-                <input
-                  type="url"
-                  value={formData.photo_url}
-                  onChange={(e) => handleFormChange("photo_url", e.target.value)}
-                  className="w-full p-2 border rounded-md"
-                />
+                <label className="block text-sm font-medium mb-1">Photo</label>
+                <div className="space-y-3">
+                  {/* Current photo preview */}
+                  {formData.photo_url && (
+                    <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-md">
+                      <img
+                        src={formData.photo_url}
+                        alt="Current teacher photo"
+                        className="w-12 h-12 object-cover rounded-md"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <span className="text-sm text-gray-600">Current photo</span>
+                    </div>
+                  )}
+
+                  {/* Photo upload errors */}
+                  {photoUploadError && (
+                    <div className="p-2 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+                      {photoUploadError}
+                    </div>
+                  )}
+
+                  {/* File upload */}
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Upload new photo:</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handlePhotoUpload(file);
+                        }
+                      }}
+                      disabled={uploadingPhoto}
+                      className="w-full p-2 border rounded-md text-sm"
+                    />
+                    {uploadingPhoto && (
+                      <p className="text-xs text-blue-600 mt-1">Uploading photo...</p>
+                    )}
+                  </div>
+
+                  {/* URL input */}
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Or enter photo URL:</label>
+                    <input
+                      type="url"
+                      value={formData.photo_url}
+                      onChange={(e) => handleFormChange("photo_url", e.target.value)}
+                      className="w-full p-2 border rounded-md"
+                      placeholder="https://example.com/photo.jpg"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 

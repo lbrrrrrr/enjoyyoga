@@ -5,6 +5,9 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/enjoyyoga"
     cors_origins: list[str] = ["http://localhost:3000"]
 
+    # Server URL for absolute image URLs
+    server_url: str = "http://localhost:8000"
+
     # JWT settings
     jwt_secret_key: str = "your-secret-key-here"  # Change in production
     jwt_algorithm: str = "HS256"

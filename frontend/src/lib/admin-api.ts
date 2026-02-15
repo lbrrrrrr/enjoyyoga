@@ -117,3 +117,29 @@ export function updateTeacher(
     body: JSON.stringify(data),
   });
 }
+
+export async function uploadTeacherPhoto(teacherId: string, file: File): Promise<{
+  message: string;
+  photo_url: string;
+  teacher: Teacher;
+}> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(`${API_BASE}/api/admin/teachers/${teacherId}/photo`, {
+    method: 'POST',
+    headers: {
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+    },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.detail || `Photo upload failed: ${res.status}`);
+  }
+
+  return res.json();
+}
