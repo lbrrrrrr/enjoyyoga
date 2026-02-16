@@ -46,6 +46,8 @@ export interface AdminStats {
   recent_registrations: any[];
   pending_payments: number;
   total_revenue: number;
+  total_revenue_cny: number;
+  total_revenue_usd: number;
 }
 
 export interface RegistrationWithSchedule {

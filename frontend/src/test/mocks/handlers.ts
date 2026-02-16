@@ -267,7 +267,11 @@ export const handlers = [
       total_registrations: 150,
       total_teachers: 5,
       total_classes: 12,
-      recent_registrations: mockRegistrations.slice(0, 5)
+      recent_registrations: mockRegistrations.slice(0, 5),
+      pending_payments: 3,
+      total_revenue: 575.0,
+      total_revenue_cny: 500.0,
+      total_revenue_usd: 75.0
     })
   }),
 

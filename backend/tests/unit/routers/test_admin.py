@@ -129,6 +129,9 @@ class TestAdminRouter:
         assert "total_teachers" in data
         assert "total_classes" in data
         assert "recent_registrations" in data
+        assert "total_revenue" in data
+        assert "total_revenue_cny" in data
+        assert "total_revenue_usd" in data
 
         assert isinstance(data["total_registrations"], int)
         assert isinstance(data["total_teachers"], int)
@@ -408,6 +411,84 @@ class TestAdminRouter:
         assert data["total_registrations"] >= 3
         assert data["total_teachers"] >= 1
         assert data["total_classes"] >= 1
+
+    @pytest.mark.unit
+    async def test_dashboard_stats_per_currency_revenue(
+        self,
+        client: AsyncClient,
+        admin_user_in_db: AdminUser,
+        db_session,
+    ):
+        """Test that dashboard stats return separate CNY and USD revenue."""
+        from app.models.teacher import Teacher
+        from app.models.yoga_class import YogaClass
+        from app.models.yoga_type import YogaType
+        from app.models.payment import Payment
+
+        yoga_type = YogaType(name_en="Test Type", name_zh="测试类型")
+        db_session.add(yoga_type)
+
+        teacher = Teacher(name_en="Test Teacher", name_zh="测试老师")
+        db_session.add(teacher)
+
+        yoga_class = YogaClass(
+            name_en="Test Class",
+            name_zh="测试课程",
+            description_en="Test",
+            description_zh="测试",
+            teacher=teacher,
+            yoga_type=yoga_type,
+            schedule="Mon 7:00 AM",
+            schedule_type="recurring",
+            capacity=10,
+            duration_minutes=60,
+            difficulty="beginner",
+            is_active=True,
+        )
+        db_session.add(yoga_class)
+        await db_session.flush()
+
+        # Create registrations with payments in different currencies
+        for i, (amount, currency, pay_status) in enumerate([
+            (100.0, "CNY", "confirmed"),
+            (200.0, "CNY", "confirmed"),
+            (50.0, "USD", "confirmed"),
+            (300.0, "CNY", "pending"),  # Should not count in revenue
+        ]):
+            reg = Registration(
+                name=f"User {i}",
+                email=f"user{i}@test.com",
+                class_id=yoga_class.id,
+                status="confirmed" if pay_status == "confirmed" else "pending_payment",
+                preferred_language="en",
+            )
+            db_session.add(reg)
+            await db_session.flush()
+
+            payment = Payment(
+                registration_id=reg.id,
+                amount=amount,
+                currency=currency,
+                payment_method="wechat",
+                status=pay_status,
+                reference_number=f"EY-20260216-T{i:03d}",
+            )
+            db_session.add(payment)
+
+        await db_session.commit()
+
+        token = create_access_token({"sub": str(admin_user_in_db.id)})
+        headers = {"Authorization": f"Bearer {token}"}
+
+        response = await client.get("/api/admin/dashboard/stats", headers=headers)
+
+        assert response.status_code == 200
+        data = response.json()
+
+        assert data["total_revenue_cny"] == 300.0  # Only confirmed CNY
+        assert data["total_revenue_usd"] == 50.0   # Only confirmed USD
+        assert data["total_revenue"] == 350.0       # Combined confirmed total
+        assert data["pending_payments"] >= 1
 
     @pytest.mark.unit
     async def test_recent_registrations_limit(

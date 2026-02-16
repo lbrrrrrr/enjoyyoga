@@ -63,8 +63,20 @@ describe('Admin API Client', () => {
         total_registrations: expect.any(Number),
         total_teachers: expect.any(Number),
         total_classes: expect.any(Number),
-        recent_registrations: expect.any(Array)
+        recent_registrations: expect.any(Array),
+        pending_payments: expect.any(Number),
+        total_revenue: expect.any(Number),
+        total_revenue_cny: expect.any(Number),
+        total_revenue_usd: expect.any(Number),
       })
+    })
+
+    it('should return separate CNY and USD revenue in dashboard stats', async () => {
+      const stats = await adminApi.getAdminStats()
+
+      expect(stats.total_revenue_cny).toBe(500.0)
+      expect(stats.total_revenue_usd).toBe(75.0)
+      expect(stats.total_revenue).toBe(575.0)
     })
 
     it('should fetch current admin user', async () => {

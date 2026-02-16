@@ -88,10 +88,19 @@ export default function AdminDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>{t("totalRevenue")}</CardTitle>
+            <CardTitle>{t("totalRevenue")} (CNY)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{"\u00a5"}{(stats?.total_revenue || 0).toFixed(2)}</div>
+            <div className="text-3xl font-bold">{"\u00a5"}{(stats?.total_revenue_cny || 0).toFixed(2)}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("totalRevenue")} (USD)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">${(stats?.total_revenue_usd || 0).toFixed(2)}</div>
           </CardContent>
         </Card>
       </div>

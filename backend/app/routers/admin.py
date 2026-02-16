@@ -202,6 +202,8 @@ async def get_dashboard_stats(
         ],
         pending_payments=payment_stats["pending_payments"],
         total_revenue=payment_stats["total_revenue"],
+        total_revenue_cny=payment_stats["total_revenue_cny"],
+        total_revenue_usd=payment_stats["total_revenue_usd"],
     )
 
 
