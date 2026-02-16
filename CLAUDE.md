@@ -81,25 +81,75 @@ Requires two terminals running simultaneously:
 1. Backend: `cd backend && uv run uvicorn app.main:app --reload`
 2. Frontend: `cd frontend && npm run dev`
 
+### Git Hooks
+
+**Auto PR Creation** (`.git/hooks/post-push`):
+- Automatically creates a pull request when you push to any non-main branch
+- Shows the PR URL immediately in your terminal after push
+- Checks if PR already exists before creating (no duplicates)
+- Requires GitHub CLI (`gh`) installed and authenticated
+- Skips gracefully if `gh` is not available
+
+**Example workflow**:
+```bash
+git checkout -b feature/new-feature
+# make changes...
+git add .
+git commit -m "Add new feature"
+git push -u origin feature/new-feature
+# PR is created automatically and URL is displayed in terminal
+```
+
 ## GitHub Actions
 
-### Automated PR Reviews
+The repository uses GitHub Actions for continuous integration with automated testing and code review on every push and pull request.
 
-The repository includes automated code review using Claude AI for all pull requests.
+### Continuous Integration Workflows
 
-**Setup**:
-1. Get Claude API key from [console.anthropic.com](https://console.anthropic.com)
-2. Add `ANTHROPIC_API_KEY` secret in GitHub repository settings
-3. Open a PR to trigger automatic review
+**Backend Tests** (`backend-tests.yml`):
+- Runs automatically on every push to `main` and on all pull requests
+- Executes 155+ unit tests covering all business logic and API endpoints
+- Generates coverage reports (HTML + JSON) with branch coverage
+- Fast execution with dependency caching (~30-60 seconds)
+- Uploads test results and coverage reports as downloadable artifacts (90-day retention)
+- Tests: schedule parsing, registration management, email notifications, JWT auth, admin APIs, payment integration
 
-**Features**:
+**Frontend Tests** (`frontend-tests.yml`):
+- Runs automatically on every push to `main` and on all pull requests
+- Executes 80+ unit tests covering UI components and API integration
+- Modern test stack: Vitest + React Testing Library + MSW (Mock Service Worker)
+- Fast execution with npm caching (~20-40 seconds)
+- Uploads test results and coverage reports as downloadable artifacts (90-day retention)
+- Tests: API clients (public + admin), React components, bilingual i18n, error handling
+
+**Claude PR Review** (`claude-pr-review.yml`):
+- Automated code review using Claude AI for all pull requests
 - Triggers on PR open, update, and reopen
 - Reviews for security, bugs, code quality, and best practices
 - Posts detailed feedback as PR comments
 - Handles large PRs gracefully (>100KB diffs skipped)
 - Uses Claude Sonnet 4.5 for comprehensive analysis
 
-See `.github/workflows/README.md` for detailed setup instructions.
+### Setup Instructions
+
+**For Backend/Frontend Tests** (automatic - no setup needed):
+- Tests run automatically on every push and PR
+- View results in GitHub Actions tab
+- Download test artifacts for detailed coverage reports
+
+**For Claude PR Review**:
+1. Get Claude API key from [console.anthropic.com](https://console.anthropic.com)
+2. Add `ANTHROPIC_API_KEY` secret in GitHub repository settings (Settings → Secrets and variables → Actions)
+3. Open a PR to trigger automatic review
+
+### CI Performance
+
+- **Total CI time**: ~1-2 minutes with caching
+- **Parallel execution**: Backend and frontend tests run simultaneously
+- **Artifact retention**: 90 days for test results and coverage reports
+- **Status checks**: Configure branch protection to require all workflows to pass before merge
+
+See `.github/workflows/README.md` for detailed documentation, troubleshooting, and customization options.
 
 ## Architecture
 
