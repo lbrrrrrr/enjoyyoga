@@ -101,6 +101,10 @@ class RegistrationService:
                     f"Current registrations: {current_count}/{yoga_class.capacity}"
                 )
 
+        # Determine status based on pricing
+        has_price = yoga_class.price is not None and float(yoga_class.price) > 0
+        initial_status = "pending_payment" if has_price else "confirmed"
+
         # Create the registration
         registration = Registration(
             id=uuid.uuid4(),
@@ -114,7 +118,7 @@ class RegistrationService:
             preferred_language=registration_data.get("preferred_language", "en"),
             email_notifications=registration_data.get("email_notifications", True),
             sms_notifications=registration_data.get("sms_notifications", False),
-            status="confirmed"
+            status=initial_status
         )
 
         db.add(registration)
@@ -152,7 +156,7 @@ class RegistrationService:
         registration_query = select(func.count(Registration.id)).where(
             Registration.class_id == class_id,
             Registration.target_date == target_date,
-            Registration.status.in_(["confirmed", "waitlist"])
+            Registration.status.in_(["confirmed", "waitlist", "pending_payment"])
         )
 
         result = await db.execute(registration_query)

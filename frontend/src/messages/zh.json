@@ -21,7 +21,14 @@
     "minutes": "分钟",
     "teacher": "老师",
     "type": "类型",
-    "viewDetails": "查看详情"
+    "viewDetails": "查看详情",
+    "price": "价格",
+    "perSession": "节",
+    "free": "免费",
+    "packages": "套餐",
+    "packagesAvailable": "个套餐可选",
+    "sessions": "节课",
+    "save": "节省"
   },
   "teachers": {
     "title": "我们的老师",
@@ -62,7 +69,14 @@
     "sunday": "周日",
     "preferredLanguage": "首选语言",
     "emailNotifications": "邮件通知",
-    "smsNotifications": "短信提醒"
+    "smsNotifications": "短信提醒",
+    "classPrice": "课程价格",
+    "selectOption": "选择支付方式",
+    "singleSession": "单次课程",
+    "perSession": "节",
+    "sessions": "节课",
+    "free": "免费",
+    "submitAndPay": "报名并前往支付"
   },
   "admin": {
     "login": {
@@ -77,6 +91,8 @@
       "registrations": "报名管理",
       "teachers": "教师",
       "inquiries": "咨询管理",
+      "payments": "支付管理",
+      "paymentSettings": "支付设置",
       "notifications": "通知",
       "logout": "登出"
     },
@@ -85,6 +101,8 @@
       "totalRegistrations": "总报名数",
       "totalTeachers": "总教师数",
       "totalClasses": "总课程数",
+      "pendingPayments": "待处理支付",
+      "totalRevenue": "总收入",
       "recentActivity": "最近活动"
     },
     "registrations": {
@@ -92,7 +110,8 @@
       "status": "状态",
       "confirmed": "已确认",
       "waitlist": "候补",
-      "cancelled": "已取消"
+      "cancelled": "已取消",
+      "pendingPayment": "待付款"
     },
     "teachers": {
       "title": "教师管理",
@@ -185,7 +204,68 @@
         "subjectPlaceholder": "回复主题...",
         "messagePlaceholder": "输入您的回复消息..."
       }
+    },
+    "payments": {
+      "title": "支付管理",
+      "totalPayments": "总支付数",
+      "pending": "待处理",
+      "confirmed": "已确认",
+      "cancelled": "已取消",
+      "revenue": "总收入",
+      "all": "全部",
+      "paymentList": "支付列表",
+      "noPayments": "暂无支付记录",
+      "paymentDetail": "支付详情",
+      "referenceNumber": "参考编号",
+      "amountLabel": "金额",
+      "statusLabel": "状态",
+      "type": "类型",
+      "created": "创建时间",
+      "confirmedAt": "确认时间",
+      "adminNotes": "管理员备注",
+      "adminNotesPlaceholder": "添加关于此支付的备注...",
+      "confirmBtn": "确认",
+      "cancelBtn": "取消"
+    },
+    "paymentSettings": {
+      "title": "支付设置",
+      "wechatQrCode": "微信支付二维码",
+      "currentQrCode": "当前二维码",
+      "noQrCode": "尚未上传二维码",
+      "uploadNewQr": "上传新二维码",
+      "uploading": "上传中...",
+      "qrUploaded": "二维码上传成功！",
+      "paymentInstructions": "支付说明",
+      "instructionsEn": "支付说明（英文）",
+      "instructionsZh": "支付说明（中文）",
+      "instructionsPlaceholder": "输入用户支付说明...",
+      "save": "保存设置",
+      "saving": "保存中...",
+      "saved": "设置保存成功！"
     }
+  },
+  "payment": {
+    "title": "完成支付",
+    "loading": "正在加载支付信息...",
+    "notFound": "未找到支付记录",
+    "scanQrCode": "扫码支付",
+    "qrNotConfigured": "二维码尚未配置",
+    "paymentDetails": "支付详情",
+    "amount": "金额",
+    "referenceNumber": "参考编号",
+    "copy": "复制",
+    "includeReference": "请在微信支付备注中填写此参考编号",
+    "instructions": "支付说明",
+    "status": "状态",
+    "date": "日期",
+    "checkStatus": "查询状态",
+    "statusConfirmed": "支付已确认！您的报名已完成。",
+    "statusPending": "待支付",
+    "statusCancelled": "此支付已被取消。",
+    "statusCheckLater": "您可以稍后在",
+    "statusPage": "支付状态查询页面",
+    "checkPaymentStatus": "查询支付状态",
+    "searching": "查询中..."
   },
   "contact": {
     "button": "联系我们",

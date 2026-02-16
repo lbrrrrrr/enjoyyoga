@@ -36,6 +36,8 @@ class AdminStatsOut(BaseModel):
     total_teachers: int
     total_classes: int
     recent_registrations: list  # Will be typed more specifically later
+    pending_payments: int = 0
+    total_revenue: float = 0.0
 
 
 class NotificationTemplateOut(BaseModel):

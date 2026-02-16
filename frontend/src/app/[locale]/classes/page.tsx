@@ -58,6 +58,17 @@ export default async function ClassesPage({
                   <span className="font-medium">{t("type")}:</span>{" "}
                   {name(cls.yoga_type)}
                 </p>
+                <p>
+                  <span className="font-medium">{t("price")}:</span>{" "}
+                  {cls.price != null && cls.price > 0
+                    ? `\u00a5${cls.price}/${t("perSession")}`
+                    : t("free")}
+                </p>
+                {cls.packages && cls.packages.length > 0 && (
+                  <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                    {cls.packages.length} {t("packagesAvailable")}
+                  </span>
+                )}
                 <Button asChild variant="outline" size="sm" className="mt-2">
                   <Link href={`/${locale}/classes/${cls.id}`}>
                     {t("viewDetails")}

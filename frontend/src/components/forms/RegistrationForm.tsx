@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,12 +19,18 @@ interface RegistrationFormProps {
 
 export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
   const t = useTranslations("register");
+  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+  const [selectedPackageId, setSelectedPackageId] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState("");
+
+  const currentClass = classes.find(cls => cls.id === selectedClass);
+  const hasPrice = currentClass?.price != null && currentClass.price > 0;
+  const activePackages = currentClass?.packages?.filter(p => p.is_active) || [];
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -35,7 +42,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
     try {
       // Use enhanced registration API if date is selected
       if (selectedDate && selectedTime) {
-        await createRegistrationWithSchedule({
+        const result = await createRegistrationWithSchedule({
           class_id: formData.get("class_id") as string,
           name: formData.get("name") as string,
           email: formData.get("email") as string,
@@ -46,7 +53,14 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
           preferred_language: formData.get("preferred_language") as string || "en",
           email_notifications: formData.get("email_notifications") === "on",
           sms_notifications: formData.get("sms_notifications") === "on",
+          package_id: selectedPackageId || undefined,
         });
+
+        // If pending payment, redirect to payment page
+        if (result.status === "pending_payment") {
+          router.push(`/${locale}/payment/${result.id}`);
+          return;
+        }
       } else {
         // Fallback to basic registration
         await createRegistration({
@@ -63,6 +77,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
       setSelectedClass("");
       setSelectedDate("");
       setSelectedTime("");
+      setSelectedPackageId("");
     } catch (error) {
       setStatus("error");
       setErrorMessage(error instanceof Error ? error.message : "Registration failed");
@@ -73,6 +88,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
     setSelectedClass(classId);
     setSelectedDate("");
     setSelectedTime("");
+    setSelectedPackageId("");
   };
 
   const handleDateSelect = (date: string, time: string) => {
@@ -104,6 +120,9 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
               {classes.map((cls) => (
                 <option key={cls.id} value={cls.id}>
                   {getName(cls)}
+                  {cls.price != null && cls.price > 0
+                    ? ` - \u00a5${cls.price}`
+                    : ` - ${t("free")}`}
                 </option>
               ))}
             </select>
@@ -112,7 +131,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
           {selectedClass && (
             <>
               <ScheduleDisplay
-                schedule={classes.find(cls => cls.id === selectedClass)?.schedule || ""}
+                schedule={currentClass?.schedule || ""}
                 className="mt-4"
               />
 
@@ -123,6 +142,59 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
                 className="mt-4"
               />
             </>
+          )}
+
+          {/* Price display and package selection */}
+          {hasPrice && (
+            <div className="bg-blue-50 rounded-lg p-4 space-y-3">
+              <p className="font-medium">
+                {t("classPrice")}: {"\u00a5"}{currentClass!.price}/{t("perSession")}
+              </p>
+
+              {activePackages.length > 0 && (
+                <div className="space-y-2">
+                  <Label>{t("selectOption")}</Label>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 p-2 rounded border bg-white cursor-pointer">
+                      <input
+                        type="radio"
+                        name="payment_option"
+                        value=""
+                        checked={!selectedPackageId}
+                        onChange={() => setSelectedPackageId("")}
+                      />
+                      <span className="text-sm">
+                        {t("singleSession")} - {"\u00a5"}{currentClass!.price}
+                      </span>
+                    </label>
+                    {activePackages.map((pkg) => {
+                      const pkgName = locale === "zh" ? pkg.name_zh : pkg.name_en;
+                      const perSession = pkg.price / pkg.session_count;
+                      return (
+                        <label
+                          key={pkg.id}
+                          className="flex items-center gap-2 p-2 rounded border bg-white cursor-pointer"
+                        >
+                          <input
+                            type="radio"
+                            name="payment_option"
+                            value={pkg.id}
+                            checked={selectedPackageId === pkg.id}
+                            onChange={() => setSelectedPackageId(pkg.id)}
+                          />
+                          <span className="text-sm">
+                            {pkgName} ({pkg.session_count} {t("sessions")}) - {"\u00a5"}{pkg.price}
+                            <span className="text-gray-500 ml-1">
+                              ({"\u00a5"}{perSession.toFixed(0)}/{t("perSession")})
+                            </span>
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           <div className="space-y-2">
@@ -186,7 +258,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
           </div>
 
           <Button type="submit" className="w-full">
-            {t("submit")}
+            {hasPrice ? t("submitAndPay") : t("submit")}
           </Button>
 
           {status === "success" && (

@@ -44,6 +44,8 @@ export interface AdminStats {
   total_teachers: number;
   total_classes: number;
   recent_registrations: any[];
+  pending_payments: number;
+  total_revenue: number;
 }
 
 export interface RegistrationWithSchedule {
@@ -200,6 +202,8 @@ export interface YogaClassCreate {
   capacity: number;
   schedule_type?: string;
   is_active?: boolean;
+  price?: number | null;
+  currency?: string;
 }
 
 export function createClass(data: YogaClassCreate): Promise<any> {
@@ -233,6 +237,162 @@ export function createYogaType(data: YogaTypeCreate): Promise<any> {
 
 export function updateYogaType(id: string, data: YogaTypeCreate): Promise<any> {
   return fetchAdminAPI<any>(`/api/admin/yoga-types/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+// Payment interfaces and functions
+export interface Payment {
+  id: string;
+  registration_id: string | null;
+  amount: number;
+  currency: string;
+  payment_method: string;
+  status: string;
+  reference_number: string;
+  payment_type: string;
+  package_id: string | null;
+  admin_notes: string | null;
+  confirmed_by: string | null;
+  confirmed_at: string | null;
+  created_at: string;
+}
+
+export interface PaymentStats {
+  total_payments: number;
+  pending_payments: number;
+  confirmed_payments: number;
+  cancelled_payments: number;
+  total_revenue: number;
+}
+
+export interface PaymentSettingsAdmin {
+  id: string;
+  wechat_qr_code_url: string | null;
+  payment_instructions_en: string | null;
+  payment_instructions_zh: string | null;
+  updated_at: string;
+}
+
+export interface ClassPackage {
+  id: string;
+  class_id: string;
+  name_en: string;
+  name_zh: string;
+  description_en: string;
+  description_zh: string;
+  session_count: number;
+  price: number;
+  currency: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export function getAdminPayments(status?: string): Promise<Payment[]> {
+  const params = status ? `?status=${status}` : '';
+  return fetchAdminAPI<Payment[]>(`/api/admin/payments${params}`);
+}
+
+export function getPendingPayments(): Promise<Payment[]> {
+  return fetchAdminAPI<Payment[]>('/api/admin/payments/pending');
+}
+
+export function getPaymentStats(): Promise<PaymentStats> {
+  return fetchAdminAPI<PaymentStats>('/api/admin/payments/stats');
+}
+
+export function getPaymentDetail(paymentId: string): Promise<Payment> {
+  return fetchAdminAPI<Payment>(`/api/admin/payments/${paymentId}`);
+}
+
+export function confirmPayment(paymentId: string, adminNotes?: string): Promise<Payment> {
+  return fetchAdminAPI<Payment>(`/api/admin/payments/${paymentId}/confirm`, {
+    method: 'POST',
+    body: JSON.stringify({ admin_notes: adminNotes }),
+  });
+}
+
+export function cancelPayment(paymentId: string, adminNotes?: string): Promise<Payment> {
+  return fetchAdminAPI<Payment>(`/api/admin/payments/${paymentId}/cancel`, {
+    method: 'POST',
+    body: JSON.stringify({ admin_notes: adminNotes }),
+  });
+}
+
+export function getPaymentSettingsAdmin(): Promise<PaymentSettingsAdmin> {
+  return fetchAdminAPI<PaymentSettingsAdmin>('/api/admin/payment-settings');
+}
+
+export function updatePaymentSettings(data: {
+  payment_instructions_en?: string;
+  payment_instructions_zh?: string;
+}): Promise<PaymentSettingsAdmin> {
+  return fetchAdminAPI<PaymentSettingsAdmin>('/api/admin/payment-settings', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function uploadWechatQrCode(file: File): Promise<{
+  message: string;
+  qr_code_url: string;
+  settings: PaymentSettingsAdmin;
+}> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(`${API_BASE}/api/admin/payment-settings/qr-code`, {
+    method: 'POST',
+    credentials: 'include',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      if (typeof window !== 'undefined') {
+        window.location.href = '/admin/login';
+      }
+    }
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.detail || `QR code upload failed: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export function getPackagesForClass(classId: string): Promise<ClassPackage[]> {
+  return fetchAdminAPI<ClassPackage[]>(`/api/admin/packages/${classId}`);
+}
+
+export function createPackage(data: {
+  class_id: string;
+  name_en: string;
+  name_zh: string;
+  description_en?: string;
+  description_zh?: string;
+  session_count: number;
+  price: number;
+  currency?: string;
+  is_active?: boolean;
+}): Promise<ClassPackage> {
+  return fetchAdminAPI<ClassPackage>('/api/admin/packages', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function updatePackage(packageId: string, data: {
+  name_en?: string;
+  name_zh?: string;
+  description_en?: string;
+  description_zh?: string;
+  session_count?: number;
+  price?: number;
+  currency?: string;
+  is_active?: boolean;
+}): Promise<ClassPackage> {
+  return fetchAdminAPI<ClassPackage>(`/api/admin/packages/${packageId}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   });

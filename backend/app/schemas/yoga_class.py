@@ -1,10 +1,12 @@
 import uuid
 from datetime import datetime
+from typing import Optional, List
 
 from pydantic import BaseModel
 
 from app.schemas.teacher import TeacherOut
 from app.schemas.yoga_type import YogaTypeOut
+from app.schemas.payment import ClassPackageOut
 
 
 class YogaClassCreate(BaseModel):
@@ -20,6 +22,8 @@ class YogaClassCreate(BaseModel):
     capacity: int
     schedule_type: str = "recurring"
     is_active: bool = True
+    price: Optional[float] = None
+    currency: str = "CNY"
 
 
 class YogaClassOut(BaseModel):
@@ -35,7 +39,10 @@ class YogaClassOut(BaseModel):
     difficulty: str
     capacity: int
     created_at: datetime
+    price: Optional[float] = None
+    currency: str = "CNY"
     teacher: TeacherOut
     yoga_type: YogaTypeOut
+    packages: List[ClassPackageOut] = []
 
     model_config = {"from_attributes": True}

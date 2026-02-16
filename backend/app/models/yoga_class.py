@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, Text, Integer, DateTime, ForeignKey, func, Boolean
+from sqlalchemy import String, Text, Integer, Numeric, DateTime, ForeignKey, func, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.yoga_type import Base
@@ -28,6 +28,11 @@ class YogaClass(Base):
     schedule_type: Mapped[str] = mapped_column(String(20), default="recurring")  # recurring, one_time, custom
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)  # Enable/disable class
 
+    # Pricing fields
+    price: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)  # null means free
+    currency: Mapped[str] = mapped_column(String(10), default="CNY")
+
     teacher: Mapped["Teacher"] = relationship(back_populates="classes")
     yoga_type: Mapped["YogaType"] = relationship(back_populates="classes")
     registrations: Mapped[list["Registration"]] = relationship(back_populates="yoga_class")
+    packages: Mapped[list["ClassPackage"]] = relationship(back_populates="yoga_class", lazy="selectin")

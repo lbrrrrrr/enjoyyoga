@@ -16,6 +16,7 @@ from app.database import get_db
 from app.auth import authenticate_admin, create_access_token, get_current_admin
 from app.config import settings
 from app.services.schedule_parser import ScheduleParserService
+from app.services.payment_service import PaymentService
 from app.models.admin_user import AdminUser
 from app.models.registration import Registration
 from app.models.teacher import Teacher
@@ -188,13 +189,19 @@ async def get_dashboard_stats(
     recent_registrations_result = await db.execute(recent_registrations_query)
     recent_registrations = recent_registrations_result.scalars().all()
 
+    # Get payment stats
+    payment_service = PaymentService()
+    payment_stats = await payment_service.get_payment_stats(db)
+
     return AdminStatsOut(
         total_registrations=total_registrations_result.scalar(),
         total_teachers=total_teachers_result.scalar(),
         total_classes=total_classes_result.scalar(),
         recent_registrations=[
             RegistrationOutWithSchedule.model_validate(r) for r in recent_registrations
-        ]
+        ],
+        pending_payments=payment_stats["pending_payments"],
+        total_revenue=payment_stats["total_revenue"],
     )
 
 
@@ -244,7 +251,7 @@ async def update_registration_status(
         raise HTTPException(status_code=404, detail="Registration not found")
 
     # Validate status
-    valid_statuses = ["confirmed", "waitlist", "cancelled"]
+    valid_statuses = ["confirmed", "waitlist", "cancelled", "pending_payment"]
     if status_data.status not in valid_statuses:
         raise HTTPException(
             status_code=400,
@@ -426,12 +433,14 @@ async def create_class(
         difficulty=class_data.difficulty,
         capacity=class_data.capacity,
         schedule_type=class_data.schedule_type,
-        is_active=class_data.is_active
+        is_active=class_data.is_active,
+        price=class_data.price,
+        currency=class_data.currency,
     )
 
     db.add(yoga_class)
     await db.commit()
-    await db.refresh(yoga_class, ["teacher", "yoga_type"])
+    await db.refresh(yoga_class, ["teacher", "yoga_type", "packages"])
 
     return yoga_class
 
@@ -484,9 +493,11 @@ async def update_class(
     yoga_class.capacity = class_data.capacity
     yoga_class.schedule_type = class_data.schedule_type
     yoga_class.is_active = class_data.is_active
+    yoga_class.price = class_data.price
+    yoga_class.currency = class_data.currency
 
     await db.commit()
-    await db.refresh(yoga_class, ["teacher", "yoga_type"])
+    await db.refresh(yoga_class, ["teacher", "yoga_type", "packages"])
 
     return yoga_class
 

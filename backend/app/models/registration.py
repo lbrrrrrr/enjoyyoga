@@ -32,3 +32,4 @@ class Registration(Base):
     sms_notifications: Mapped[bool] = mapped_column(Boolean, default=False)
 
     yoga_class: Mapped["YogaClass"] = relationship(back_populates="registrations")
+    payment: Mapped["Payment"] = relationship(back_populates="registration", uselist=False, lazy="selectin")

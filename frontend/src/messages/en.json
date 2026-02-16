@@ -21,7 +21,14 @@
     "minutes": "min",
     "teacher": "Teacher",
     "type": "Type",
-    "viewDetails": "View Details"
+    "viewDetails": "View Details",
+    "price": "Price",
+    "perSession": "session",
+    "free": "Free",
+    "packages": "Packages",
+    "packagesAvailable": "packages available",
+    "sessions": "sessions",
+    "save": "Save"
   },
   "teachers": {
     "title": "Our Teachers",
@@ -62,7 +69,14 @@
     "sunday": "Sunday",
     "preferredLanguage": "Preferred Language",
     "emailNotifications": "Email notifications",
-    "smsNotifications": "SMS reminders"
+    "smsNotifications": "SMS reminders",
+    "classPrice": "Class Price",
+    "selectOption": "Select payment option",
+    "singleSession": "Single Session",
+    "perSession": "session",
+    "sessions": "sessions",
+    "free": "Free",
+    "submitAndPay": "Register & Proceed to Payment"
   },
   "admin": {
     "login": {
@@ -77,6 +91,8 @@
       "registrations": "Registrations",
       "teachers": "Teachers",
       "inquiries": "Inquiries",
+      "payments": "Payments",
+      "paymentSettings": "Payment Settings",
       "notifications": "Notifications",
       "logout": "Logout"
     },
@@ -85,6 +101,8 @@
       "totalRegistrations": "Total Registrations",
       "totalTeachers": "Total Teachers",
       "totalClasses": "Total Classes",
+      "pendingPayments": "Pending Payments",
+      "totalRevenue": "Total Revenue",
       "recentActivity": "Recent Activity"
     },
     "registrations": {
@@ -92,7 +110,8 @@
       "status": "Status",
       "confirmed": "Confirmed",
       "waitlist": "Waitlist",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "pendingPayment": "Pending Payment"
     },
     "teachers": {
       "title": "Teacher Management",
@@ -185,7 +204,68 @@
         "subjectPlaceholder": "Reply subject...",
         "messagePlaceholder": "Type your reply message..."
       }
+    },
+    "payments": {
+      "title": "Payment Management",
+      "totalPayments": "Total Payments",
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "cancelled": "Cancelled",
+      "revenue": "Total Revenue",
+      "all": "All",
+      "paymentList": "Payment List",
+      "noPayments": "No payments found",
+      "paymentDetail": "Payment Detail",
+      "referenceNumber": "Reference Number",
+      "amountLabel": "Amount",
+      "statusLabel": "Status",
+      "type": "Type",
+      "created": "Created",
+      "confirmedAt": "Confirmed At",
+      "adminNotes": "Admin Notes",
+      "adminNotesPlaceholder": "Add notes about this payment...",
+      "confirmBtn": "Confirm",
+      "cancelBtn": "Cancel"
+    },
+    "paymentSettings": {
+      "title": "Payment Settings",
+      "wechatQrCode": "WeChat Pay QR Code",
+      "currentQrCode": "Current QR Code",
+      "noQrCode": "No QR code uploaded yet",
+      "uploadNewQr": "Upload New QR Code",
+      "uploading": "Uploading...",
+      "qrUploaded": "QR code uploaded successfully!",
+      "paymentInstructions": "Payment Instructions",
+      "instructionsEn": "Instructions (English)",
+      "instructionsZh": "Instructions (Chinese)",
+      "instructionsPlaceholder": "Enter payment instructions for users...",
+      "save": "Save Settings",
+      "saving": "Saving...",
+      "saved": "Settings saved successfully!"
     }
+  },
+  "payment": {
+    "title": "Complete Your Payment",
+    "loading": "Loading payment information...",
+    "notFound": "Payment not found",
+    "scanQrCode": "Scan QR Code to Pay",
+    "qrNotConfigured": "QR code not yet configured",
+    "paymentDetails": "Payment Details",
+    "amount": "Amount",
+    "referenceNumber": "Reference Number",
+    "copy": "Copy",
+    "includeReference": "Please include this reference number in your WeChat payment note",
+    "instructions": "Payment Instructions",
+    "status": "Status",
+    "date": "Date",
+    "checkStatus": "Check Status",
+    "statusConfirmed": "Payment confirmed! Your registration is complete.",
+    "statusPending": "Pending",
+    "statusCancelled": "This payment has been cancelled.",
+    "statusCheckLater": "You can check your payment status later on the",
+    "statusPage": "payment status page",
+    "checkPaymentStatus": "Check Payment Status",
+    "searching": "Searching..."
   },
   "contact": {
     "button": "Contact Us",

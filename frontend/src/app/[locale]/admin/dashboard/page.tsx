@@ -76,6 +76,24 @@ export default function AdminDashboard() {
             <div className="text-3xl font-bold">{stats?.total_classes || 0}</div>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("pendingPayments")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-amber-600">{stats?.pending_payments || 0}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("totalRevenue")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{"\u00a5"}{(stats?.total_revenue || 0).toFixed(2)}</div>
+          </CardContent>
+        </Card>
       </div>
 
       {stats?.recent_registrations && stats.recent_registrations.length > 0 && (

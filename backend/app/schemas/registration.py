@@ -3,6 +3,7 @@ from datetime import datetime, date, time
 from typing import Optional
 
 from pydantic import BaseModel, EmailStr
+from app.schemas.payment import PaymentOut
 
 
 class RegistrationCreate(BaseModel):
@@ -26,6 +27,8 @@ class RegistrationCreateWithSchedule(BaseModel):
     preferred_language: str = "en"
     email_notifications: bool = True
     sms_notifications: bool = False
+    # Payment support
+    package_id: Optional[uuid.UUID] = None
 
 
 class RegistrationOut(BaseModel):
@@ -59,6 +62,8 @@ class RegistrationOutWithSchedule(BaseModel):
     preferred_language: str
     email_notifications: bool
     sms_notifications: bool
+    # Payment
+    payment: Optional[PaymentOut] = None
 
     model_config = {"from_attributes": True}
 

@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/classes", tags=["classes"])
 async def list_classes(db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(YogaClass)
-        .options(selectinload(YogaClass.teacher), selectinload(YogaClass.yoga_type))
+        .options(selectinload(YogaClass.teacher), selectinload(YogaClass.yoga_type), selectinload(YogaClass.packages))
     )
     return result.scalars().all()
 
@@ -26,7 +26,7 @@ async def get_classes_by_teacher(teacher_id: uuid.UUID, db: AsyncSession = Depen
     result = await db.execute(
         select(YogaClass)
         .where(YogaClass.teacher_id == teacher_id)
-        .options(selectinload(YogaClass.teacher), selectinload(YogaClass.yoga_type))
+        .options(selectinload(YogaClass.teacher), selectinload(YogaClass.yoga_type), selectinload(YogaClass.packages))
         .order_by(YogaClass.name_en)
     )
     return result.scalars().all()
@@ -37,7 +37,7 @@ async def get_class(class_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(YogaClass)
         .where(YogaClass.id == class_id)
-        .options(selectinload(YogaClass.teacher), selectinload(YogaClass.yoga_type))
+        .options(selectinload(YogaClass.teacher), selectinload(YogaClass.yoga_type), selectinload(YogaClass.packages))
     )
     yoga_class = result.scalar_one_or_none()
     if not yoga_class:

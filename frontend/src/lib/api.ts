@@ -29,6 +29,20 @@ export interface Teacher {
   created_at: string;
 }
 
+export interface ClassPackage {
+  id: string;
+  class_id: string;
+  name_en: string;
+  name_zh: string;
+  description_en: string;
+  description_zh: string;
+  session_count: number;
+  price: number;
+  currency: string;
+  is_active: boolean;
+  created_at: string;
+}
+
 export interface YogaClass {
   id: string;
   name_en: string;
@@ -42,8 +56,11 @@ export interface YogaClass {
   difficulty: string;
   capacity: number;
   created_at: string;
+  price: number | null;
+  currency: string;
   teacher: Teacher;
   yoga_type: YogaType;
+  packages: ClassPackage[];
 }
 
 export interface Registration {
@@ -56,10 +73,45 @@ export interface Registration {
   created_at: string;
 }
 
+export interface PaymentInfo {
+  payment_id: string;
+  reference_number: string;
+  amount: number;
+  currency: string;
+  status: string;
+  wechat_qr_code_url: string | null;
+  payment_instructions_en: string | null;
+  payment_instructions_zh: string | null;
+  created_at: string;
+}
+
+export interface PaymentSettings {
+  id: string;
+  wechat_qr_code_url: string | null;
+  payment_instructions_en: string | null;
+  payment_instructions_zh: string | null;
+  updated_at: string;
+}
+
 export interface RegistrationWithSchedule extends Registration {
   target_date: string | null;
   target_time: string | null;
   status: string;
+  payment?: {
+    id: string;
+    registration_id: string | null;
+    amount: number;
+    currency: string;
+    payment_method: string;
+    status: string;
+    reference_number: string;
+    payment_type: string;
+    package_id: string | null;
+    admin_notes: string | null;
+    confirmed_by: string | null;
+    confirmed_at: string | null;
+    created_at: string;
+  } | null;
 }
 
 export interface AvailableDate {
@@ -122,6 +174,7 @@ export async function createRegistrationWithSchedule(data: {
   preferred_language?: string;
   email_notifications?: boolean;
   sms_notifications?: boolean;
+  package_id?: string;
 }): Promise<RegistrationWithSchedule> {
   const res = await fetch(`${API_BASE}/api/registrations/with-schedule`, {
     method: "POST",
@@ -318,4 +371,17 @@ export async function createInquiryReply(
     throw new Error(errorData.detail || `API error: ${res.status}`);
   }
   return res.json();
+}
+
+// Payment functions
+export function getPaymentStatus(referenceNumber: string) {
+  return fetchAPI<PaymentInfo>(`/api/payments/status/${referenceNumber}`);
+}
+
+export function getPaymentSettings() {
+  return fetchAPI<PaymentSettings>("/api/payments/settings");
+}
+
+export function getPaymentByRegistration(registrationId: string) {
+  return fetchAPI<PaymentInfo>(`/api/payments/registration/${registrationId}`);
 }

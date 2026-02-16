@@ -10,6 +10,7 @@ from app.models.notification_template import NotificationTemplate
 from app.models.registration import Registration
 from app.models.contact_inquiry import ContactInquiry
 from app.models.inquiry_reply import InquiryReply
+from app.models.payment import Payment
 from app.config import settings
 
 
@@ -260,6 +261,100 @@ class NotificationService:
             print(f"Error sending inquiry reply email: {e}")
             return False
 
+    async def send_payment_pending_email(self, registration: Registration, payment: Payment, db: AsyncSession) -> bool:
+        """Send payment pending email to user with amount and reference number."""
+        try:
+            template = await self._get_template("payment_pending", "email", db)
+            if not template:
+                print(f"No email template found for payment pending")
+                return False
+
+            variables = {
+                "name": registration.name,
+                "email": registration.email,
+                "registration_id": str(registration.id),
+                "amount": f"{float(payment.amount):.2f}",
+                "currency": payment.currency,
+                "reference_number": payment.reference_number,
+                "language": registration.preferred_language
+            }
+
+            if registration.preferred_language == "zh":
+                subject = template.subject_zh
+                content = template.content_zh
+            else:
+                subject = template.subject_en
+                content = template.content_en
+
+            for key, value in variables.items():
+                subject = subject.replace(f"{{{{{key}}}}}", str(value))
+                content = content.replace(f"{{{{{key}}}}}", str(value))
+
+            email_sent = await self._send_smtp_email(
+                to_email=registration.email,
+                subject=subject,
+                content=content
+            )
+
+            if email_sent:
+                print(f"✅ Payment pending email sent successfully to {registration.email}")
+                return True
+            else:
+                print(f"❌ Failed to send payment pending email to {registration.email}")
+                return False
+
+        except Exception as e:
+            print(f"Error sending payment pending email: {e}")
+            return False
+
+    async def send_payment_confirmed_email(self, registration: Registration, payment: Payment, db: AsyncSession) -> bool:
+        """Send payment confirmed email to user."""
+        try:
+            template = await self._get_template("payment_confirmed", "email", db)
+            if not template:
+                print(f"No email template found for payment confirmed")
+                return False
+
+            variables = {
+                "name": registration.name,
+                "email": registration.email,
+                "registration_id": str(registration.id),
+                "amount": f"{float(payment.amount):.2f}",
+                "currency": payment.currency,
+                "reference_number": payment.reference_number,
+                "language": registration.preferred_language
+            }
+
+            if registration.preferred_language == "zh":
+                subject = template.subject_zh
+                content = template.content_zh
+            else:
+                subject = template.subject_en
+                content = template.content_en
+
+            for key, value in variables.items():
+                subject = subject.replace(f"{{{{{key}}}}}", str(value))
+                content = content.replace(f"{{{{{key}}}}}", str(value))
+
+            email_sent = await self._send_smtp_email(
+                to_email=registration.email,
+                subject=subject,
+                content=content
+            )
+
+            if email_sent:
+                registration.email_confirmation_sent = True
+                await db.commit()
+                print(f"✅ Payment confirmed email sent successfully to {registration.email}")
+                return True
+            else:
+                print(f"❌ Failed to send payment confirmed email to {registration.email}")
+                return False
+
+        except Exception as e:
+            print(f"Error sending payment confirmed email: {e}")
+            return False
+
     async def schedule_reminder(self, registration: Registration) -> bool:
         """Schedule a reminder for the registration (placeholder for background task)."""
         try:
@@ -435,6 +530,94 @@ The enjoyyoga Team""",
 最好的问候，
 enjoyyoga团队""",
                 "variables": json.dumps(["name", "original_subject", "reply_message", "inquiry_id", "reply_id"]),
+                "is_active": True
+            },
+            {
+                "template_type": "payment_pending",
+                "channel": "email",
+                "subject_en": "Payment Required - enjoyyoga Registration",
+                "subject_zh": "待付款 - enjoyyoga课程报名",
+                "content_en": """Dear {{name}},
+
+Thank you for registering for a yoga class at enjoyyoga!
+
+Your registration requires payment to be confirmed. Please complete the payment using the details below:
+
+Payment Details:
+- Amount: {{currency}} {{amount}}
+- Reference Number: {{reference_number}}
+- Registration ID: {{registration_id}}
+
+How to Pay:
+1. Open WeChat and scan the QR code on our payment page
+2. Enter the amount: {{currency}} {{amount}}
+3. IMPORTANT: Include the reference number {{reference_number}} in the payment note/message
+
+Your registration will be confirmed once we verify your payment.
+
+If you have any questions, please contact us.
+
+Best regards,
+The enjoyyoga Team""",
+                "content_zh": """亲爱的 {{name}}，
+
+感谢您在enjoyyoga报名瑜伽课程！
+
+您的报名需要完成付款后才能确认。请使用以下信息完成支付：
+
+付款详情：
+- 金额：{{currency}} {{amount}}
+- 参考编号：{{reference_number}}
+- 报名ID：{{registration_id}}
+
+支付方式：
+1. 打开微信扫描我们支付页面上的二维码
+2. 输入金额：{{currency}} {{amount}}
+3. 重要提示：请在付款备注中填写参考编号 {{reference_number}}
+
+我们确认收到您的付款后，您的报名将被确认。
+
+如有任何问题，请联系我们。
+
+最好的问候，
+enjoyyoga团队""",
+                "variables": json.dumps(["name", "email", "registration_id", "amount", "currency", "reference_number", "language"]),
+                "is_active": True
+            },
+            {
+                "template_type": "payment_confirmed",
+                "channel": "email",
+                "subject_en": "Payment Confirmed - enjoyyoga",
+                "subject_zh": "付款已确认 - enjoyyoga",
+                "content_en": """Dear {{name}},
+
+Great news! Your payment has been confirmed and your registration is now complete.
+
+Payment Details:
+- Amount: {{currency}} {{amount}}
+- Reference Number: {{reference_number}}
+- Registration ID: {{registration_id}}
+- Status: Confirmed
+
+We look forward to seeing you at the class!
+
+Best regards,
+The enjoyyoga Team""",
+                "content_zh": """亲爱的 {{name}}，
+
+好消息！您的付款已确认，报名已完成。
+
+付款详情：
+- 金额：{{currency}} {{amount}}
+- 参考编号：{{reference_number}}
+- 报名ID：{{registration_id}}
+- 状态：已确认
+
+我们期待在课堂上见到您！
+
+最好的问候，
+enjoyyoga团队""",
+                "variables": json.dumps(["name", "email", "registration_id", "amount", "currency", "reference_number", "language"]),
                 "is_active": True
             }
         ]
