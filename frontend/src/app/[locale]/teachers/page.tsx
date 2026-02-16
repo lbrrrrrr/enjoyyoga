@@ -27,23 +27,26 @@ export default async function TeachersPage({
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <h1 className="mb-8 text-3xl font-bold">{t("title")}</h1>
+      <div className="mb-10 text-center">
+        <h1 className="zen-heading mb-3 text-3xl">{t("title")}</h1>
+        <div className="mx-auto h-px w-16 bg-primary/40" />
+      </div>
       {teachers.length === 0 ? (
         <p className="text-muted-foreground">No teachers available yet.</p>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {teachers.map((teacher) => (
-            <Card key={teacher.id}>
+            <Card key={teacher.id} className="transition-shadow hover:shadow-lg">
               <CardHeader>
                 <div className="flex items-center gap-4">
                   {teacher.photo_url && (
                     <TeacherPhoto
                       src={teacher.photo_url}
                       alt={name(teacher)}
-                      className="w-20 h-20 object-cover rounded-full border-2 border-gray-200"
+                      className="w-20 h-20 object-cover rounded-full border-2 border-primary/20"
                     />
                   )}
-                  <CardTitle>{name(teacher)}</CardTitle>
+                  <CardTitle className="zen-heading">{name(teacher)}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">

@@ -26,15 +26,18 @@ export default async function ClassesPage({
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <h1 className="mb-8 text-3xl font-bold">{t("title")}</h1>
+      <div className="mb-10 text-center">
+        <h1 className="zen-heading mb-3 text-3xl">{t("title")}</h1>
+        <div className="mx-auto h-px w-16 bg-primary/40" />
+      </div>
       {classes.length === 0 ? (
         <p className="text-muted-foreground">No classes available yet.</p>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {classes.map((cls) => (
-            <Card key={cls.id}>
+            <Card key={cls.id} className="transition-shadow hover:shadow-lg">
               <CardHeader>
-                <CardTitle>{name(cls)}</CardTitle>
+                <CardTitle className="zen-heading">{name(cls)}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 <p className="text-muted-foreground">{desc(cls)}</p>
@@ -70,7 +73,7 @@ export default async function ClassesPage({
                   })()}
                 </p>
                 {cls.packages && cls.packages.length > 0 && (
-                  <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                  <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
                     {cls.packages.length} {t("packagesAvailable")}
                   </span>
                 )}

@@ -49,7 +49,7 @@ export default function PaymentPage() {
   if (loading) {
     return (
       <div className="container mx-auto max-w-lg px-4 py-12">
-        <p className="text-gray-600">{t("loading")}</p>
+        <p className="text-muted-foreground">{t("loading")}</p>
       </div>
     );
   }
@@ -57,7 +57,7 @@ export default function PaymentPage() {
   if (error || !paymentInfo) {
     return (
       <div className="container mx-auto max-w-lg px-4 py-12">
-        <p className="text-red-600">{error || t("notFound")}</p>
+        <p className="text-destructive">{error || t("notFound")}</p>
       </div>
     );
   }
@@ -74,12 +74,12 @@ export default function PaymentPage() {
 
   return (
     <div className="container mx-auto max-w-lg px-4 py-12">
-      <h1 className="mb-6 text-2xl font-bold">{t("title")}</h1>
+      <h1 className="zen-heading mb-6 text-2xl">{t("title")}</h1>
 
       {isConfirmed && (
-        <Card className="mb-6 border-green-200 bg-green-50">
+        <Card className="mb-6 border-primary/30 bg-primary/5">
           <CardContent className="pt-6">
-            <p className="text-center text-green-800 font-medium">
+            <p className="text-center text-primary font-medium">
               {t("statusConfirmed")}
             </p>
           </CardContent>
@@ -90,7 +90,7 @@ export default function PaymentPage() {
         <>
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>{isVenmo ? t("scanQrCodeVenmo") : t("scanQrCodeWechat")}</CardTitle>
+              <CardTitle className="zen-heading">{isVenmo ? t("scanQrCodeVenmo") : t("scanQrCodeWechat")}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col items-center space-y-4">
               {qrCodeUrl ? (
@@ -100,8 +100,8 @@ export default function PaymentPage() {
                   className="w-64 h-64 object-contain border rounded-lg"
                 />
               ) : (
-                <div className="w-64 h-64 bg-gray-100 flex items-center justify-center rounded-lg border">
-                  <p className="text-gray-500 text-sm">{t("qrNotConfigured")}</p>
+                <div className="w-64 h-64 bg-secondary flex items-center justify-center rounded-lg border">
+                  <p className="text-muted-foreground text-sm">{t("qrNotConfigured")}</p>
                 </div>
               )}
             </CardContent>
@@ -109,20 +109,20 @@ export default function PaymentPage() {
 
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>{t("paymentDetails")}</CardTitle>
+              <CardTitle className="zen-heading">{t("paymentDetails")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <p className="text-sm text-gray-600">{t("amount")}</p>
+                <p className="text-sm text-muted-foreground">{t("amount")}</p>
                 <p className="text-3xl font-bold">
                   {currencySymbol}{paymentInfo.amount.toFixed(2)}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">{t("referenceNumber")}</p>
+                <p className="text-sm text-muted-foreground">{t("referenceNumber")}</p>
                 <div className="flex items-center gap-2">
-                  <p className="text-2xl font-mono font-bold text-blue-600 select-all">
+                  <p className="text-2xl font-mono font-bold text-primary select-all">
                     {paymentInfo.reference_number}
                   </p>
                   <Button
@@ -140,7 +140,7 @@ export default function PaymentPage() {
 
               {instructions && (
                 <div>
-                  <p className="text-sm text-gray-600">{t("instructions")}</p>
+                  <p className="text-sm text-muted-foreground">{t("instructions")}</p>
                   <p className="mt-1 text-sm whitespace-pre-line">{instructions}</p>
                 </div>
               )}
@@ -152,7 +152,7 @@ export default function PaymentPage() {
               {checking ? t("searching") : t("checkStatus")}
             </Button>
             {lastChecked && (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 {t("statusPending")} ({lastChecked})
               </p>
             )}
@@ -170,10 +170,10 @@ export default function PaymentPage() {
         </Card>
       )}
 
-      <div className="mt-6 text-center text-sm text-gray-500">
+      <div className="mt-6 text-center text-sm text-muted-foreground">
         <p>
           {t("statusCheckLater")}{" "}
-          <Link href={`/${locale}/payment/status`} className="text-blue-600 underline">
+          <Link href={`/${locale}/payment/status`} className="text-primary underline">
             {t("statusPage")}
           </Link>
         </p>

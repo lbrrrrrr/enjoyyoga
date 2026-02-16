@@ -65,12 +65,12 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div className="bg-card rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">{t("title")}</h2>
+          <h2 className="zen-heading text-xl">{t("title")}</h2>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -80,9 +80,9 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
 
         {status === "success" ? (
           <div className="text-center py-8">
-            <div className="text-green-600 text-5xl mb-4">✓</div>
+            <div className="text-primary text-5xl mb-4">&#10003;</div>
             <h3 className="text-lg font-semibold mb-2">{t("success.title")}</h3>
-            <p className="text-gray-600">{t("success.message")}</p>
+            <p className="text-muted-foreground">{t("success.message")}</p>
           </div>
         ) : (
           <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
@@ -92,7 +92,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
                 id="category"
                 name="category"
                 required
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full mt-1 px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-ring"
               >
                 <option value="">{t("form.category.placeholder")}</option>
                 <option value="scheduling">{t("form.category.options.scheduling")}</option>
@@ -162,7 +162,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
             </div>
 
             {status === "error" && (
-              <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md">
+              <div className="text-destructive text-sm bg-destructive/10 p-3 rounded-md">
                 {errorMessage || t("form.error")}
               </div>
             )}

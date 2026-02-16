@@ -1,5 +1,6 @@
 import { getClasses, type YogaClass } from "@/lib/api";
 import { RegistrationForm } from "@/components/forms/RegistrationForm";
+import { getTranslations } from "next-intl/server";
 
 export default async function RegisterPage({
   params,
@@ -7,6 +8,7 @@ export default async function RegisterPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const t = await getTranslations("register");
 
   let classes: YogaClass[] = [];
   try {
@@ -17,6 +19,7 @@ export default async function RegisterPage({
 
   return (
     <div className="container mx-auto px-4 py-12">
+      <h1 className="zen-heading mb-8 text-center text-3xl">{t("title")}</h1>
       <RegistrationForm classes={classes} locale={locale} />
     </div>
   );

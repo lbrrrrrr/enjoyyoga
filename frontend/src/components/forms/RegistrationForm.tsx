@@ -109,7 +109,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
   return (
     <Card className="mx-auto max-w-lg">
       <CardHeader>
-        <CardTitle>{t("title")}</CardTitle>
+        <CardTitle className="zen-heading">{t("title")}</CardTitle>
       </CardHeader>
       <CardContent>
         <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
@@ -158,10 +158,10 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
 
           {/* Payment method selection */}
           {hasPrice && hasBothPrices && (
-            <div className="bg-blue-50 rounded-lg p-4 space-y-3">
+            <div className="bg-secondary rounded-lg p-4 space-y-3">
               <Label className="font-medium">{t("selectPaymentMethod")}</Label>
               <div className="space-y-2">
-                <label className="flex items-center gap-2 p-2 rounded border bg-white cursor-pointer">
+                <label className="flex items-center gap-2 p-2 rounded border bg-card cursor-pointer">
                   <input
                     type="radio"
                     name="payment_method"
@@ -173,7 +173,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
                     {t("wechatPay")} - {"\u00a5"}{currentClass!.price}/{t("perSession")}
                   </span>
                 </label>
-                <label className="flex items-center gap-2 p-2 rounded border bg-white cursor-pointer">
+                <label className="flex items-center gap-2 p-2 rounded border bg-card cursor-pointer">
                   <input
                     type="radio"
                     name="payment_method"
@@ -191,7 +191,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
 
           {/* Price display and package selection */}
           {hasPrice && (
-            <div className="bg-blue-50 rounded-lg p-4 space-y-3">
+            <div className="bg-secondary rounded-lg p-4 space-y-3">
               {!hasBothPrices && (
                 <p className="font-medium">
                   {t("classPrice")}:{" "}
@@ -206,7 +206,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
                 <div className="space-y-2">
                   <Label>{t("selectOption")}</Label>
                   <div className="space-y-2">
-                    <label className="flex items-center gap-2 p-2 rounded border bg-white cursor-pointer">
+                    <label className="flex items-center gap-2 p-2 rounded border bg-card cursor-pointer">
                       <input
                         type="radio"
                         name="payment_option"
@@ -230,7 +230,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
                       return (
                         <label
                           key={pkg.id}
-                          className="flex items-center gap-2 p-2 rounded border bg-white cursor-pointer"
+                          className="flex items-center gap-2 p-2 rounded border bg-card cursor-pointer"
                         >
                           <input
                             type="radio"
@@ -241,7 +241,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
                           />
                           <span className="text-sm">
                             {pkgName} ({pkg.session_count} {t("sessions")}) - {symbol}{displayPrice}
-                            <span className="text-gray-500 ml-1">
+                            <span className="text-muted-foreground ml-1">
                               ({symbol}{perSession.toFixed(0)}/{t("perSession")})
                             </span>
                           </span>
@@ -294,7 +294,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
                 id="email_notifications"
                 name="email_notifications"
                 defaultChecked
-                className="rounded border-gray-300"
+                className="rounded border-border"
               />
               <Label htmlFor="email_notifications" className="text-sm">
                 {t("emailNotifications")}
@@ -306,7 +306,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
                 type="checkbox"
                 id="sms_notifications"
                 name="sms_notifications"
-                className="rounded border-gray-300"
+                className="rounded border-border"
               />
               <Label htmlFor="sms_notifications" className="text-sm">
                 {t("smsNotifications")}
@@ -314,12 +314,12 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
             </div>
           </div>
 
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full rounded-full">
             {hasPrice ? t("submitAndPay") : t("submit")}
           </Button>
 
           {status === "success" && (
-            <p className="text-sm text-green-600">{t("success")}</p>
+            <p className="text-sm text-primary">{t("success")}</p>
           )}
           {status === "error" && (
             <p className="text-sm text-destructive">

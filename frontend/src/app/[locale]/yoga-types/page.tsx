@@ -24,15 +24,18 @@ export default async function YogaTypesPage({
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <h1 className="mb-8 text-3xl font-bold">{t("title")}</h1>
+      <div className="mb-10 text-center">
+        <h1 className="zen-heading mb-3 text-3xl">{t("title")}</h1>
+        <div className="mx-auto h-px w-16 bg-primary/40" />
+      </div>
       {yogaTypes.length === 0 ? (
         <p className="text-muted-foreground">No yoga types available yet.</p>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {yogaTypes.map((yt) => (
-            <Card key={yt.id}>
+            <Card key={yt.id} className="transition-shadow hover:shadow-lg">
               <CardHeader>
-                <CardTitle>{name(yt)}</CardTitle>
+                <CardTitle className="zen-heading">{name(yt)}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">{desc(yt)}</p>

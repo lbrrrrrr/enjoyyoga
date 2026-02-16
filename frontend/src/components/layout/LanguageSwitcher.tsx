@@ -16,7 +16,7 @@ export function LanguageSwitcher() {
   };
 
   return (
-    <Button variant="outline" size="sm" onClick={switchLocale}>
+    <Button variant="ghost" size="sm" onClick={switchLocale} className="zen-heading">
       {locale === "en" ? "中文" : "EN"}
     </Button>
   );

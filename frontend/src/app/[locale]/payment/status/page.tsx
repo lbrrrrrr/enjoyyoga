@@ -37,13 +37,13 @@ export default function PaymentStatusPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "confirmed":
-        return "text-green-800 bg-green-100";
+        return "text-primary bg-primary/10";
       case "pending":
         return "text-amber-800 bg-amber-100";
       case "cancelled":
         return "text-red-800 bg-red-100";
       default:
-        return "text-gray-800 bg-gray-100";
+        return "text-muted-foreground bg-secondary";
     }
   };
 
@@ -62,7 +62,7 @@ export default function PaymentStatusPage() {
 
   return (
     <div className="container mx-auto max-w-lg px-4 py-12">
-      <h1 className="mb-6 text-2xl font-bold">{t("checkPaymentStatus")}</h1>
+      <h1 className="zen-heading mb-6 text-2xl">{t("checkPaymentStatus")}</h1>
 
       <Card className="mb-6">
         <CardContent className="pt-6">
@@ -77,7 +77,7 @@ export default function PaymentStatusPage() {
                 className="font-mono"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full rounded-full" disabled={loading}>
               {loading ? t("searching") : t("checkStatus")}
             </Button>
           </form>
@@ -95,28 +95,28 @@ export default function PaymentStatusPage() {
       {paymentInfo && (
         <Card>
           <CardHeader>
-            <CardTitle>{t("paymentDetails")}</CardTitle>
+            <CardTitle className="zen-heading">{t("paymentDetails")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-gray-600">{t("referenceNumber")}</span>
+              <span className="text-muted-foreground">{t("referenceNumber")}</span>
               <span className="font-mono font-medium">{paymentInfo.reference_number}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">{t("amount")}</span>
+              <span className="text-muted-foreground">{t("amount")}</span>
               <span className="font-medium">
                 {paymentInfo.currency === "USD" ? "$" : "\u00a5"}
                 {paymentInfo.amount.toFixed(2)}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">{t("status")}</span>
+              <span className="text-muted-foreground">{t("status")}</span>
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(paymentInfo.status)}`}>
                 {getStatusLabel(paymentInfo.status)}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">{t("date")}</span>
+              <span className="text-muted-foreground">{t("date")}</span>
               <span>{new Date(paymentInfo.created_at).toLocaleDateString()}</span>
             </div>
           </CardContent>

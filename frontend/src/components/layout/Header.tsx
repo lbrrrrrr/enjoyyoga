@@ -18,17 +18,17 @@ export function Header() {
   ];
 
   return (
-    <header className="border-b bg-background">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href={`/${locale}`} className="text-xl font-bold">
+    <header className="sticky top-0 z-30 border-b border-border/50 bg-card/80 backdrop-blur-sm">
+      <div className="container mx-auto flex h-20 items-center justify-between px-4">
+        <Link href={`/${locale}`} className="zen-heading text-2xl transition-colors hover:text-primary">
           Enjoy Yoga
         </Link>
-        <nav className="flex items-center gap-6">
+        <nav className="flex items-center gap-8">
           {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="zen-heading text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
             >
               {link.label}
             </Link>

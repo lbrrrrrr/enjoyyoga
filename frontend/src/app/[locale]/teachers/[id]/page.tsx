@@ -42,11 +42,11 @@ export default async function TeacherDetailPage({
               <TeacherPhoto
                 src={teacher.photo_url}
                 alt={name}
-                className="w-32 h-32 object-cover rounded-full border-4 border-gray-200"
+                className="w-32 h-32 object-cover rounded-full border-4 border-primary/20"
               />
             </div>
           )}
-          <CardTitle className="text-2xl">{name}</CardTitle>
+          <CardTitle className="zen-heading text-2xl">{name}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p>{bio}</p>
