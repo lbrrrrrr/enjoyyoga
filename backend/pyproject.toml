@@ -18,6 +18,8 @@ dependencies = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
     "pytest-mock>=3.12.0",
+    "pytest-json-report>=1.5.0",
+    "pytest-cov>=4.1.0",
     "httpx>=0.26.0",
     "sqlalchemy-utils>=0.41.0",
     "python-multipart>=0.0.22",
@@ -34,9 +36,19 @@ addopts = [
     "-v",
     "--tb=short",
     "--strict-markers",
+    "--color=yes",
 ]
 markers = [
     "unit: marks tests as unit tests",
     "integration: marks tests as integration tests",
     "slow: marks tests as slow running",
 ]
+
+[tool.coverage.run]
+branch = true
+source = ["app"]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false

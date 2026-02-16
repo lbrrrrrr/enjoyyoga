@@ -42,5 +42,18 @@ Thumbs.db
 *.db
 *.sqlite3
 
+# Testing and coverage
+.coverage
+.coverage.*
+coverage.json
+coverage-html/
+htmlcov/
+.pytest_cache/
+test-results/
+*.log
+
 # Alembic
 alembic/versions/__pycache__/
+
+# Uploads (payment QR codes, etc)
+backend/uploads/

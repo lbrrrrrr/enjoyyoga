@@ -24,6 +24,7 @@ export default defineConfig({
       exclude: [
         'node_modules/',
         'src/test/',
+        '.next/',
         '**/*.d.ts',
         '**/*.config.*',
         'src/app/**/layout.tsx',
@@ -39,6 +40,17 @@ export default defineConfig({
     // Timeout settings
     testTimeout: 10000,
     hookTimeout: 10000,
+
+    // Reporters for CI
+    reporters: process.env.CI
+      ? ['default', 'json', 'junit']
+      : ['default'],
+
+    // Output files for CI reporters
+    outputFile: {
+      json: './test-results/results.json',
+      junit: './test-results/junit.xml',
+    },
   },
 
   resolve: {

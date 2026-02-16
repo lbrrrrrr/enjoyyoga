@@ -1,0 +1,76 @@
+name: Backend Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  test:
+    name: Run Backend Tests
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full git history for better context
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Restore cached dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('backend/uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run tests with coverage
+        run: |
+          uv run pytest -v \
+            --junitxml=test-results/junit.xml \
+            --json-report \
+            --json-report-file=test-results/report.json \
+            --cov=app \
+            --cov-report=html:coverage-html \
+            --cov-report=json:coverage.json \
+            --cov-report=term
+
+      - name: Upload test results
+        if: always()  # Upload even if tests fail
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: |
+            backend/test-results/
+            backend/coverage-html/
+            backend/coverage.json
+          retention-days: 90
+
+      - name: Publish test results
+        if: always()  # Show results even if tests fail
+        uses: dorny/test-reporter@v1
+        with:
+          name: Backend Test Results
+          path: backend/test-results/junit.xml
+          reporter: java-junit
+          fail-on-error: true
