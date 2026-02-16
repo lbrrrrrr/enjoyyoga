@@ -201,17 +201,25 @@ tests/
 
 ## TODO: Future Enhancements
 
-1. **Contact Inquiry Tests**: Add comprehensive unit tests for the new contact inquiry system:
+1. **Contact Inquiry Tests**: Add comprehensive unit tests for the contact inquiry system:
    - ContactService business logic (inquiry creation, status updates, statistics)
    - Contact notification emails (confirmation, admin alerts, replies)
    - Admin contact API endpoints and authentication
    - Contact form validation and error handling
 
-2. **Integration Tests**: Add tests for full API workflows
-3. **Performance Tests**: Add tests for capacity and load scenarios
-4. **Contract Tests**: Add API contract validation
-5. **Coverage Reports**: Set up automated coverage reporting
-6. **Continuous Integration**: GitHub Actions for automated testing
+2. **Payment System Tests**: Add comprehensive unit tests for payment functionality:
+   - PaymentService business logic (payment creation, confirmation, cancellation, reference number generation)
+   - Package CRUD operations and pricing logic
+   - Payment settings management
+   - Payment email notifications (pending, confirmed)
+   - Admin payment API endpoints (listing, filtering, confirm/cancel)
+   - Public payment status check endpoint
+
+3. **Integration Tests**: Add tests for full API workflows
+4. **Performance Tests**: Add tests for capacity and load scenarios
+5. **Contract Tests**: Add API contract validation
+6. **Coverage Reports**: Set up automated coverage reporting
+7. **Continuous Integration**: GitHub Actions for automated testing
 
 ## Known Issues
 
