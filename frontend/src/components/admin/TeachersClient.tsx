@@ -339,13 +339,11 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
         currency: classFormData.currency
       });
 
-      // Update the teacher classes cache to include the new class
+      // Re-fetch classes from API to ensure the list is complete
+      const classes = await getClassesByTeacher(selectedTeacherForClass.id);
       setTeacherClasses(prev => ({
         ...prev,
-        [selectedTeacherForClass.id]: [
-          ...(prev[selectedTeacherForClass.id] || []),
-          newClass
-        ]
+        [selectedTeacherForClass.id]: classes
       }));
 
       // Show the classes for this teacher if not already showing
