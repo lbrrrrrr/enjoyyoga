@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     smtp_from_name: str = "enjoyyoga"
     smtp_use_tls: bool = True
 
+    # Upload directory settings
+    upload_dir: str = "uploads"
+
     model_config = {"env_file": ".env"}
 
 

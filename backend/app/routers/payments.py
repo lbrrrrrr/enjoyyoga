@@ -303,7 +303,7 @@ async def upload_qr_code(
         raise HTTPException(status_code=400, detail="File size must be less than 5MB")
 
     # Create upload directory
-    upload_dir = Path("uploads/payment")
+    upload_dir = Path(settings.upload_dir) / "payment"
     upload_dir.mkdir(parents=True, exist_ok=True)
 
     # Generate filename
@@ -326,7 +326,7 @@ async def upload_qr_code(
         await file.close()
 
     # Update payment settings with QR code URL
-    qr_code_url = f"{settings.server_url}/uploads/payment/{filename}"
+    qr_code_url = f"{settings.server_url}/{settings.upload_dir}/payment/{filename}"
     payment_service = PaymentService()
     payment_settings = await payment_service.update_payment_settings(
         db, wechat_qr_code_url=qr_code_url
@@ -356,7 +356,7 @@ async def upload_venmo_qr_code(
         raise HTTPException(status_code=400, detail="File size must be less than 5MB")
 
     # Create upload directory
-    upload_dir = Path("uploads/payment")
+    upload_dir = Path(settings.upload_dir) / "payment"
     upload_dir.mkdir(parents=True, exist_ok=True)
 
     # Generate filename
@@ -379,7 +379,7 @@ async def upload_venmo_qr_code(
         await file.close()
 
     # Update payment settings with Venmo QR code URL
-    qr_code_url = f"{settings.server_url}/uploads/payment/{filename}"
+    qr_code_url = f"{settings.server_url}/{settings.upload_dir}/payment/{filename}"
     payment_service = PaymentService()
     payment_settings = await payment_service.update_payment_settings(
         db, venmo_qr_code_url=qr_code_url

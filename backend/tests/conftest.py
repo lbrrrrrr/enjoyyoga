@@ -1,7 +1,10 @@
 """Test configuration and fixtures."""
 import asyncio
+import shutil
+import tempfile
 import uuid
 from datetime import date, datetime, time, timedelta
+from pathlib import Path
 from typing import AsyncGenerator, Generator
 
 import pytest
@@ -58,8 +61,27 @@ async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
         await session.rollback()
 
 
+@pytest.fixture
+def temp_upload_dir() -> Generator[Path, None, None]:
+    """Create temporary upload directory for tests."""
+    temp_dir = Path(tempfile.mkdtemp())
+
+    # Store original upload_dir
+    original_upload_dir = settings.upload_dir
+
+    # Override settings to use temp directory
+    settings.upload_dir = str(temp_dir)
+
+    yield temp_dir
+
+    # Cleanup: remove temp directory and restore original setting
+    if temp_dir.exists():
+        shutil.rmtree(temp_dir)
+    settings.upload_dir = original_upload_dir
+
+
 @pytest_asyncio.fixture
-async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
+async def client(db_session: AsyncSession, temp_upload_dir: Path) -> AsyncGenerator[AsyncClient, None]:
     """Create test HTTP client with dependency overrides."""
     app.dependency_overrides[get_db] = lambda: db_session
 
