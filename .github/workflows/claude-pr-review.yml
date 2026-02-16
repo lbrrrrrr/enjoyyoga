@@ -1,8 +1,8 @@
 name: Claude PR Review
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: read
@@ -11,6 +11,9 @@ permissions:
 jobs:
   review:
     runs-on: ubuntu-latest
+    if: >-
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '@claude review this PR')
 
     steps:
       - name: Checkout code
@@ -18,13 +21,25 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Get PR details
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUMBER=${{ github.event.issue.number }}
+          echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
+
+          # Get PR title and body
+          gh pr view "$PR_NUMBER" --json title,body --jq '.title' > pr_title.txt
+          gh pr view "$PR_NUMBER" --json title,body --jq '.body' > pr_body.txt
+
       - name: Get PR diff
         id: diff
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           # Get the diff for this PR
-          gh pr diff ${{ github.event.pull_request.number }} > pr_diff.txt
+          gh pr diff ${{ steps.pr.outputs.number }} > pr_diff.txt
 
           # Check if diff is too large (Claude has context limits)
           DIFF_SIZE=$(wc -c < pr_diff.txt)
@@ -41,6 +56,8 @@ jobs:
         run: |
           # Read the diff
           DIFF=$(cat pr_diff.txt)
+          PR_TITLE=$(cat pr_title.txt)
+          PR_BODY=$(cat pr_body.txt)
 
           # Prepare the prompt for Claude
           cat > prompt.json <<'EOF'
@@ -50,7 +67,7 @@ jobs:
             "messages": [
               {
                 "role": "user",
-                "content": "You are a code reviewer for the enjoyyoga project - a bilingual yoga business management application with FastAPI backend and Next.js frontend.\n\nPlease review the following pull request diff and provide:\n1. **Summary**: Brief overview of changes\n2. **Issues**: Any bugs, security vulnerabilities, or problems you find\n3. **Suggestions**: Improvements for code quality, performance, or maintainability\n4. **Positive feedback**: What was done well\n\nFocus on:\n- Security vulnerabilities (SQL injection, XSS, authentication issues)\n- Bugs and logic errors\n- Code quality and best practices\n- Performance concerns\n- Consistency with existing codebase patterns\n\nBe constructive and specific. If the code looks good, say so!\n\n---\n\nPR Title: ${{ github.event.pull_request.title }}\nPR Description: ${{ github.event.pull_request.body }}\n\n---\n\nDiff:\n```diff\n${DIFF}\n```"
+                "content": "You are a code reviewer for the enjoyyoga project - a bilingual yoga business management application with FastAPI backend and Next.js frontend.\n\nPlease review the following pull request diff and provide:\n1. **Summary**: Brief overview of changes\n2. **Issues**: Any bugs, security vulnerabilities, or problems you find\n3. **Suggestions**: Improvements for code quality, performance, or maintainability\n4. **Positive feedback**: What was done well\n\nFocus on:\n- Security vulnerabilities (SQL injection, XSS, authentication issues)\n- Bugs and logic errors\n- Code quality and best practices\n- Performance concerns\n- Consistency with existing codebase patterns\n\nBe constructive and specific. If the code looks good, say so!\n\n---\n\nPR Title: ${PR_TITLE}\nPR Description: ${PR_BODY}\n\n---\n\nDiff:\n```diff\n${DIFF}\n```"
               }
             ]
           }
@@ -83,14 +100,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh pr comment ${{ github.event.pull_request.number }} --body-file comment.md
+          gh pr comment ${{ steps.pr.outputs.number }} --body-file comment.md
 
       - name: Handle large diff
         if: steps.diff.outputs.diff_too_large == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh pr comment ${{ github.event.pull_request.number }} --body "## ⚠️ PR Too Large for Automated Review
+          gh pr comment ${{ steps.pr.outputs.number }} --body "## ⚠️ PR Too Large for Automated Review
 
           This pull request is too large for automated Claude review (>100KB diff).
 
