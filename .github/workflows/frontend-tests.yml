@@ -8,6 +8,10 @@ on:
     types: [opened, synchronize, reopened]
   workflow_dispatch:  # Allow manual triggering
 
+permissions:
+  contents: read
+  checks: write
+
 jobs:
   test:
     name: Run Frontend Tests
