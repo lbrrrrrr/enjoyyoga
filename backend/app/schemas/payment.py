@@ -12,6 +12,7 @@ class ClassPackageCreate(BaseModel):
     description_zh: str = ""
     session_count: int
     price: float
+    price_usd: Optional[float] = None
     currency: str = "CNY"
     is_active: bool = True
 
@@ -23,6 +24,7 @@ class ClassPackageUpdate(BaseModel):
     description_zh: Optional[str] = None
     session_count: Optional[int] = None
     price: Optional[float] = None
+    price_usd: Optional[float] = None
     currency: Optional[str] = None
     is_active: Optional[bool] = None
 
@@ -36,6 +38,7 @@ class ClassPackageOut(BaseModel):
     description_zh: str
     session_count: int
     price: float
+    price_usd: Optional[float] = None
     currency: str
     is_active: bool
     created_at: datetime
@@ -74,6 +77,9 @@ class PaymentSettingsOut(BaseModel):
     wechat_qr_code_url: Optional[str]
     payment_instructions_en: Optional[str]
     payment_instructions_zh: Optional[str]
+    venmo_qr_code_url: Optional[str] = None
+    venmo_payment_instructions_en: Optional[str] = None
+    venmo_payment_instructions_zh: Optional[str] = None
     updated_at: datetime
 
     model_config = {"from_attributes": True}
@@ -82,6 +88,8 @@ class PaymentSettingsOut(BaseModel):
 class PaymentSettingsUpdate(BaseModel):
     payment_instructions_en: Optional[str] = None
     payment_instructions_zh: Optional[str] = None
+    venmo_payment_instructions_en: Optional[str] = None
+    venmo_payment_instructions_zh: Optional[str] = None
 
 
 class PaymentInfoOut(BaseModel):
@@ -91,9 +99,13 @@ class PaymentInfoOut(BaseModel):
     amount: float
     currency: str
     status: str
-    wechat_qr_code_url: Optional[str]
-    payment_instructions_en: Optional[str]
-    payment_instructions_zh: Optional[str]
+    payment_method: str = "wechat_qr"
+    wechat_qr_code_url: Optional[str] = None
+    payment_instructions_en: Optional[str] = None
+    payment_instructions_zh: Optional[str] = None
+    venmo_qr_code_url: Optional[str] = None
+    venmo_payment_instructions_en: Optional[str] = None
+    venmo_payment_instructions_zh: Optional[str] = None
     created_at: datetime
 
 
@@ -103,3 +115,5 @@ class PaymentStatsOut(BaseModel):
     confirmed_payments: int
     cancelled_payments: int
     total_revenue: float
+    total_revenue_cny: float = 0.0
+    total_revenue_usd: float = 0.0

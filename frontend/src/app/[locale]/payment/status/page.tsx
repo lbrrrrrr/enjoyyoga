@@ -105,7 +105,7 @@ export default function PaymentStatusPage() {
             <div className="flex justify-between">
               <span className="text-gray-600">{t("amount")}</span>
               <span className="font-medium">
-                {paymentInfo.currency === "CNY" ? "\u00a5" : paymentInfo.currency}{" "}
+                {paymentInfo.currency === "USD" ? "$" : "\u00a5"}
                 {paymentInfo.amount.toFixed(2)}
               </span>
             </div>

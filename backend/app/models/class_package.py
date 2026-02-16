@@ -18,6 +18,7 @@ class ClassPackage(Base):
     description_zh: Mapped[str] = mapped_column(Text, default="")
     session_count: Mapped[int] = mapped_column(Integer)
     price: Mapped[float] = mapped_column(Numeric(10, 2))
+    price_usd: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     currency: Mapped[str] = mapped_column(String(10), default="CNY")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

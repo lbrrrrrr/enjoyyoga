@@ -133,7 +133,17 @@ export function PaymentsClient() {
           <Card>
             <CardContent className="pt-4 pb-4">
               <p className="text-sm text-gray-600">{t("revenue")}</p>
-              <p className="text-2xl font-bold">{"\u00a5"}{stats.total_revenue.toFixed(2)}</p>
+              <div>
+                {stats.total_revenue_cny > 0 && (
+                  <p className="text-2xl font-bold">{"\u00a5"}{stats.total_revenue_cny.toFixed(2)}</p>
+                )}
+                {stats.total_revenue_usd > 0 && (
+                  <p className="text-2xl font-bold">${stats.total_revenue_usd.toFixed(2)}</p>
+                )}
+                {stats.total_revenue_cny === 0 && stats.total_revenue_usd === 0 && (
+                  <p className="text-2xl font-bold">{"\u00a5"}0.00</p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -178,7 +188,7 @@ export function PaymentsClient() {
                     <div>
                       <p className="font-mono font-medium">{payment.reference_number}</p>
                       <p className="text-sm text-gray-600">
-                        {"\u00a5"}{payment.amount.toFixed(2)} - {payment.payment_type}
+                        {payment.currency === "USD" ? "$" : "\u00a5"}{payment.amount.toFixed(2)} - {payment.payment_type}
                       </p>
                       <p className="text-xs text-gray-500">
                         {new Date(payment.created_at).toLocaleString()}
@@ -239,13 +249,17 @@ export function PaymentsClient() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">{t("amountLabel")}</span>
-                  <span>{"\u00a5"}{selectedPayment.amount.toFixed(2)}</span>
+                  <span>{selectedPayment.currency === "USD" ? "$" : "\u00a5"}{selectedPayment.amount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">{t("statusLabel")}</span>
                   <span className={`px-2 py-1 text-xs rounded-full ${getStatusBadge(selectedPayment.status)}`}>
                     {selectedPayment.status}
                   </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">{t("paymentMethod")}</span>
+                  <span>{selectedPayment.payment_method === "venmo_qr" ? "Venmo" : "WeChat Pay"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">{t("type")}</span>

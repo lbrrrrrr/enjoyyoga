@@ -51,9 +51,13 @@ async def get_payment_status(reference_number: str, db: AsyncSession = Depends(g
         amount=float(payment.amount),
         currency=payment.currency,
         status=payment.status,
+        payment_method=payment.payment_method,
         wechat_qr_code_url=payment_settings.wechat_qr_code_url if payment_settings else None,
         payment_instructions_en=payment_settings.payment_instructions_en if payment_settings else None,
         payment_instructions_zh=payment_settings.payment_instructions_zh if payment_settings else None,
+        venmo_qr_code_url=payment_settings.venmo_qr_code_url if payment_settings else None,
+        venmo_payment_instructions_en=payment_settings.venmo_payment_instructions_en if payment_settings else None,
+        venmo_payment_instructions_zh=payment_settings.venmo_payment_instructions_zh if payment_settings else None,
         created_at=payment.created_at,
     )
 
@@ -87,9 +91,13 @@ async def get_payment_by_registration(registration_id: uuid.UUID, db: AsyncSessi
         amount=float(payment.amount),
         currency=payment.currency,
         status=payment.status,
+        payment_method=payment.payment_method,
         wechat_qr_code_url=payment_settings.wechat_qr_code_url if payment_settings else None,
         payment_instructions_en=payment_settings.payment_instructions_en if payment_settings else None,
         payment_instructions_zh=payment_settings.payment_instructions_zh if payment_settings else None,
+        venmo_qr_code_url=payment_settings.venmo_qr_code_url if payment_settings else None,
+        venmo_payment_instructions_en=payment_settings.venmo_payment_instructions_en if payment_settings else None,
+        venmo_payment_instructions_zh=payment_settings.venmo_payment_instructions_zh if payment_settings else None,
         created_at=payment.created_at,
     )
 
@@ -272,6 +280,8 @@ async def update_payment_settings(
         db,
         payment_instructions_en=data.payment_instructions_en,
         payment_instructions_zh=data.payment_instructions_zh,
+        venmo_payment_instructions_en=data.venmo_payment_instructions_en,
+        venmo_payment_instructions_zh=data.venmo_payment_instructions_zh,
     )
     return payment_settings
 
@@ -324,6 +334,59 @@ async def upload_qr_code(
 
     return {
         "message": "QR code uploaded successfully",
+        "qr_code_url": qr_code_url,
+        "settings": PaymentSettingsOut.model_validate(payment_settings),
+    }
+
+
+@admin_router.post("/payment-settings/venmo-qr-code")
+async def upload_venmo_qr_code(
+    file: UploadFile = File(...),
+    admin: AdminUser = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Upload Venmo QR code image."""
+    # Validate file type
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image (jpg, png, gif, etc.)")
+
+    # Validate file size (5MB limit)
+    max_size = 5 * 1024 * 1024
+    if file.size and file.size > max_size:
+        raise HTTPException(status_code=400, detail="File size must be less than 5MB")
+
+    # Create upload directory
+    upload_dir = Path("uploads/payment")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    # Generate filename
+    file_extension = "jpg"
+    if file.filename and "." in file.filename:
+        file_extension = file.filename.split(".")[-1]
+    elif file.content_type == "image/png":
+        file_extension = "png"
+
+    filename = f"venmo_qr_{uuid.uuid4().hex}.{file_extension}"
+    file_path = upload_dir / filename
+
+    # Save file
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Failed to save uploaded file")
+    finally:
+        await file.close()
+
+    # Update payment settings with Venmo QR code URL
+    qr_code_url = f"{settings.server_url}/uploads/payment/{filename}"
+    payment_service = PaymentService()
+    payment_settings = await payment_service.update_payment_settings(
+        db, venmo_qr_code_url=qr_code_url
+    )
+
+    return {
+        "message": "Venmo QR code uploaded successfully",
         "qr_code_url": qr_code_url,
         "settings": PaymentSettingsOut.model_validate(payment_settings),
     }

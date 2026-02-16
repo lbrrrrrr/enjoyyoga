@@ -62,9 +62,12 @@ export default function PaymentPage() {
     );
   }
 
-  const instructions = locale === "zh"
-    ? paymentInfo.payment_instructions_zh
-    : paymentInfo.payment_instructions_en;
+  const isVenmo = paymentInfo.payment_method === "venmo_qr";
+  const qrCodeUrl = isVenmo ? paymentInfo.venmo_qr_code_url : paymentInfo.wechat_qr_code_url;
+  const instructions = isVenmo
+    ? (locale === "zh" ? paymentInfo.venmo_payment_instructions_zh : paymentInfo.venmo_payment_instructions_en)
+    : (locale === "zh" ? paymentInfo.payment_instructions_zh : paymentInfo.payment_instructions_en);
+  const currencySymbol = paymentInfo.currency === "USD" ? "$" : "\u00a5";
 
   const isConfirmed = paymentInfo.status === "confirmed";
   const isPending = paymentInfo.status === "pending";
@@ -87,13 +90,13 @@ export default function PaymentPage() {
         <>
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>{t("scanQrCode")}</CardTitle>
+              <CardTitle>{isVenmo ? t("scanQrCodeVenmo") : t("scanQrCodeWechat")}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col items-center space-y-4">
-              {paymentInfo.wechat_qr_code_url ? (
+              {qrCodeUrl ? (
                 <img
-                  src={paymentInfo.wechat_qr_code_url}
-                  alt="WeChat Pay QR Code"
+                  src={qrCodeUrl}
+                  alt={isVenmo ? "Venmo QR Code" : "WeChat Pay QR Code"}
                   className="w-64 h-64 object-contain border rounded-lg"
                 />
               ) : (
@@ -112,8 +115,7 @@ export default function PaymentPage() {
               <div>
                 <p className="text-sm text-gray-600">{t("amount")}</p>
                 <p className="text-3xl font-bold">
-                  {paymentInfo.currency === "CNY" ? "\u00a5" : paymentInfo.currency}{" "}
-                  {paymentInfo.amount.toFixed(2)}
+                  {currencySymbol}{paymentInfo.amount.toFixed(2)}
                 </p>
               </div>
 
@@ -131,7 +133,9 @@ export default function PaymentPage() {
                     {t("copy")}
                   </Button>
                 </div>
-                <p className="text-xs text-amber-600 mt-1">{t("includeReference")}</p>
+                <p className="text-xs text-amber-600 mt-1">
+                  {isVenmo ? t("includeReferenceVenmo") : t("includeReference")}
+                </p>
               </div>
 
               {instructions && (

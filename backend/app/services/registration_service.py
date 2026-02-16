@@ -101,8 +101,10 @@ class RegistrationService:
                     f"Current registrations: {current_count}/{yoga_class.capacity}"
                 )
 
-        # Determine status based on pricing
-        has_price = yoga_class.price is not None and float(yoga_class.price) > 0
+        # Determine status based on pricing (either CNY or USD)
+        has_cny = yoga_class.price is not None and float(yoga_class.price) > 0
+        has_usd = yoga_class.price_usd is not None and float(yoga_class.price_usd) > 0
+        has_price = has_cny or has_usd
         initial_status = "pending_payment" if has_price else "confirmed"
 
         # Create the registration

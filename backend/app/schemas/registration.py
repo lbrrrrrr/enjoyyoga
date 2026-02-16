@@ -29,6 +29,7 @@ class RegistrationCreateWithSchedule(BaseModel):
     sms_notifications: bool = False
     # Payment support
     package_id: Optional[uuid.UUID] = None
+    payment_method: Optional[str] = None  # "wechat_qr" or "venmo_qr"
 
 
 class RegistrationOut(BaseModel):

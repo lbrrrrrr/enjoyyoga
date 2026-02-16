@@ -23,6 +23,7 @@ class YogaClassCreate(BaseModel):
     schedule_type: str = "recurring"
     is_active: bool = True
     price: Optional[float] = None
+    price_usd: Optional[float] = None
     currency: str = "CNY"
 
 
@@ -40,6 +41,7 @@ class YogaClassOut(BaseModel):
     capacity: int
     created_at: datetime
     price: Optional[float] = None
+    price_usd: Optional[float] = None
     currency: str = "CNY"
     teacher: TeacherOut
     yoga_type: YogaTypeOut

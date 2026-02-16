@@ -26,10 +26,14 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedPackageId, setSelectedPackageId] = useState<string>("");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState("");
 
   const currentClass = classes.find(cls => cls.id === selectedClass);
-  const hasPrice = currentClass?.price != null && currentClass.price > 0;
+  const hasCnyPrice = currentClass?.price != null && currentClass.price > 0;
+  const hasUsdPrice = currentClass?.price_usd != null && currentClass.price_usd > 0;
+  const hasPrice = hasCnyPrice || hasUsdPrice;
+  const hasBothPrices = hasCnyPrice && hasUsdPrice;
   const activePackages = currentClass?.packages?.filter(p => p.is_active) || [];
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -54,6 +58,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
           email_notifications: formData.get("email_notifications") === "on",
           sms_notifications: formData.get("sms_notifications") === "on",
           package_id: selectedPackageId || undefined,
+          payment_method: selectedPaymentMethod || undefined,
         });
 
         // If pending payment, redirect to payment page
@@ -78,6 +83,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
       setSelectedDate("");
       setSelectedTime("");
       setSelectedPackageId("");
+      setSelectedPaymentMethod("");
     } catch (error) {
       setStatus("error");
       setErrorMessage(error instanceof Error ? error.message : "Registration failed");
@@ -89,6 +95,7 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
     setSelectedDate("");
     setSelectedTime("");
     setSelectedPackageId("");
+    setSelectedPaymentMethod("");
   };
 
   const handleDateSelect = (date: string, time: string) => {
@@ -117,14 +124,19 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
               <option value="">{t("selectClass")}</option>
-              {classes.map((cls) => (
-                <option key={cls.id} value={cls.id}>
-                  {getName(cls)}
-                  {cls.price != null && cls.price > 0
-                    ? ` - \u00a5${cls.price}`
-                    : ` - ${t("free")}`}
-                </option>
-              ))}
+              {classes.map((cls) => {
+                const cny = cls.price != null && cls.price > 0;
+                const usd = cls.price_usd != null && cls.price_usd > 0;
+                let priceLabel = ` - ${t("free")}`;
+                if (cny && usd) priceLabel = ` - \u00a5${cls.price} / $${cls.price_usd}`;
+                else if (cny) priceLabel = ` - \u00a5${cls.price}`;
+                else if (usd) priceLabel = ` - $${cls.price_usd}`;
+                return (
+                  <option key={cls.id} value={cls.id}>
+                    {getName(cls)}{priceLabel}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -144,12 +156,51 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
             </>
           )}
 
+          {/* Payment method selection */}
+          {hasPrice && hasBothPrices && (
+            <div className="bg-blue-50 rounded-lg p-4 space-y-3">
+              <Label className="font-medium">{t("selectPaymentMethod")}</Label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 p-2 rounded border bg-white cursor-pointer">
+                  <input
+                    type="radio"
+                    name="payment_method"
+                    value="wechat_qr"
+                    checked={selectedPaymentMethod === "wechat_qr"}
+                    onChange={() => setSelectedPaymentMethod("wechat_qr")}
+                  />
+                  <span className="text-sm">
+                    {t("wechatPay")} - {"\u00a5"}{currentClass!.price}/{t("perSession")}
+                  </span>
+                </label>
+                <label className="flex items-center gap-2 p-2 rounded border bg-white cursor-pointer">
+                  <input
+                    type="radio"
+                    name="payment_method"
+                    value="venmo_qr"
+                    checked={selectedPaymentMethod === "venmo_qr"}
+                    onChange={() => setSelectedPaymentMethod("venmo_qr")}
+                  />
+                  <span className="text-sm">
+                    {t("venmo")} - ${currentClass!.price_usd}/{t("perSession")}
+                  </span>
+                </label>
+              </div>
+            </div>
+          )}
+
           {/* Price display and package selection */}
           {hasPrice && (
             <div className="bg-blue-50 rounded-lg p-4 space-y-3">
-              <p className="font-medium">
-                {t("classPrice")}: {"\u00a5"}{currentClass!.price}/{t("perSession")}
-              </p>
+              {!hasBothPrices && (
+                <p className="font-medium">
+                  {t("classPrice")}:{" "}
+                  {hasCnyPrice
+                    ? `\u00a5${currentClass!.price}`
+                    : `$${currentClass!.price_usd}`}
+                  /{t("perSession")}
+                </p>
+              )}
 
               {activePackages.length > 0 && (
                 <div className="space-y-2">
@@ -164,12 +215,18 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
                         onChange={() => setSelectedPackageId("")}
                       />
                       <span className="text-sm">
-                        {t("singleSession")} - {"\u00a5"}{currentClass!.price}
+                        {t("singleSession")} -{" "}
+                        {selectedPaymentMethod === "venmo_qr" && hasUsdPrice
+                          ? `$${currentClass!.price_usd}`
+                          : `\u00a5${currentClass!.price}`}
                       </span>
                     </label>
                     {activePackages.map((pkg) => {
                       const pkgName = locale === "zh" ? pkg.name_zh : pkg.name_en;
-                      const perSession = pkg.price / pkg.session_count;
+                      const useUsd = selectedPaymentMethod === "venmo_qr" && pkg.price_usd != null;
+                      const displayPrice = useUsd ? pkg.price_usd! : pkg.price;
+                      const symbol = useUsd ? "$" : "\u00a5";
+                      const perSession = displayPrice / pkg.session_count;
                       return (
                         <label
                           key={pkg.id}
@@ -183,9 +240,9 @@ export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
                             onChange={() => setSelectedPackageId(pkg.id)}
                           />
                           <span className="text-sm">
-                            {pkgName} ({pkg.session_count} {t("sessions")}) - {"\u00a5"}{pkg.price}
+                            {pkgName} ({pkg.session_count} {t("sessions")}) - {symbol}{displayPrice}
                             <span className="text-gray-500 ml-1">
-                              ({"\u00a5"}{perSession.toFixed(0)}/{t("perSession")})
+                              ({symbol}{perSession.toFixed(0)}/{t("perSession")})
                             </span>
                           </span>
                         </label>

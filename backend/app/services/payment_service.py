@@ -31,9 +31,23 @@ class PaymentService:
         registration: Registration,
         yoga_class: YogaClass,
         db: AsyncSession,
-        package_id: Optional[uuid.UUID] = None
+        package_id: Optional[uuid.UUID] = None,
+        payment_method: Optional[str] = None
     ) -> Payment:
         """Create a payment record for a registration."""
+        # Determine payment method if not specified
+        if not payment_method:
+            has_cny = yoga_class.price is not None and float(yoga_class.price) > 0
+            has_usd = yoga_class.price_usd is not None and float(yoga_class.price_usd) > 0
+            if has_cny:
+                payment_method = "wechat_qr"
+            elif has_usd:
+                payment_method = "venmo_qr"
+            else:
+                payment_method = "wechat_qr"
+
+        use_usd = payment_method == "venmo_qr"
+
         # Determine amount
         if package_id:
             query = select(ClassPackage).where(ClassPackage.id == package_id)
@@ -41,13 +55,25 @@ class PaymentService:
             package = result.scalar_one_or_none()
             if not package:
                 raise ValueError("Package not found")
-            amount = float(package.price)
+            if use_usd:
+                if package.price_usd is None:
+                    raise ValueError("Package does not have a USD price")
+                amount = float(package.price_usd)
+                currency = "USD"
+            else:
+                amount = float(package.price)
+                currency = package.currency
             payment_type = "package"
-            currency = package.currency
         else:
-            amount = float(yoga_class.price)
+            if use_usd:
+                if yoga_class.price_usd is None:
+                    raise ValueError("Class does not have a USD price")
+                amount = float(yoga_class.price_usd)
+                currency = "USD"
+            else:
+                amount = float(yoga_class.price)
+                currency = yoga_class.currency
             payment_type = "single_session"
-            currency = yoga_class.currency
 
         # Generate unique reference number
         reference_number = self.generate_reference_number()
@@ -65,7 +91,7 @@ class PaymentService:
             registration_id=registration.id,
             amount=amount,
             currency=currency,
-            payment_method="wechat_qr",
+            payment_method=payment_method,
             status="pending",
             reference_number=reference_number,
             payment_type=payment_type,
@@ -192,11 +218,21 @@ class PaymentService:
         # Total revenue (confirmed payments only)
         revenue_query = select(func.coalesce(func.sum(Payment.amount), 0)).where(Payment.status == "confirmed")
 
+        # Per-currency revenue
+        revenue_cny_query = select(func.coalesce(func.sum(Payment.amount), 0)).where(
+            and_(Payment.status == "confirmed", Payment.currency == "CNY")
+        )
+        revenue_usd_query = select(func.coalesce(func.sum(Payment.amount), 0)).where(
+            and_(Payment.status == "confirmed", Payment.currency == "USD")
+        )
+
         total = (await db.execute(total_query)).scalar() or 0
         pending = (await db.execute(pending_query)).scalar() or 0
         confirmed = (await db.execute(confirmed_query)).scalar() or 0
         cancelled = (await db.execute(cancelled_query)).scalar() or 0
         revenue = float((await db.execute(revenue_query)).scalar() or 0)
+        revenue_cny = float((await db.execute(revenue_cny_query)).scalar() or 0)
+        revenue_usd = float((await db.execute(revenue_usd_query)).scalar() or 0)
 
         return {
             "total_payments": total,
@@ -204,6 +240,8 @@ class PaymentService:
             "confirmed_payments": confirmed,
             "cancelled_payments": cancelled,
             "total_revenue": revenue,
+            "total_revenue_cny": revenue_cny,
+            "total_revenue_usd": revenue_usd,
         }
 
     # Package CRUD
@@ -255,7 +293,10 @@ class PaymentService:
         db: AsyncSession,
         wechat_qr_code_url: Optional[str] = None,
         payment_instructions_en: Optional[str] = None,
-        payment_instructions_zh: Optional[str] = None
+        payment_instructions_zh: Optional[str] = None,
+        venmo_qr_code_url: Optional[str] = None,
+        venmo_payment_instructions_en: Optional[str] = None,
+        venmo_payment_instructions_zh: Optional[str] = None
     ) -> PaymentSettings:
         """Update or create payment settings."""
         settings = await self.get_payment_settings(db)
@@ -270,6 +311,12 @@ class PaymentService:
             settings.payment_instructions_en = payment_instructions_en
         if payment_instructions_zh is not None:
             settings.payment_instructions_zh = payment_instructions_zh
+        if venmo_qr_code_url is not None:
+            settings.venmo_qr_code_url = venmo_qr_code_url
+        if venmo_payment_instructions_en is not None:
+            settings.venmo_payment_instructions_en = venmo_payment_instructions_en
+        if venmo_payment_instructions_zh is not None:
+            settings.venmo_payment_instructions_zh = venmo_payment_instructions_zh
 
         await db.commit()
         await db.refresh(settings)

@@ -38,6 +38,7 @@ export interface ClassPackage {
   description_zh: string;
   session_count: number;
   price: number;
+  price_usd: number | null;
   currency: string;
   is_active: boolean;
   created_at: string;
@@ -57,6 +58,7 @@ export interface YogaClass {
   capacity: number;
   created_at: string;
   price: number | null;
+  price_usd: number | null;
   currency: string;
   teacher: Teacher;
   yoga_type: YogaType;
@@ -79,9 +81,13 @@ export interface PaymentInfo {
   amount: number;
   currency: string;
   status: string;
+  payment_method: string;
   wechat_qr_code_url: string | null;
   payment_instructions_en: string | null;
   payment_instructions_zh: string | null;
+  venmo_qr_code_url: string | null;
+  venmo_payment_instructions_en: string | null;
+  venmo_payment_instructions_zh: string | null;
   created_at: string;
 }
 
@@ -90,6 +96,9 @@ export interface PaymentSettings {
   wechat_qr_code_url: string | null;
   payment_instructions_en: string | null;
   payment_instructions_zh: string | null;
+  venmo_qr_code_url: string | null;
+  venmo_payment_instructions_en: string | null;
+  venmo_payment_instructions_zh: string | null;
   updated_at: string;
 }
 
@@ -175,6 +184,7 @@ export async function createRegistrationWithSchedule(data: {
   email_notifications?: boolean;
   sms_notifications?: boolean;
   package_id?: string;
+  payment_method?: string;
 }): Promise<RegistrationWithSchedule> {
   const res = await fetch(`${API_BASE}/api/registrations/with-schedule`, {
     method: "POST",

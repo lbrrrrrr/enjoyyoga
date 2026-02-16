@@ -14,4 +14,7 @@ class PaymentSettings(Base):
     wechat_qr_code_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     payment_instructions_en: Mapped[str | None] = mapped_column(Text, nullable=True)
     payment_instructions_zh: Mapped[str | None] = mapped_column(Text, nullable=True)
+    venmo_qr_code_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    venmo_payment_instructions_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    venmo_payment_instructions_zh: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

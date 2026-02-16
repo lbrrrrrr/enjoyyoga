@@ -63,6 +63,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
     difficulty: "beginner",
     capacity: 10,
     price: null as number | null,
+    price_usd: null as number | null,
     currency: "CNY"
   });
   const [isCreatingClass, setIsCreatingClass] = useState(false);
@@ -83,6 +84,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
     difficulty: "beginner",
     capacity: 10,
     price: null as number | null,
+    price_usd: null as number | null,
     currency: "CNY"
   });
   const [isUpdatingClass, setIsUpdatingClass] = useState(false);
@@ -282,6 +284,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
       difficulty: "beginner",
       capacity: 10,
       price: null,
+      price_usd: null,
       currency: "CNY"
     });
     setCreateClassError(null);
@@ -332,6 +335,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
         difficulty: classFormData.difficulty,
         capacity: classFormData.capacity,
         price: classFormData.price,
+        price_usd: classFormData.price_usd,
         currency: classFormData.currency
       });
 
@@ -371,6 +375,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
       difficulty: yogaClass.difficulty,
       capacity: yogaClass.capacity,
       price: yogaClass.price ?? null,
+      price_usd: yogaClass.price_usd ?? null,
       currency: yogaClass.currency || "CNY"
     });
     setUpdateClassError(null);
@@ -421,6 +426,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
         difficulty: editClassFormData.difficulty,
         capacity: editClassFormData.capacity,
         price: editClassFormData.price,
+        price_usd: editClassFormData.price_usd,
         currency: editClassFormData.currency
       });
 
@@ -589,9 +595,14 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
                                 </p>
                                 <p className="text-xs text-gray-600">
                                   <strong>Price:</strong>{" "}
-                                  {yogaClass.price != null && yogaClass.price > 0
-                                    ? `${yogaClass.currency === "USD" ? "$" : "¥"}${yogaClass.price}/session`
-                                    : "Free"}
+                                  {(() => {
+                                    const cny = yogaClass.price != null && yogaClass.price > 0;
+                                    const usd = yogaClass.price_usd != null && yogaClass.price_usd > 0;
+                                    if (cny && usd) return `¥${yogaClass.price} / $${yogaClass.price_usd}/session`;
+                                    if (cny) return `¥${yogaClass.price}/session`;
+                                    if (usd) return `$${yogaClass.price_usd}/session`;
+                                    return "Free";
+                                  })()}
                                 </p>
                                 <p className="text-xs text-gray-600">
                                   <strong>Type:</strong> {locale === "zh" ? yogaClass.yoga_type.name_zh : yogaClass.yoga_type.name_en}
@@ -1105,7 +1116,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Price per Session</label>
+                    <label className="block text-sm font-medium mb-1">Price per Session (CNY)</label>
                     <input
                       type="number"
                       value={classFormData.price ?? ""}
@@ -1116,23 +1127,30 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
                       className="w-full p-2 border rounded-md"
                       min="0"
                       step="0.01"
-                      placeholder="Leave empty for free"
+                      placeholder="Leave empty if not available"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Leave empty for free classes
+                      WeChat Pay (leave empty if not available in CNY)
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1">Currency</label>
-                    <select
-                      value={classFormData.currency}
-                      onChange={(e) => handleClassFormChange("currency", e.target.value)}
+                    <label className="block text-sm font-medium mb-1">Price per Session (USD)</label>
+                    <input
+                      type="number"
+                      value={classFormData.price_usd ?? ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        handleClassFormChange("price_usd", val === "" ? null as unknown as number : parseFloat(val));
+                      }}
                       className="w-full p-2 border rounded-md"
-                    >
-                      <option value="CNY">CNY (¥)</option>
-                      <option value="USD">USD ($)</option>
-                    </select>
+                      min="0"
+                      step="0.01"
+                      placeholder="Leave empty if not available"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Venmo (leave empty if not available in USD)
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1312,7 +1330,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Price per Session</label>
+                    <label className="block text-sm font-medium mb-1">Price per Session (CNY)</label>
                     <input
                       type="number"
                       value={editClassFormData.price ?? ""}
@@ -1323,23 +1341,30 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
                       className="w-full p-2 border rounded-md"
                       min="0"
                       step="0.01"
-                      placeholder="Leave empty for free"
+                      placeholder="Leave empty if not available"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Leave empty for free classes
+                      WeChat Pay (leave empty if not available in CNY)
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1">Currency</label>
-                    <select
-                      value={editClassFormData.currency}
-                      onChange={(e) => handleEditClassFormChange("currency", e.target.value)}
+                    <label className="block text-sm font-medium mb-1">Price per Session (USD)</label>
+                    <input
+                      type="number"
+                      value={editClassFormData.price_usd ?? ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        handleEditClassFormChange("price_usd", val === "" ? null as unknown as number : parseFloat(val));
+                      }}
                       className="w-full p-2 border rounded-md"
-                    >
-                      <option value="CNY">CNY (¥)</option>
-                      <option value="USD">USD ($)</option>
-                    </select>
+                      min="0"
+                      step="0.01"
+                      placeholder="Leave empty if not available"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Venmo (leave empty if not available in USD)
+                    </p>
                   </div>
                 </div>
               </div>

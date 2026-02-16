@@ -203,6 +203,7 @@ export interface YogaClassCreate {
   schedule_type?: string;
   is_active?: boolean;
   price?: number | null;
+  price_usd?: number | null;
   currency?: string;
 }
 
@@ -265,6 +266,8 @@ export interface PaymentStats {
   confirmed_payments: number;
   cancelled_payments: number;
   total_revenue: number;
+  total_revenue_cny: number;
+  total_revenue_usd: number;
 }
 
 export interface PaymentSettingsAdmin {
@@ -272,6 +275,9 @@ export interface PaymentSettingsAdmin {
   wechat_qr_code_url: string | null;
   payment_instructions_en: string | null;
   payment_instructions_zh: string | null;
+  venmo_qr_code_url: string | null;
+  venmo_payment_instructions_en: string | null;
+  venmo_payment_instructions_zh: string | null;
   updated_at: string;
 }
 
@@ -284,6 +290,7 @@ export interface ClassPackage {
   description_zh: string;
   session_count: number;
   price: number;
+  price_usd: number | null;
   currency: string;
   is_active: boolean;
   created_at: string;
@@ -327,6 +334,8 @@ export function getPaymentSettingsAdmin(): Promise<PaymentSettingsAdmin> {
 export function updatePaymentSettings(data: {
   payment_instructions_en?: string;
   payment_instructions_zh?: string;
+  venmo_payment_instructions_en?: string;
+  venmo_payment_instructions_zh?: string;
 }): Promise<PaymentSettingsAdmin> {
   return fetchAdminAPI<PaymentSettingsAdmin>('/api/admin/payment-settings', {
     method: 'PUT',
@@ -361,6 +370,33 @@ export async function uploadWechatQrCode(file: File): Promise<{
   return res.json();
 }
 
+export async function uploadVenmoQrCode(file: File): Promise<{
+  message: string;
+  qr_code_url: string;
+  settings: PaymentSettingsAdmin;
+}> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(`${API_BASE}/api/admin/payment-settings/venmo-qr-code`, {
+    method: 'POST',
+    credentials: 'include',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      if (typeof window !== 'undefined') {
+        window.location.href = '/admin/login';
+      }
+    }
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.detail || `Venmo QR code upload failed: ${res.status}`);
+  }
+
+  return res.json();
+}
+
 export function getPackagesForClass(classId: string): Promise<ClassPackage[]> {
   return fetchAdminAPI<ClassPackage[]>(`/api/admin/packages/${classId}`);
 }
@@ -373,6 +409,7 @@ export function createPackage(data: {
   description_zh?: string;
   session_count: number;
   price: number;
+  price_usd?: number | null;
   currency?: string;
   is_active?: boolean;
 }): Promise<ClassPackage> {
@@ -389,6 +426,7 @@ export function updatePackage(packageId: string, data: {
   description_zh?: string;
   session_count?: number;
   price?: number;
+  price_usd?: number | null;
   currency?: string;
   is_active?: boolean;
 }): Promise<ClassPackage> {

@@ -29,7 +29,8 @@ class YogaClass(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)  # Enable/disable class
 
     # Pricing fields
-    price: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)  # null means free
+    price: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)  # null means free (CNY)
+    price_usd: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)  # null means not available in USD
     currency: Mapped[str] = mapped_column(String(10), default="CNY")
 
     teacher: Mapped["Teacher"] = relationship(back_populates="classes")

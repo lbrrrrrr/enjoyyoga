@@ -77,7 +77,10 @@
     "perSession": "session",
     "sessions": "sessions",
     "free": "Free",
-    "submitAndPay": "Register & Proceed to Payment"
+    "submitAndPay": "Register & Proceed to Payment",
+    "selectPaymentMethod": "Select Payment Method",
+    "wechatPay": "WeChat Pay",
+    "venmo": "Venmo"
   },
   "admin": {
     "login": {
@@ -227,7 +230,8 @@
       "adminNotes": "Admin Notes",
       "adminNotesPlaceholder": "Add notes about this payment...",
       "confirmBtn": "Confirm",
-      "cancelBtn": "Cancel"
+      "cancelBtn": "Cancel",
+      "paymentMethod": "Payment Method"
     },
     "paymentSettings": {
       "title": "Payment Settings",
@@ -243,7 +247,16 @@
       "instructionsPlaceholder": "Enter payment instructions for users...",
       "save": "Save Settings",
       "saving": "Saving...",
-      "saved": "Settings saved successfully!"
+      "saved": "Settings saved successfully!",
+      "venmoQrCode": "Venmo QR Code",
+      "currentVenmoQrCode": "Current Venmo QR Code",
+      "noVenmoQrCode": "No Venmo QR code uploaded yet",
+      "uploadNewVenmoQr": "Upload New Venmo QR Code",
+      "venmoQrUploaded": "Venmo QR code uploaded successfully!",
+      "venmoInstructions": "Venmo Payment Instructions",
+      "venmoInstructionsEn": "Venmo Instructions (English)",
+      "venmoInstructionsZh": "Venmo Instructions (Chinese)",
+      "venmoInstructionsPlaceholder": "Enter Venmo payment instructions for users..."
     }
   },
   "payment": {
@@ -251,12 +264,15 @@
     "loading": "Loading payment information...",
     "notFound": "Payment not found",
     "scanQrCode": "Scan QR Code to Pay",
+    "scanQrCodeWechat": "Scan to Pay via WeChat",
+    "scanQrCodeVenmo": "Scan to Pay via Venmo",
     "qrNotConfigured": "QR code not yet configured",
     "paymentDetails": "Payment Details",
     "amount": "Amount",
     "referenceNumber": "Reference Number",
     "copy": "Copy",
     "includeReference": "Please include this reference number in your WeChat payment note",
+    "includeReferenceVenmo": "Please include this reference number in your Venmo payment note",
     "instructions": "Payment Instructions",
     "status": "Status",
     "date": "Date",

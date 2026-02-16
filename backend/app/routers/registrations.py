@@ -56,7 +56,9 @@ async def create_registration_with_schedule(
 
             # Create payment record
             payment = await payment_service.create_payment_for_registration(
-                registration, yoga_class, db, package_id=data.package_id
+                registration, yoga_class, db,
+                package_id=data.package_id,
+                payment_method=data.payment_method
             )
 
             # Send payment instructions email instead of confirmation

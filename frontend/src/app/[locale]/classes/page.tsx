@@ -60,9 +60,14 @@ export default async function ClassesPage({
                 </p>
                 <p>
                   <span className="font-medium">{t("price")}:</span>{" "}
-                  {cls.price != null && cls.price > 0
-                    ? `\u00a5${cls.price}/${t("perSession")}`
-                    : t("free")}
+                  {(() => {
+                    const cny = cls.price != null && cls.price > 0;
+                    const usd = cls.price_usd != null && cls.price_usd > 0;
+                    if (cny && usd) return `\u00a5${cls.price} / $${cls.price_usd} ${t("perSession")}`;
+                    if (cny) return `\u00a5${cls.price}/${t("perSession")}`;
+                    if (usd) return `$${cls.price_usd}/${t("perSession")}`;
+                    return t("free");
+                  })()}
                 </p>
                 {cls.packages && cls.packages.length > 0 && (
                   <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
