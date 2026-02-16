@@ -7,7 +7,7 @@ import { vi } from 'vitest'
 export const mockUseTranslations = (messages: Record<string, any>) => {
   return vi.fn((key: string, params?: any) => {
     const keys = key.split('.')
-    let value = messages
+    let value: any = messages
 
     for (const k of keys) {
       if (value && typeof value === 'object' && k in value) {

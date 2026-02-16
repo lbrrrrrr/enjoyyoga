@@ -20,10 +20,14 @@ afterAll(() => {
 
 // Mock IntersectionObserver (often needed for modern UI components)
 global.IntersectionObserver = class IntersectionObserver {
-  constructor() {}
+  readonly root = null
+  readonly rootMargin = '0px'
+  readonly thresholds = [0]
+  constructor(_callback: IntersectionObserverCallback, _options?: IntersectionObserverInit) {}
   disconnect() {}
   observe() {}
   unobserve() {}
+  takeRecords(): IntersectionObserverEntry[] { return [] }
 }
 
 // Mock ResizeObserver (often needed for modern UI components)

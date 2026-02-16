@@ -186,7 +186,7 @@ export const handlers = [
 
   // Public API - Registrations
   http.post(`${API_BASE}/api/registrations`, async ({ request }) => {
-    const data = await request.json()
+    const data = await request.json() as Record<string, unknown>
     const newRegistration = {
       id: Date.now().toString(),
       ...data,
@@ -196,7 +196,7 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE}/api/registrations/with-schedule`, async ({ request }) => {
-    const data = await request.json()
+    const data = await request.json() as Record<string, unknown>
     const newRegistration = {
       id: Date.now().toString(),
       ...data,
@@ -223,7 +223,7 @@ export const handlers = [
 
   // Public API - Contact Inquiries
   http.post(`${API_BASE}/api/contact/inquiries`, async ({ request }) => {
-    const data = await request.json()
+    const data = await request.json() as Record<string, unknown>
     const newInquiry = {
       id: Date.now().toString(),
       ...data,
@@ -238,7 +238,7 @@ export const handlers = [
 
   // Admin API - Authentication
   http.post(`${API_BASE}/api/admin/login`, async ({ request }) => {
-    const { username, password } = await request.json()
+    const { username, password } = await request.json() as Record<string, string>
 
     if (username === 'admin' && password === 'password') {
       return HttpResponse.json({
@@ -295,7 +295,7 @@ export const handlers = [
 
   http.put(`${API_BASE}/api/admin/registrations/:id/status`, async ({ params, request }) => {
     const { id } = params
-    const { status } = await request.json()
+    const { status } = await request.json() as Record<string, string>
     const registration = mockRegistrations.find(r => r.id === id)
 
     if (!registration) {
@@ -308,7 +308,7 @@ export const handlers = [
 
   // Admin API - Teachers
   http.post(`${API_BASE}/api/admin/teachers`, async ({ request }) => {
-    const data = await request.json()
+    const data = await request.json() as Record<string, unknown>
     const newTeacher = {
       id: Date.now().toString(),
       ...data,
@@ -319,7 +319,7 @@ export const handlers = [
 
   http.put(`${API_BASE}/api/admin/teachers/:id`, async ({ params, request }) => {
     const { id } = params
-    const data = await request.json()
+    const data = await request.json() as Record<string, unknown>
     const updatedTeacher = {
       id,
       ...data,
@@ -345,7 +345,7 @@ export const handlers = [
 
   // Admin API - Classes
   http.post(`${API_BASE}/api/admin/classes`, async ({ request }) => {
-    const data = await request.json()
+    const data = await request.json() as Record<string, unknown>
     const newClass = {
       id: Date.now().toString(),
       ...data,
@@ -358,7 +358,7 @@ export const handlers = [
 
   http.put(`${API_BASE}/api/admin/classes/:id`, async ({ params, request }) => {
     const { id } = params
-    const data = await request.json()
+    const data = await request.json() as Record<string, unknown>
     const updatedClass = {
       id,
       ...data,
@@ -371,7 +371,7 @@ export const handlers = [
 
   // Admin API - Yoga Types
   http.post(`${API_BASE}/api/admin/yoga-types`, async ({ request }) => {
-    const data = await request.json()
+    const data = await request.json() as Record<string, unknown>
     const newYogaType = {
       id: Date.now().toString(),
       ...data,
@@ -382,7 +382,7 @@ export const handlers = [
 
   http.put(`${API_BASE}/api/admin/yoga-types/:id`, async ({ params, request }) => {
     const { id } = params
-    const data = await request.json()
+    const data = await request.json() as Record<string, unknown>
     const updatedYogaType = {
       id,
       ...data,
@@ -423,7 +423,7 @@ export const handlers = [
 
   http.put(`${API_BASE}/api/admin/contact/inquiries/:id`, async ({ params, request }) => {
     const { id } = params
-    const data = await request.json()
+    const data = await request.json() as Record<string, unknown>
     const inquiry = mockContactInquiries.find(i => i.id === id)
 
     if (!inquiry) {
@@ -457,7 +457,7 @@ export const handlers = [
 
   http.post(`${API_BASE}/api/admin/contact/inquiries/:id/replies`, async ({ params, request }) => {
     const { id } = params
-    const data = await request.json()
+    const data = await request.json() as Record<string, unknown>
 
     const newReply = {
       id: Date.now().toString(),
@@ -648,7 +648,7 @@ export const handlers = [
 
   http.post(`${API_BASE}/api/admin/payments/:paymentId/confirm`, async ({ params, request }) => {
     const { paymentId } = params
-    const data = await request.json()
+    const data = await request.json() as Record<string, unknown>
     return HttpResponse.json({
       id: paymentId,
       registration_id: 'reg-1',
@@ -668,7 +668,7 @@ export const handlers = [
 
   http.post(`${API_BASE}/api/admin/payments/:paymentId/cancel`, async ({ params, request }) => {
     const { paymentId } = params
-    const data = await request.json()
+    const data = await request.json() as Record<string, unknown>
     return HttpResponse.json({
       id: paymentId,
       registration_id: 'reg-1',
@@ -701,7 +701,7 @@ export const handlers = [
   }),
 
   http.put(`${API_BASE}/api/admin/payment-settings`, async ({ request }) => {
-    const data = await request.json()
+    const data = await request.json() as Record<string, unknown>
     return HttpResponse.json({
       id: 'settings-1',
       wechat_qr_code_url: 'http://test.com/wechat_qr.png',
@@ -769,7 +769,7 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE}/api/admin/packages`, async ({ request }) => {
-    const data = await request.json()
+    const data = await request.json() as Record<string, unknown>
     return HttpResponse.json({
       id: Date.now().toString(),
       ...data,
@@ -779,7 +779,7 @@ export const handlers = [
 
   http.put(`${API_BASE}/api/admin/packages/:packageId`, async ({ params, request }) => {
     const { packageId } = params
-    const data = await request.json()
+    const data = await request.json() as Record<string, unknown>
     return HttpResponse.json({
       id: packageId,
       class_id: 'class-1',
