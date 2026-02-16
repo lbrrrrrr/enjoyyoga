@@ -8,6 +8,14 @@ This repository uses GitHub Actions for continuous integration and automated cod
 - **Frontend Tests** - Automated testing for Next.js frontend (80+ tests)
 - **Claude PR Review** - AI-powered code review using Claude Sonnet 4.5
 
+## Pull Request Creation
+
+**Local Git Hook** (not a GitHub Actions workflow):
+- PRs are automatically created via a local git post-push hook (`.git/hooks/post-push`)
+- When you push to any non-main branch, the hook creates a PR and displays the URL in your terminal
+- Requires GitHub CLI (`gh`) installed and authenticated
+- No GitHub Actions workflow needed for PR creation
+
 ## Backend Tests
 
 Runs automatically on every push to `main` and on all pull requests.
