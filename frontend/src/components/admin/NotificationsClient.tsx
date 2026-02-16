@@ -31,7 +31,7 @@ export function NotificationsClient() {
       title: "Registration Confirmation",
       description: "Sent automatically when a user registers for a class",
       subject_en: "Welcome to {{class_name}} - Registration Confirmed!",
-      content_en: "Dear {{name}},\n\nYour registration for {{class_name}} has been confirmed!\n\nClass Details:\n- Date: {{date}}\n- Time: {{time}}\n- Teacher: {{teacher_name}}\n\nWe look forward to seeing you!\n\nBest regards,\nenjoyYoga Team"
+      content_en: "Dear {{name}},\n\nYour registration for {{class_name}} has been confirmed!\n\nClass Details:\n- Date: {{date}}\n- Time: {{time}}\n- Teacher: {{teacher_name}}\n\nWe look forward to seeing you!\n\nBest regards,\nEnjoy Yoga Team"
     },
     {
       id: "2",
@@ -39,7 +39,7 @@ export function NotificationsClient() {
       title: "Class Reminder",
       description: "Sent 24 hours before the scheduled class",
       subject_en: "Reminder: {{class_name}} tomorrow at {{time}}",
-      content_en: "Hi {{name}},\n\nThis is a friendly reminder that you have {{class_name}} scheduled for tomorrow.\n\nClass Details:\n- Date: {{date}}\n- Time: {{time}}\n- Teacher: {{teacher_name}}\n\nSee you there!\n\nBest,\nenjoyYoga Team"
+      content_en: "Hi {{name}},\n\nThis is a friendly reminder that you have {{class_name}} scheduled for tomorrow.\n\nClass Details:\n- Date: {{date}}\n- Time: {{time}}\n- Teacher: {{teacher_name}}\n\nSee you there!\n\nBest,\nEnjoy Yoga Team"
     },
     {
       id: "3",
@@ -47,7 +47,7 @@ export function NotificationsClient() {
       title: "Cancellation Notice",
       description: "Sent when a class is cancelled by the studio",
       subject_en: "Class Cancelled: {{class_name}} on {{date}}",
-      content_en: "Dear {{name}},\n\nWe regret to inform you that {{class_name}} scheduled for {{date}} at {{time}} has been cancelled.\n\nWe apologize for any inconvenience. Please contact us to reschedule or for a full refund.\n\nThank you for your understanding.\n\nenjoyYoga Team"
+      content_en: "Dear {{name}},\n\nWe regret to inform you that {{class_name}} scheduled for {{date}} at {{time}} has been cancelled.\n\nWe apologize for any inconvenience. Please contact us to reschedule or for a full refund.\n\nThank you for your understanding.\n\nEnjoy Yoga Team"
     }
   ];
 

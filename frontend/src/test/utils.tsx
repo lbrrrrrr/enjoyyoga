@@ -13,7 +13,7 @@ const defaultEnMessages = {
     register: 'Register'
   },
   home: {
-    title: 'Welcome to enjoyyoga'
+    title: 'Welcome to Enjoy Yoga'
   },
   admin: {
     dashboard: 'Dashboard',
@@ -56,7 +56,7 @@ const defaultZhMessages = {
     register: '注册'
   },
   home: {
-    title: '欢迎来到enjoyyoga'
+    title: '欢迎来到Enjoy Yoga'
   },
   admin: {
     dashboard: '仪表板',

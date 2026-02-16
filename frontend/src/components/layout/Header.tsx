@@ -21,7 +21,7 @@ export function Header() {
     <header className="border-b bg-background">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href={`/${locale}`} className="text-xl font-bold">
-          enjoyyoga
+          Enjoy Yoga
         </Link>
         <nav className="flex items-center gap-6">
           {links.map((link) => (

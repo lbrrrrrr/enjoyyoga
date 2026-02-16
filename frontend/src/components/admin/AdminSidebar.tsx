@@ -23,7 +23,7 @@ export function AdminSidebar() {
   return (
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
       <div className="p-4 border-b">
-        <h2 className="text-lg font-semibold text-gray-900">enjoyyoga Admin</h2>
+        <h2 className="text-lg font-semibold text-gray-900">Enjoy Yoga Admin</h2>
       </div>
 
       <nav className="flex-1 mt-4">
