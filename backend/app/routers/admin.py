@@ -435,6 +435,7 @@ async def create_class(
         schedule_type=class_data.schedule_type,
         is_active=class_data.is_active,
         price=class_data.price,
+        price_usd=class_data.price_usd,
         currency=class_data.currency,
     )
 
@@ -494,6 +495,7 @@ async def update_class(
     yoga_class.schedule_type = class_data.schedule_type
     yoga_class.is_active = class_data.is_active
     yoga_class.price = class_data.price
+    yoga_class.price_usd = class_data.price_usd
     yoga_class.currency = class_data.currency
 
     await db.commit()
