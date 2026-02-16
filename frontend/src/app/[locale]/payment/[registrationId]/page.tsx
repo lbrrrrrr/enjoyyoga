@@ -16,6 +16,8 @@ export default function PaymentPage() {
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [lastChecked, setLastChecked] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPayment = async () => {
@@ -32,11 +34,15 @@ export default function PaymentPage() {
   }, [registrationId]);
 
   const refreshStatus = async () => {
+    setChecking(true);
     try {
       const data = await getPaymentByRegistration(registrationId);
       setPaymentInfo(data);
+      setLastChecked(new Date().toLocaleTimeString());
     } catch {
-      // ignore
+      setLastChecked(null);
+    } finally {
+      setChecking(false);
     }
   };
 
@@ -137,10 +143,15 @@ export default function PaymentPage() {
             </CardContent>
           </Card>
 
-          <div className="text-center">
-            <Button variant="outline" onClick={refreshStatus}>
-              {t("checkStatus")}
+          <div className="text-center space-y-2">
+            <Button variant="outline" onClick={refreshStatus} disabled={checking}>
+              {checking ? t("searching") : t("checkStatus")}
             </Button>
+            {lastChecked && (
+              <p className="text-xs text-gray-500">
+                {t("statusPending")} ({lastChecked})
+              </p>
+            )}
           </div>
         </>
       )}

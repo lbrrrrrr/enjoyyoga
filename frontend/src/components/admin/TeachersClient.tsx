@@ -61,7 +61,9 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
     schedule: "",
     duration_minutes: 60,
     difficulty: "beginner",
-    capacity: 10
+    capacity: 10,
+    price: null as number | null,
+    currency: "CNY"
   });
   const [isCreatingClass, setIsCreatingClass] = useState(false);
   const [createClassError, setCreateClassError] = useState<string | null>(null);
@@ -79,7 +81,9 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
     schedule: "",
     duration_minutes: 60,
     difficulty: "beginner",
-    capacity: 10
+    capacity: 10,
+    price: null as number | null,
+    currency: "CNY"
   });
   const [isUpdatingClass, setIsUpdatingClass] = useState(false);
   const [updateClassError, setUpdateClassError] = useState<string | null>(null);
@@ -276,7 +280,9 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
       schedule: "",
       duration_minutes: 60,
       difficulty: "beginner",
-      capacity: 10
+      capacity: 10,
+      price: null,
+      currency: "CNY"
     });
     setCreateClassError(null);
 
@@ -300,7 +306,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
     setCreateClassError(null);
   };
 
-  const handleClassFormChange = (field: keyof typeof classFormData, value: string | number) => {
+  const handleClassFormChange = (field: keyof typeof classFormData, value: string | number | null) => {
     setClassFormData(prev => ({
       ...prev,
       [field]: value
@@ -324,7 +330,9 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
         schedule: classFormData.schedule,
         duration_minutes: classFormData.duration_minutes,
         difficulty: classFormData.difficulty,
-        capacity: classFormData.capacity
+        capacity: classFormData.capacity,
+        price: classFormData.price,
+        currency: classFormData.currency
       });
 
       // Update the teacher classes cache to include the new class
@@ -361,7 +369,9 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
       schedule: yogaClass.schedule,
       duration_minutes: yogaClass.duration_minutes,
       difficulty: yogaClass.difficulty,
-      capacity: yogaClass.capacity
+      capacity: yogaClass.capacity,
+      price: yogaClass.price ?? null,
+      currency: yogaClass.currency || "CNY"
     });
     setUpdateClassError(null);
 
@@ -385,7 +395,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
     setUpdateClassError(null);
   };
 
-  const handleEditClassFormChange = (field: keyof typeof editClassFormData, value: string | number) => {
+  const handleEditClassFormChange = (field: keyof typeof editClassFormData, value: string | number | null) => {
     setEditClassFormData(prev => ({
       ...prev,
       [field]: value
@@ -409,7 +419,9 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
         schedule: editClassFormData.schedule,
         duration_minutes: editClassFormData.duration_minutes,
         difficulty: editClassFormData.difficulty,
-        capacity: editClassFormData.capacity
+        capacity: editClassFormData.capacity,
+        price: editClassFormData.price,
+        currency: editClassFormData.currency
       });
 
       // Update the teacher classes cache with the updated class
@@ -574,6 +586,12 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
                                 </p>
                                 <p className="text-xs text-gray-600">
                                   <strong>Capacity:</strong> {yogaClass.capacity}
+                                </p>
+                                <p className="text-xs text-gray-600">
+                                  <strong>Price:</strong>{" "}
+                                  {yogaClass.price != null && yogaClass.price > 0
+                                    ? `${yogaClass.currency === "USD" ? "$" : "¥"}${yogaClass.price}/session`
+                                    : "Free"}
                                 </p>
                                 <p className="text-xs text-gray-600">
                                   <strong>Type:</strong> {locale === "zh" ? yogaClass.yoga_type.name_zh : yogaClass.yoga_type.name_en}
@@ -1084,6 +1102,39 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
                     <option value="all-levels">All Levels</option>
                   </select>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Price per Session</label>
+                    <input
+                      type="number"
+                      value={classFormData.price ?? ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        handleClassFormChange("price", val === "" ? null as unknown as number : parseFloat(val));
+                      }}
+                      className="w-full p-2 border rounded-md"
+                      min="0"
+                      step="0.01"
+                      placeholder="Leave empty for free"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Leave empty for free classes
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Currency</label>
+                    <select
+                      value={classFormData.currency}
+                      onChange={(e) => handleClassFormChange("currency", e.target.value)}
+                      className="w-full p-2 border rounded-md"
+                    >
+                      <option value="CNY">CNY (¥)</option>
+                      <option value="USD">USD ($)</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1257,6 +1308,39 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
                     <option value="advanced">Advanced</option>
                     <option value="all-levels">All Levels</option>
                   </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Price per Session</label>
+                    <input
+                      type="number"
+                      value={editClassFormData.price ?? ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        handleEditClassFormChange("price", val === "" ? null as unknown as number : parseFloat(val));
+                      }}
+                      className="w-full p-2 border rounded-md"
+                      min="0"
+                      step="0.01"
+                      placeholder="Leave empty for free"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Leave empty for free classes
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Currency</label>
+                    <select
+                      value={editClassFormData.currency}
+                      onChange={(e) => handleEditClassFormChange("currency", e.target.value)}
+                      className="w-full p-2 border rounded-md"
+                    >
+                      <option value="CNY">CNY (¥)</option>
+                      <option value="USD">USD ($)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
