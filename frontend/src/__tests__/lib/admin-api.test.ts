@@ -260,6 +260,198 @@ describe('Admin API Client', () => {
     })
   })
 
+  describe('Payment Management', () => {
+    it('should fetch all payments', async () => {
+      const payments = await adminApi.getAdminPayments()
+
+      expect(payments).toHaveLength(2)
+      expect(payments[0]).toMatchObject({
+        payment_method: 'wechat_qr',
+        currency: 'CNY'
+      })
+      expect(payments[1]).toMatchObject({
+        payment_method: 'venmo_qr',
+        currency: 'USD'
+      })
+    })
+
+    it('should fetch payments filtered by status', async () => {
+      const payments = await adminApi.getAdminPayments('confirmed')
+
+      expect(payments).toHaveLength(1)
+      expect(payments[0].status).toBe('confirmed')
+      expect(payments[0].payment_method).toBe('venmo_qr')
+    })
+
+    it('should fetch pending payments', async () => {
+      const payments = await adminApi.getPendingPayments()
+
+      expect(payments).toHaveLength(2)
+      expect(payments[0].payment_method).toBe('wechat_qr')
+      expect(payments[1].payment_method).toBe('venmo_qr')
+    })
+
+    it('should fetch payment statistics with per-currency revenue', async () => {
+      const stats = await adminApi.getPaymentStats()
+
+      expect(stats).toMatchObject({
+        total_payments: 10,
+        pending_payments: 3,
+        confirmed_payments: 5,
+        cancelled_payments: 2,
+        total_revenue: 575.0,
+        total_revenue_cny: 500.0,
+        total_revenue_usd: 75.0
+      })
+    })
+
+    it('should fetch payment detail', async () => {
+      const payment = await adminApi.getPaymentDetail('pay-1')
+
+      expect(payment).toMatchObject({
+        id: 'pay-1',
+        payment_method: 'venmo_qr',
+        currency: 'USD',
+        amount: 15.0
+      })
+    })
+
+    it('should confirm a payment', async () => {
+      const payment = await adminApi.confirmPayment('pay-1', 'Verified in WeChat')
+
+      expect(payment).toMatchObject({
+        id: 'pay-1',
+        status: 'confirmed',
+        admin_notes: 'Verified in WeChat',
+        confirmed_at: expect.any(String)
+      })
+    })
+
+    it('should cancel a payment', async () => {
+      const payment = await adminApi.cancelPayment('pay-1', 'Duplicate')
+
+      expect(payment).toMatchObject({
+        id: 'pay-1',
+        status: 'cancelled',
+        admin_notes: 'Duplicate'
+      })
+    })
+  })
+
+  describe('Payment Settings', () => {
+    it('should fetch payment settings with Venmo fields', async () => {
+      const settings = await adminApi.getPaymentSettingsAdmin()
+
+      expect(settings).toMatchObject({
+        wechat_qr_code_url: 'http://test.com/wechat_qr.png',
+        venmo_qr_code_url: 'http://test.com/venmo_qr.png',
+        venmo_payment_instructions_en: 'Pay via Venmo',
+        venmo_payment_instructions_zh: '通过 Venmo 支付'
+      })
+    })
+
+    it('should update payment settings with Venmo instructions', async () => {
+      const settings = await adminApi.updatePaymentSettings({
+        venmo_payment_instructions_en: 'Updated Venmo instructions',
+        venmo_payment_instructions_zh: '更新的 Venmo 说明'
+      })
+
+      expect(settings).toMatchObject({
+        venmo_payment_instructions_en: 'Updated Venmo instructions',
+        venmo_payment_instructions_zh: '更新的 Venmo 说明'
+      })
+    })
+
+    it('should upload WeChat QR code', async () => {
+      const file = new File(['qr-data'], 'wechat.png', { type: 'image/png' })
+      const result = await adminApi.uploadWechatQrCode(file)
+
+      expect(result).toMatchObject({
+        message: 'QR code uploaded successfully',
+        qr_code_url: expect.stringContaining('wechat_qr')
+      })
+    })
+
+    it('should upload Venmo QR code', async () => {
+      const file = new File(['qr-data'], 'venmo.png', { type: 'image/png' })
+      const result = await adminApi.uploadVenmoQrCode(file)
+
+      expect(result).toMatchObject({
+        message: 'Venmo QR code uploaded successfully',
+        qr_code_url: expect.stringContaining('venmo_qr')
+      })
+    })
+
+    it('should handle WeChat QR upload auth failure', async () => {
+      server.use(
+        http.post('http://localhost:8000/api/admin/payment-settings/qr-code', () => {
+          return HttpResponse.json({ detail: 'Not authenticated' }, { status: 401 })
+        })
+      )
+
+      const file = new File(['qr-data'], 'wechat.png', { type: 'image/png' })
+      await expect(adminApi.uploadWechatQrCode(file)).rejects.toThrow('Not authenticated')
+      expect(window.location.href).toBe('/admin/login')
+    })
+
+    it('should handle Venmo QR upload auth failure', async () => {
+      server.use(
+        http.post('http://localhost:8000/api/admin/payment-settings/venmo-qr-code', () => {
+          return HttpResponse.json({ detail: 'Session expired' }, { status: 401 })
+        })
+      )
+
+      const file = new File(['qr-data'], 'venmo.png', { type: 'image/png' })
+      await expect(adminApi.uploadVenmoQrCode(file)).rejects.toThrow('Session expired')
+      expect(window.location.href).toBe('/admin/login')
+    })
+  })
+
+  describe('Package Management', () => {
+    it('should fetch packages for a class with price_usd', async () => {
+      const packages = await adminApi.getPackagesForClass('class-1')
+
+      expect(packages).toHaveLength(1)
+      expect(packages[0]).toMatchObject({
+        id: 'pkg-1',
+        name_en: '5 Sessions',
+        price: 400.0,
+        price_usd: 60.0,
+        session_count: 5
+      })
+    })
+
+    it('should create a package with dual pricing', async () => {
+      const pkg = await adminApi.createPackage({
+        class_id: 'class-1',
+        name_en: '10 Sessions',
+        name_zh: '10节课',
+        session_count: 10,
+        price: 800.0,
+        price_usd: 120.0,
+        currency: 'CNY'
+      })
+
+      expect(pkg).toMatchObject({
+        name_en: '10 Sessions',
+        price: 800.0,
+        price_usd: 120.0,
+        session_count: 10
+      })
+    })
+
+    it('should update a package with USD price', async () => {
+      const pkg = await adminApi.updatePackage('pkg-1', {
+        price_usd: 55.0
+      })
+
+      expect(pkg).toMatchObject({
+        id: 'pkg-1',
+        price_usd: 55.0
+      })
+    })
+  })
+
   describe('Error Handling and Authentication', () => {
     it('should handle 401 errors by redirecting to login', async () => {
       server.use(

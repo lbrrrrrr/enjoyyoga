@@ -349,6 +349,94 @@ describe('API Client', () => {
     })
   })
 
+  describe('Payment API', () => {
+    it('should fetch payment status by reference number', async () => {
+      const paymentInfo = await api.getPaymentStatus('EY-20260216-WC01')
+
+      expect(paymentInfo).toMatchObject({
+        payment_id: 'pay-1',
+        reference_number: 'EY-20260216-WC01',
+        amount: 100.0,
+        currency: 'CNY',
+        status: 'pending',
+        payment_method: 'wechat_qr',
+        wechat_qr_code_url: expect.any(String)
+      })
+    })
+
+    it('should fetch Venmo payment status', async () => {
+      const paymentInfo = await api.getPaymentStatus('EY-20260216-VM01')
+
+      expect(paymentInfo).toMatchObject({
+        payment_method: 'venmo_qr',
+        currency: 'USD',
+        amount: 15.0,
+        venmo_qr_code_url: 'http://test.com/venmo_qr.png',
+        venmo_payment_instructions_en: 'Pay via Venmo'
+      })
+    })
+
+    it('should handle payment not found', async () => {
+      await expect(api.getPaymentStatus('EY-20260216-NOTF'))
+        .rejects.toThrow('API error: 404')
+    })
+
+    it('should fetch payment settings with Venmo fields', async () => {
+      const settings = await api.getPaymentSettings()
+
+      expect(settings).toMatchObject({
+        id: 'settings-1',
+        wechat_qr_code_url: 'http://test.com/wechat_qr.png',
+        venmo_qr_code_url: 'http://test.com/venmo_qr.png',
+        venmo_payment_instructions_en: 'Pay via Venmo',
+        venmo_payment_instructions_zh: '通过 Venmo 支付'
+      })
+    })
+
+    it('should fetch payment by registration ID', async () => {
+      const paymentInfo = await api.getPaymentByRegistration('reg-123')
+
+      expect(paymentInfo).toMatchObject({
+        payment_id: 'pay-reg-1',
+        reference_number: 'EY-20260216-REG1',
+        amount: 100.0,
+        currency: 'CNY',
+        payment_method: 'wechat_qr'
+      })
+    })
+
+    it('should handle payment by registration not found', async () => {
+      await expect(api.getPaymentByRegistration('not-found'))
+        .rejects.toThrow('API error: 404')
+    })
+
+    it('should include payment_method in registration with schedule', async () => {
+      let capturedBody: any = null
+      server.use(
+        http.post('http://localhost:8000/api/registrations/with-schedule', async ({ request }) => {
+          capturedBody = await request.json()
+          return HttpResponse.json({
+            id: '1',
+            ...capturedBody,
+            status: 'pending_payment',
+            created_at: new Date().toISOString(),
+            email_confirmation_sent: true,
+            reminder_sent: false
+          }, { status: 201 })
+        })
+      )
+
+      await api.createRegistrationWithSchedule({
+        class_id: '1',
+        name: 'Test User',
+        email: 'test@example.com',
+        payment_method: 'venmo_qr'
+      })
+
+      expect(capturedBody.payment_method).toBe('venmo_qr')
+    })
+  })
+
   describe('Request Headers and Authentication', () => {
     it('should include admin token in authorization header for admin endpoints', async () => {
       let capturedHeaders: Record<string, string> = {}

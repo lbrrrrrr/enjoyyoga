@@ -468,5 +468,328 @@ export const handlers = [
     }
 
     return HttpResponse.json(newReply, { status: 201 })
+  }),
+
+  // Public API - Payments
+  http.get(`${API_BASE}/api/payments/status/:referenceNumber`, ({ params }) => {
+    const { referenceNumber } = params
+    if (referenceNumber === 'EY-20260216-NOTF') {
+      return HttpResponse.json({ detail: 'Payment not found' }, { status: 404 })
+    }
+    const isVenmo = (referenceNumber as string).includes('VM')
+    return HttpResponse.json({
+      payment_id: 'pay-1',
+      reference_number: referenceNumber,
+      amount: isVenmo ? 15.0 : 100.0,
+      currency: isVenmo ? 'USD' : 'CNY',
+      status: 'pending',
+      payment_method: isVenmo ? 'venmo_qr' : 'wechat_qr',
+      wechat_qr_code_url: 'http://test.com/wechat_qr.png',
+      payment_instructions_en: 'Pay via WeChat',
+      payment_instructions_zh: '通过微信支付',
+      venmo_qr_code_url: 'http://test.com/venmo_qr.png',
+      venmo_payment_instructions_en: 'Pay via Venmo',
+      venmo_payment_instructions_zh: '通过 Venmo 支付',
+      created_at: '2024-01-15T00:00:00Z'
+    })
+  }),
+
+  http.get(`${API_BASE}/api/payments/settings`, () => {
+    return HttpResponse.json({
+      id: 'settings-1',
+      wechat_qr_code_url: 'http://test.com/wechat_qr.png',
+      payment_instructions_en: 'Pay via WeChat',
+      payment_instructions_zh: '通过微信支付',
+      venmo_qr_code_url: 'http://test.com/venmo_qr.png',
+      venmo_payment_instructions_en: 'Pay via Venmo',
+      venmo_payment_instructions_zh: '通过 Venmo 支付',
+      updated_at: '2024-01-15T00:00:00Z'
+    })
+  }),
+
+  http.get(`${API_BASE}/api/payments/registration/:registrationId`, ({ params }) => {
+    const { registrationId } = params
+    if (registrationId === 'not-found') {
+      return HttpResponse.json({ detail: 'Payment not found' }, { status: 404 })
+    }
+    return HttpResponse.json({
+      payment_id: 'pay-reg-1',
+      reference_number: 'EY-20260216-REG1',
+      amount: 100.0,
+      currency: 'CNY',
+      status: 'pending',
+      payment_method: 'wechat_qr',
+      wechat_qr_code_url: 'http://test.com/wechat_qr.png',
+      payment_instructions_en: 'Pay via WeChat',
+      payment_instructions_zh: '通过微信支付',
+      venmo_qr_code_url: null,
+      venmo_payment_instructions_en: null,
+      venmo_payment_instructions_zh: null,
+      created_at: '2024-01-15T00:00:00Z'
+    })
+  }),
+
+  // Admin API - Payments
+  http.get(`${API_BASE}/api/admin/payments/stats`, () => {
+    return HttpResponse.json({
+      total_payments: 10,
+      pending_payments: 3,
+      confirmed_payments: 5,
+      cancelled_payments: 2,
+      total_revenue: 575.0,
+      total_revenue_cny: 500.0,
+      total_revenue_usd: 75.0
+    })
+  }),
+
+  http.get(`${API_BASE}/api/admin/payments/pending`, () => {
+    return HttpResponse.json([
+      {
+        id: 'pay-p1',
+        registration_id: 'reg-1',
+        amount: 100.0,
+        currency: 'CNY',
+        payment_method: 'wechat_qr',
+        status: 'pending',
+        reference_number: 'EY-20260216-P001',
+        payment_type: 'single_session',
+        package_id: null,
+        admin_notes: null,
+        confirmed_by: null,
+        confirmed_at: null,
+        created_at: '2024-01-15T00:00:00Z'
+      },
+      {
+        id: 'pay-p2',
+        registration_id: 'reg-2',
+        amount: 15.0,
+        currency: 'USD',
+        payment_method: 'venmo_qr',
+        status: 'pending',
+        reference_number: 'EY-20260216-P002',
+        payment_type: 'single_session',
+        package_id: null,
+        admin_notes: null,
+        confirmed_by: null,
+        confirmed_at: null,
+        created_at: '2024-01-15T00:00:00Z'
+      }
+    ])
+  }),
+
+  http.get(`${API_BASE}/api/admin/payments/:paymentId`, ({ params }) => {
+    const { paymentId } = params
+    if (paymentId === 'not-found') {
+      return HttpResponse.json({ detail: 'Payment not found' }, { status: 404 })
+    }
+    return HttpResponse.json({
+      id: paymentId,
+      registration_id: 'reg-1',
+      amount: 15.0,
+      currency: 'USD',
+      payment_method: 'venmo_qr',
+      status: 'pending',
+      reference_number: 'EY-20260216-DTL1',
+      payment_type: 'single_session',
+      package_id: null,
+      admin_notes: null,
+      confirmed_by: null,
+      confirmed_at: null,
+      created_at: '2024-01-15T00:00:00Z'
+    })
+  }),
+
+  http.get(`${API_BASE}/api/admin/payments`, ({ request }) => {
+    const url = new URL(request.url)
+    const status = url.searchParams.get('status')
+
+    const allPayments = [
+      {
+        id: 'pay-1',
+        registration_id: 'reg-1',
+        amount: 100.0,
+        currency: 'CNY',
+        payment_method: 'wechat_qr',
+        status: 'pending',
+        reference_number: 'EY-20260216-A001',
+        payment_type: 'single_session',
+        package_id: null,
+        admin_notes: null,
+        confirmed_by: null,
+        confirmed_at: null,
+        created_at: '2024-01-15T00:00:00Z'
+      },
+      {
+        id: 'pay-2',
+        registration_id: 'reg-2',
+        amount: 25.0,
+        currency: 'USD',
+        payment_method: 'venmo_qr',
+        status: 'confirmed',
+        reference_number: 'EY-20260216-A002',
+        payment_type: 'single_session',
+        package_id: null,
+        admin_notes: 'Verified',
+        confirmed_by: '1',
+        confirmed_at: '2024-01-16T00:00:00Z',
+        created_at: '2024-01-15T00:00:00Z'
+      }
+    ]
+
+    if (status) {
+      return HttpResponse.json(allPayments.filter(p => p.status === status))
+    }
+    return HttpResponse.json(allPayments)
+  }),
+
+  http.post(`${API_BASE}/api/admin/payments/:paymentId/confirm`, async ({ params, request }) => {
+    const { paymentId } = params
+    const data = await request.json()
+    return HttpResponse.json({
+      id: paymentId,
+      registration_id: 'reg-1',
+      amount: 100.0,
+      currency: 'CNY',
+      payment_method: 'wechat_qr',
+      status: 'confirmed',
+      reference_number: 'EY-20260216-CONF',
+      payment_type: 'single_session',
+      package_id: null,
+      admin_notes: (data as any).admin_notes || null,
+      confirmed_by: '1',
+      confirmed_at: new Date().toISOString(),
+      created_at: '2024-01-15T00:00:00Z'
+    })
+  }),
+
+  http.post(`${API_BASE}/api/admin/payments/:paymentId/cancel`, async ({ params, request }) => {
+    const { paymentId } = params
+    const data = await request.json()
+    return HttpResponse.json({
+      id: paymentId,
+      registration_id: 'reg-1',
+      amount: 15.0,
+      currency: 'USD',
+      payment_method: 'venmo_qr',
+      status: 'cancelled',
+      reference_number: 'EY-20260216-CANC',
+      payment_type: 'single_session',
+      package_id: null,
+      admin_notes: (data as any).admin_notes || null,
+      confirmed_by: null,
+      confirmed_at: null,
+      created_at: '2024-01-15T00:00:00Z'
+    })
+  }),
+
+  // Admin API - Payment Settings
+  http.get(`${API_BASE}/api/admin/payment-settings`, () => {
+    return HttpResponse.json({
+      id: 'settings-1',
+      wechat_qr_code_url: 'http://test.com/wechat_qr.png',
+      payment_instructions_en: 'Pay via WeChat',
+      payment_instructions_zh: '通过微信支付',
+      venmo_qr_code_url: 'http://test.com/venmo_qr.png',
+      venmo_payment_instructions_en: 'Pay via Venmo',
+      venmo_payment_instructions_zh: '通过 Venmo 支付',
+      updated_at: '2024-01-15T00:00:00Z'
+    })
+  }),
+
+  http.put(`${API_BASE}/api/admin/payment-settings`, async ({ request }) => {
+    const data = await request.json()
+    return HttpResponse.json({
+      id: 'settings-1',
+      wechat_qr_code_url: 'http://test.com/wechat_qr.png',
+      payment_instructions_en: (data as any).payment_instructions_en || 'Pay via WeChat',
+      payment_instructions_zh: (data as any).payment_instructions_zh || '通过微信支付',
+      venmo_qr_code_url: 'http://test.com/venmo_qr.png',
+      venmo_payment_instructions_en: (data as any).venmo_payment_instructions_en || 'Pay via Venmo',
+      venmo_payment_instructions_zh: (data as any).venmo_payment_instructions_zh || '通过 Venmo 支付',
+      updated_at: new Date().toISOString()
+    })
+  }),
+
+  http.post(`${API_BASE}/api/admin/payment-settings/qr-code`, () => {
+    return HttpResponse.json({
+      message: 'QR code uploaded successfully',
+      qr_code_url: 'http://test.com/wechat_qr_new.png',
+      settings: {
+        id: 'settings-1',
+        wechat_qr_code_url: 'http://test.com/wechat_qr_new.png',
+        payment_instructions_en: 'Pay via WeChat',
+        payment_instructions_zh: '通过微信支付',
+        venmo_qr_code_url: null,
+        venmo_payment_instructions_en: null,
+        venmo_payment_instructions_zh: null,
+        updated_at: new Date().toISOString()
+      }
+    })
+  }),
+
+  http.post(`${API_BASE}/api/admin/payment-settings/venmo-qr-code`, () => {
+    return HttpResponse.json({
+      message: 'Venmo QR code uploaded successfully',
+      qr_code_url: 'http://test.com/venmo_qr_new.png',
+      settings: {
+        id: 'settings-1',
+        wechat_qr_code_url: null,
+        payment_instructions_en: null,
+        payment_instructions_zh: null,
+        venmo_qr_code_url: 'http://test.com/venmo_qr_new.png',
+        venmo_payment_instructions_en: null,
+        venmo_payment_instructions_zh: null,
+        updated_at: new Date().toISOString()
+      }
+    })
+  }),
+
+  // Admin API - Packages
+  http.get(`${API_BASE}/api/admin/packages/:classId`, ({ params }) => {
+    return HttpResponse.json([
+      {
+        id: 'pkg-1',
+        class_id: params.classId,
+        name_en: '5 Sessions',
+        name_zh: '5节课',
+        description_en: '5 session package',
+        description_zh: '5节课套餐',
+        session_count: 5,
+        price: 400.0,
+        price_usd: 60.0,
+        currency: 'CNY',
+        is_active: true,
+        created_at: '2024-01-01T00:00:00Z'
+      }
+    ])
+  }),
+
+  http.post(`${API_BASE}/api/admin/packages`, async ({ request }) => {
+    const data = await request.json()
+    return HttpResponse.json({
+      id: Date.now().toString(),
+      ...data,
+      created_at: new Date().toISOString()
+    }, { status: 201 })
+  }),
+
+  http.put(`${API_BASE}/api/admin/packages/:packageId`, async ({ params, request }) => {
+    const { packageId } = params
+    const data = await request.json()
+    return HttpResponse.json({
+      id: packageId,
+      class_id: 'class-1',
+      name_en: '5 Sessions',
+      name_zh: '5节课',
+      description_en: '',
+      description_zh: '',
+      session_count: 5,
+      price: 400.0,
+      price_usd: null,
+      currency: 'CNY',
+      is_active: true,
+      created_at: '2024-01-01T00:00:00Z',
+      ...data
+    })
   })
 ]
