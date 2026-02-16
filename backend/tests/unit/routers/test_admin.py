@@ -495,3 +495,307 @@ class TestAdminRouter:
             assert response.status_code == 200
             data = response.json()
             assert data["status"] == status
+
+    @pytest.mark.unit
+    async def test_create_class_with_schedule_parsing(
+        self,
+        client: AsyncClient,
+        admin_user_in_db: AdminUser,
+        teacher_in_db,
+        yoga_type_in_db,
+        db_session,
+    ):
+        """Test that create_class parses schedule strings into structured data."""
+        token = create_access_token({"sub": str(admin_user_in_db.id)})
+        headers = {"Authorization": f"Bearer {token}"}
+
+        class_data = {
+            "name_en": "Test Class",
+            "name_zh": "测试课程",
+            "description_en": "Test class description",
+            "description_zh": "测试课程描述",
+            "teacher_id": str(teacher_in_db.id),
+            "yoga_type_id": str(yoga_type_in_db.id),
+            "schedule": "Mon/Wed/Fri 7:00 AM",  # Schedule string to be parsed
+            "schedule_type": "recurring",
+            "duration_minutes": 60,
+            "difficulty": "beginner",
+            "capacity": 20,
+            "is_active": True
+        }
+
+        response = await client.post(
+            "/api/admin/classes",
+            json=class_data,
+            headers=headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # Verify the raw schedule string is saved in response
+        assert data["schedule"] == "Mon/Wed/Fri 7:00 AM"
+
+        # Check the database directly for schedule_data parsing
+        from app.models.yoga_class import YogaClass
+        from sqlalchemy import select
+        import uuid
+
+        class_id = uuid.UUID(data["id"])  # Convert string to UUID
+        query = select(YogaClass).where(YogaClass.id == class_id)
+        result = await db_session.execute(query)
+        created_class = result.scalar_one()
+
+        # Verify structured schedule data was parsed and saved to database
+        assert created_class.schedule_data is not None
+        import json
+        schedule_data = json.loads(created_class.schedule_data)
+
+        assert schedule_data["type"] == "weekly_recurring"
+        assert schedule_data["pattern"]["days"] == ["monday", "wednesday", "friday"]
+        assert schedule_data["pattern"]["time"] == "07:00"
+        assert schedule_data["pattern"]["duration_minutes"] == 60
+
+    @pytest.mark.unit
+    async def test_create_class_with_duration_format_schedule(
+        self,
+        client: AsyncClient,
+        admin_user_in_db: AdminUser,
+        teacher_in_db,
+        yoga_type_in_db,
+        db_session,
+    ):
+        """Test creating class with duration format schedule."""
+        token = create_access_token({"sub": str(admin_user_in_db.id)})
+        headers = {"Authorization": f"Bearer {token}"}
+
+        class_data = {
+            "name_en": "Duration Test Class",
+            "name_zh": "时长测试课程",
+            "description_en": "Test class with duration",
+            "description_zh": "带时长的测试课程",
+            "teacher_id": str(teacher_in_db.id),
+            "yoga_type_id": str(yoga_type_in_db.id),
+            "schedule": "Wednesday 18:00 - 19:30",  # Duration format
+            "schedule_type": "recurring",
+            "duration_minutes": 90,
+            "difficulty": "intermediate",
+            "capacity": 15,
+            "is_active": True
+        }
+
+        response = await client.post(
+            "/api/admin/classes",
+            json=class_data,
+            headers=headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # Check the database directly for schedule_data parsing
+        from app.models.yoga_class import YogaClass
+        from sqlalchemy import select
+        import uuid
+
+        class_id = uuid.UUID(data["id"])  # Convert string to UUID
+        query = select(YogaClass).where(YogaClass.id == class_id)
+        result = await db_session.execute(query)
+        created_class = result.scalar_one()
+
+        # Verify structured schedule data was parsed with correct duration
+        import json
+        schedule_data = json.loads(created_class.schedule_data)
+
+        assert schedule_data["type"] == "weekly_recurring"
+        assert schedule_data["pattern"]["days"] == ["wednesday"]
+        assert schedule_data["pattern"]["time"] == "18:00"
+        assert schedule_data["pattern"]["duration_minutes"] == 90  # Calculated from duration
+
+    @pytest.mark.unit
+    async def test_update_class_with_schedule_parsing(
+        self,
+        client: AsyncClient,
+        admin_user_in_db: AdminUser,
+        teacher_in_db,
+        yoga_type_in_db,
+        db_session,
+    ):
+        """Test that update_class parses schedule strings into structured data."""
+        # Create a yoga class first
+        from app.models.yoga_class import YogaClass
+
+        yoga_class = YogaClass(
+            name_en="Original Class",
+            name_zh="原课程",
+            description_en="Original description",
+            description_zh="原描述",
+            teacher_id=teacher_in_db.id,
+            yoga_type_id=yoga_type_in_db.id,
+            schedule="Tue/Thu 6:00 PM",
+            schedule_data='{"type": "weekly_recurring"}',  # Original structured data
+            schedule_type="recurring",
+            duration_minutes=75,
+            difficulty="advanced",
+            capacity=10,
+            is_active=True
+        )
+
+        db_session.add(yoga_class)
+        await db_session.commit()
+        await db_session.refresh(yoga_class)
+
+        token = create_access_token({"sub": str(admin_user_in_db.id)})
+        headers = {"Authorization": f"Bearer {token}"}
+
+        update_data = {
+            "name_en": "Updated Class",
+            "name_zh": "更新课程",
+            "description_en": "Updated description",
+            "description_zh": "更新描述",
+            "teacher_id": str(teacher_in_db.id),
+            "yoga_type_id": str(yoga_type_in_db.id),
+            "schedule": "Monday 14:30 - 16:00",  # New duration format
+            "schedule_type": "recurring",
+            "duration_minutes": 90,
+            "difficulty": "intermediate",
+            "capacity": 12,
+            "is_active": True
+        }
+
+        response = await client.put(
+            f"/api/admin/classes/{yoga_class.id}",
+            json=update_data,
+            headers=headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # Verify the schedule was updated in response
+        assert data["schedule"] == "Monday 14:30 - 16:00"
+
+        # Check the database directly for updated schedule_data parsing
+        from sqlalchemy import select
+        query = select(YogaClass).where(YogaClass.id == yoga_class.id)
+        result = await db_session.execute(query)
+        updated_class = result.scalar_one()
+
+        # Verify structured schedule data was re-parsed
+        import json
+        schedule_data = json.loads(updated_class.schedule_data)
+
+        assert schedule_data["type"] == "weekly_recurring"
+        assert schedule_data["pattern"]["days"] == ["monday"]
+        assert schedule_data["pattern"]["time"] == "14:30"
+        assert schedule_data["pattern"]["duration_minutes"] == 90  # Calculated duration
+
+    @pytest.mark.unit
+    async def test_create_class_with_24hour_format_schedule(
+        self,
+        client: AsyncClient,
+        admin_user_in_db: AdminUser,
+        teacher_in_db,
+        yoga_type_in_db,
+        db_session,
+    ):
+        """Test creating class with 24-hour format schedule."""
+        token = create_access_token({"sub": str(admin_user_in_db.id)})
+        headers = {"Authorization": f"Bearer {token}"}
+
+        class_data = {
+            "name_en": "24Hour Test Class",
+            "name_zh": "24小时制测试课程",
+            "description_en": "Test class with 24-hour time",
+            "description_zh": "24小时制测试课程",
+            "teacher_id": str(teacher_in_db.id),
+            "yoga_type_id": str(yoga_type_in_db.id),
+            "schedule": "Sat/Sun 19:30",  # 24-hour format
+            "schedule_type": "recurring",
+            "duration_minutes": 60,
+            "difficulty": "beginner",
+            "capacity": 25,
+            "is_active": True
+        }
+
+        response = await client.post(
+            "/api/admin/classes",
+            json=class_data,
+            headers=headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # Check the database directly for schedule_data parsing
+        from app.models.yoga_class import YogaClass
+        from sqlalchemy import select
+        import uuid
+
+        class_id = uuid.UUID(data["id"])  # Convert string to UUID
+        query = select(YogaClass).where(YogaClass.id == class_id)
+        result = await db_session.execute(query)
+        created_class = result.scalar_one()
+
+        # Verify structured schedule data was parsed correctly
+        import json
+        schedule_data = json.loads(created_class.schedule_data)
+
+        assert schedule_data["type"] == "weekly_recurring"
+        assert schedule_data["pattern"]["days"] == ["saturday", "sunday"]
+        assert schedule_data["pattern"]["time"] == "19:30"
+        assert schedule_data["pattern"]["duration_minutes"] == 60  # Default duration
+
+    @pytest.mark.unit
+    async def test_create_class_with_invalid_schedule_format(
+        self,
+        client: AsyncClient,
+        admin_user_in_db: AdminUser,
+        teacher_in_db,
+        yoga_type_in_db,
+        db_session,
+    ):
+        """Test creating class with unparseable schedule format falls back to custom type."""
+        token = create_access_token({"sub": str(admin_user_in_db.id)})
+        headers = {"Authorization": f"Bearer {token}"}
+
+        class_data = {
+            "name_en": "Custom Schedule Class",
+            "name_zh": "自定义时间表课程",
+            "description_en": "Class with custom schedule",
+            "description_zh": "自定义时间表课程",
+            "teacher_id": str(teacher_in_db.id),
+            "yoga_type_id": str(yoga_type_in_db.id),
+            "schedule": "By appointment only",  # Unparseable format
+            "schedule_type": "custom",
+            "duration_minutes": 60,
+            "difficulty": "all_levels",
+            "capacity": 5,
+            "is_active": True
+        }
+
+        response = await client.post(
+            "/api/admin/classes",
+            json=class_data,
+            headers=headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+
+        # Check the database directly for schedule_data parsing
+        from app.models.yoga_class import YogaClass
+        from sqlalchemy import select
+        import uuid
+
+        class_id = uuid.UUID(data["id"])  # Convert string to UUID
+        query = select(YogaClass).where(YogaClass.id == class_id)
+        result = await db_session.execute(query)
+        created_class = result.scalar_one()
+
+        # Verify it falls back to custom type
+        import json
+        schedule_data = json.loads(created_class.schedule_data)
+
+        assert schedule_data["type"] == "custom"
+        assert schedule_data["original_schedule"] == "by appointment only"  # lowercase

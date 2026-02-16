@@ -111,6 +111,9 @@ class RegistrationService:
             message=registration_data.get("message"),
             target_date=target_date,
             target_time=target_time,
+            preferred_language=registration_data.get("preferred_language", "en"),
+            email_notifications=registration_data.get("email_notifications", True),
+            sms_notifications=registration_data.get("sms_notifications", False),
             status="confirmed"
         )
 

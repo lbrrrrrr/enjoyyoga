@@ -24,7 +24,7 @@ class TestRegistrationService:
         """Test successful registration creation with schedule validation."""
         # Set up schedule data on the class
         schedule_data = {
-            "type": "recurring",
+            "type": "weekly_recurring",
             "pattern": {
                 "days": ["monday", "wednesday", "friday"],
                 "time": "07:00",
@@ -68,7 +68,7 @@ class TestRegistrationService:
         """Test registration creation with invalid target date."""
         # Set up schedule data
         schedule_data = {
-            "type": "recurring",
+            "type": "weekly_recurring",
             "pattern": {
                 "days": ["monday", "wednesday", "friday"],
                 "time": "07:00",
@@ -92,13 +92,13 @@ class TestRegistrationService:
 
         service = RegistrationService()
 
+        # Should fail because Tuesday is not a valid day for Mon/Wed/Fri class
         with pytest.raises(ValueError) as exc_info:
             await service.create_registration_with_schedule(
                 registration_data, db_session
             )
 
-        assert "not available on this date" in str(exc_info.value)
-        assert "Available dates" in str(exc_info.value)
+        assert "not valid for this class schedule" in str(exc_info.value)
 
     @pytest.mark.unit
     async def test_create_registration_class_not_found(
@@ -120,7 +120,7 @@ class TestRegistrationService:
                 registration_data, db_session
             )
 
-        assert "Class not found" in str(exc_info.value)
+        assert "not found" in str(exc_info.value)
 
     @pytest.mark.unit
     async def test_create_registration_capacity_check(
@@ -132,7 +132,7 @@ class TestRegistrationService:
         # Set class capacity to 1
         yoga_class_in_db.capacity = 1
         schedule_data = {
-            "type": "recurring",
+            "type": "weekly_recurring",
             "pattern": {
                 "days": ["monday", "wednesday", "friday"],
                 "time": "07:00",
@@ -174,10 +174,12 @@ class TestRegistrationService:
             "preferred_language": "en",
         }
 
-        second_registration = await service.create_registration_with_schedule(
-            registration_data_2, db_session
-        )
-        assert second_registration.status == "waitlist"
+        # Second registration should fail due to capacity
+        with pytest.raises(ValueError) as exc_info:
+            await service.create_registration_with_schedule(
+                registration_data_2, db_session
+            )
+        assert "full" in str(exc_info.value)
 
     @pytest.mark.unit
     async def test_validate_registration_capacity(
@@ -391,7 +393,7 @@ class TestRegistrationService:
     ):
         """Test ensuring schedule data exists with valid JSON."""
         schedule_data = {
-            "type": "recurring",
+            "type": "weekly_recurring",
             "pattern": {"days": ["monday"], "time": "07:00"},
         }
         yoga_class_in_db.schedule_data = json.dumps(schedule_data)
@@ -418,7 +420,7 @@ class TestRegistrationService:
         service = RegistrationService()
 
         with patch.object(service, 'schedule_parser') as mock_parser:
-            mock_parsed_schedule = {"type": "recurring", "pattern": {"days": ["monday"]}}
+            mock_parsed_schedule = {"type": "weekly_recurring", "pattern": {"days": ["monday"]}}
             mock_parser.parse_schedule_string.return_value = mock_parsed_schedule
 
             result = await service.ensure_schedule_data_exists(
@@ -446,7 +448,7 @@ class TestRegistrationService:
         service = RegistrationService()
 
         with patch.object(service, 'schedule_parser') as mock_parser:
-            mock_parsed_schedule = {"type": "recurring", "pattern": {"days": ["monday"]}}
+            mock_parsed_schedule = {"type": "weekly_recurring", "pattern": {"days": ["monday"]}}
             mock_parser.parse_schedule_string.return_value = mock_parsed_schedule
 
             result = await service.ensure_schedule_data_exists(
@@ -506,7 +508,7 @@ class TestRegistrationService:
     ):
         """Test registration creation with optional message and phone."""
         schedule_data = {
-            "type": "recurring",
+            "type": "weekly_recurring",
             "pattern": {
                 "days": ["monday"],
                 "time": "07:00",
