@@ -27,6 +27,10 @@ class ScheduleParserService:
     def parse_schedule_string(self, schedule: str) -> Dict:
         """
         Convert schedule string like 'Mon/Wed/Fri 7:00 AM' to structured JSON.
+        Supports multiple formats:
+        - "Mon/Wed/Fri 7:00 AM" (12-hour with AM/PM)
+        - "Monday 19:00" (24-hour format)
+        - "Wednesday 18:00 - 19:30" (with duration)
 
         Args:
             schedule: Schedule string from class.schedule field
@@ -39,15 +43,46 @@ class ScheduleParserService:
 
         schedule = schedule.strip().lower()
 
-        # Pattern for "Mon/Wed/Fri 7:00 AM" or "Monday/Wednesday 9:30 PM"
-        pattern = r'([a-z/]+)\s+(\d{1,2}):(\d{2})\s*(am|pm)'
-        match = re.search(pattern, schedule)
+        # Try multiple patterns in order of specificity (most specific first)
+        patterns = [
+            # Pattern 0: "Wednesday 18:00 - 19:30" (with duration) - most specific
+            r'([a-z/]+)\s+(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})',
+            # Pattern 1: "Mon/Wed/Fri 7:00 AM" or "Monday/Wednesday 9:30 PM"
+            r'([a-z/]+)\s+(\d{1,2}):(\d{2})\s*(am|pm)',
+            # Pattern 2: "Mon/Wed/Fri 19:00" (24-hour format) - least specific
+            r'([a-z/]+)\s+(\d{1,2}):(\d{2})\s*$'
+        ]
+
+        match = None
+        pattern_type = None
+        for i, pattern in enumerate(patterns):
+            match = re.search(pattern, schedule)
+            if match:
+                pattern_type = i
+                break
 
         if not match:
             # If no pattern matches, return basic structure
             return self._create_basic_schedule(schedule)
 
-        days_str, hour, minute, ampm = match.groups()
+        # Parse based on pattern type (reordered)
+        if pattern_type == 0:  # Duration format
+            days_str, start_hour, start_minute, end_hour, end_minute = match.groups()
+            hour, minute = start_hour, start_minute
+            ampm = None
+            # Calculate duration in minutes
+            start_total_minutes = int(start_hour) * 60 + int(start_minute)
+            end_total_minutes = int(end_hour) * 60 + int(end_minute)
+            duration_minutes = end_total_minutes - start_total_minutes
+            if duration_minutes <= 0:
+                duration_minutes = 60  # Fallback if calculation fails
+        elif pattern_type == 1:  # 12-hour format with AM/PM
+            days_str, hour, minute, ampm = match.groups()
+            duration_minutes = 60  # Default duration
+        else:  # pattern_type == 2: 24-hour format
+            days_str, hour, minute = match.groups()
+            ampm = None
+            duration_minutes = 60  # Default duration
 
         # Parse days
         day_names = [day.strip() for day in days_str.split('/')]
@@ -63,10 +98,12 @@ class ScheduleParserService:
 
         # Convert to 24-hour format
         hour_24 = int(hour)
-        if ampm == 'pm' and hour_24 != 12:
-            hour_24 += 12
-        elif ampm == 'am' and hour_24 == 12:
-            hour_24 = 0
+        if ampm:  # 12-hour format
+            if ampm == 'pm' and hour_24 != 12:
+                hour_24 += 12
+            elif ampm == 'am' and hour_24 == 12:
+                hour_24 = 0
+        # If no ampm, assume it's already 24-hour format
 
         time_str = f"{hour_24:02d}:{minute}"
 
@@ -75,7 +112,7 @@ class ScheduleParserService:
             "pattern": {
                 "days": days,
                 "time": time_str,
-                "duration_minutes": 60,  # Default duration
+                "duration_minutes": duration_minutes,
                 "timezone": self.default_timezone
             },
             "date_range": {
@@ -244,6 +281,7 @@ class ScheduleParserService:
         """Create empty schedule structure."""
         return {
             "type": "custom",
+            "original_schedule": "",
             "pattern": {},
             "date_range": {
                 "start_date": None,
@@ -256,6 +294,7 @@ class ScheduleParserService:
         """Create basic schedule structure for unparseable schedules."""
         return {
             "type": "custom",
+            "original_schedule": original_schedule,
             "pattern": {
                 "description": original_schedule
             },

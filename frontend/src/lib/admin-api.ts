@@ -101,6 +101,20 @@ export interface Teacher {
   created_at: string;
 }
 
+export function createTeacher(data: {
+  name_en: string;
+  name_zh: string;
+  bio_en: string;
+  bio_zh: string;
+  qualifications: string;
+  photo_url?: string | null;
+}): Promise<Teacher> {
+  return fetchAdminAPI<Teacher>('/api/admin/teachers', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
 export function updateTeacher(
   id: string,
   data: {
@@ -142,4 +156,55 @@ export async function uploadTeacherPhoto(teacherId: string, file: File): Promise
   }
 
   return res.json();
+}
+
+export interface YogaClassCreate {
+  name_en: string;
+  name_zh: string;
+  description_en: string;
+  description_zh: string;
+  teacher_id: string;
+  yoga_type_id: string;
+  schedule: string;
+  duration_minutes: number;
+  difficulty: string;
+  capacity: number;
+  schedule_type?: string;
+  is_active?: boolean;
+}
+
+export function createClass(data: YogaClassCreate): Promise<any> {
+  return fetchAdminAPI<any>('/api/admin/classes', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function updateClass(id: string, data: YogaClassCreate): Promise<any> {
+  return fetchAdminAPI<any>(`/api/admin/classes/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export interface YogaTypeCreate {
+  name_en: string;
+  name_zh: string;
+  description_en: string;
+  description_zh: string;
+  image_url?: string | null;
+}
+
+export function createYogaType(data: YogaTypeCreate): Promise<any> {
+  return fetchAdminAPI<any>('/api/admin/yoga-types', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function updateYogaType(id: string, data: YogaTypeCreate): Promise<any> {
+  return fetchAdminAPI<any>(`/api/admin/yoga-types/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
 }

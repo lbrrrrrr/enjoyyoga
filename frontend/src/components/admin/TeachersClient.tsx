@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useTranslations, useLocale } from "next-intl";
-import { getClassesByTeacher, YogaClass, Teacher } from "@/lib/api";
-import { updateTeacher, uploadTeacherPhoto } from "@/lib/admin-api";
+import { getClassesByTeacher, YogaClass, Teacher, getYogaTypes, YogaType } from "@/lib/api";
+import { createTeacher, updateTeacher, uploadTeacherPhoto, createClass, updateClass, YogaClassCreate } from "@/lib/admin-api";
 
 interface TeachersClientProps {
   initialTeachers: Teacher[];
@@ -14,6 +14,7 @@ interface TeachersClientProps {
 export function TeachersClient({ initialTeachers }: TeachersClientProps) {
   const [teachers, setTeachers] = useState<Teacher[]>(initialTeachers);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [showClasses, setShowClasses] = useState<string | null>(null);
   const [teacherClasses, setTeacherClasses] = useState<{ [teacherId: string]: YogaClass[] }>({});
@@ -30,6 +31,58 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Form state for adding new teacher
+  const [addFormData, setAddFormData] = useState({
+    name_en: "",
+    name_zh: "",
+    bio_en: "",
+    bio_zh: "",
+    qualifications: "",
+    photo_url: ""
+  });
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  // Photo upload state for add teacher modal
+  const [addPhotoFile, setAddPhotoFile] = useState<File | null>(null);
+  const [addPhotoUploadError, setAddPhotoUploadError] = useState<string | null>(null);
+
+  // Add class modal state
+  const [isAddClassModalOpen, setIsAddClassModalOpen] = useState(false);
+  const [selectedTeacherForClass, setSelectedTeacherForClass] = useState<Teacher | null>(null);
+  const [yogaTypes, setYogaTypes] = useState<YogaType[]>([]);
+  const [classFormData, setClassFormData] = useState({
+    name_en: "",
+    name_zh: "",
+    description_en: "",
+    description_zh: "",
+    yoga_type_id: "",
+    schedule: "",
+    duration_minutes: 60,
+    difficulty: "beginner",
+    capacity: 10
+  });
+  const [isCreatingClass, setIsCreatingClass] = useState(false);
+  const [createClassError, setCreateClassError] = useState<string | null>(null);
+
+  // Edit class modal state
+  const [isEditClassModalOpen, setIsEditClassModalOpen] = useState(false);
+  const [selectedClassForEdit, setSelectedClassForEdit] = useState<YogaClass | null>(null);
+  const [editClassFormData, setEditClassFormData] = useState({
+    name_en: "",
+    name_zh: "",
+    description_en: "",
+    description_zh: "",
+    teacher_id: "",
+    yoga_type_id: "",
+    schedule: "",
+    duration_minutes: 60,
+    difficulty: "beginner",
+    capacity: 10
+  });
+  const [isUpdatingClass, setIsUpdatingClass] = useState(false);
+  const [updateClassError, setUpdateClassError] = useState<string | null>(null);
 
   // Photo upload state
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -84,8 +137,18 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
   };
 
   const handleAddTeacher = () => {
-    console.log("Add new teacher");
-    // Here you would open a form to add a new teacher
+    setAddFormData({
+      name_en: "",
+      name_zh: "",
+      bio_en: "",
+      bio_zh: "",
+      qualifications: "",
+      photo_url: ""
+    });
+    setCreateError(null);
+    setAddPhotoFile(null);
+    setAddPhotoUploadError(null);
+    setIsAddModalOpen(true);
   };
 
   const closeEditModal = () => {
@@ -93,6 +156,13 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
     setSelectedTeacher(null);
     setSaveError(null);
     setPhotoUploadError(null);
+  };
+
+  const closeAddModal = () => {
+    setIsAddModalOpen(false);
+    setCreateError(null);
+    setAddPhotoFile(null);
+    setAddPhotoUploadError(null);
   };
 
   const handleSaveTeacher = async () => {
@@ -126,11 +196,250 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
     }
   };
 
+  const handleCreateTeacher = async () => {
+    setIsCreating(true);
+    setCreateError(null);
+    setAddPhotoUploadError(null);
+
+    try {
+      // First, create the teacher
+      let newTeacher = await createTeacher({
+        name_en: addFormData.name_en,
+        name_zh: addFormData.name_zh,
+        bio_en: addFormData.bio_en,
+        bio_zh: addFormData.bio_zh,
+        qualifications: addFormData.qualifications,
+        photo_url: addFormData.photo_url || null
+      });
+
+      // If a photo file was selected, upload it
+      if (addPhotoFile) {
+        try {
+          const photoResult = await uploadTeacherPhoto(newTeacher.id, addPhotoFile);
+          // Update the teacher with the uploaded photo URL
+          newTeacher = { ...newTeacher, photo_url: photoResult.photo_url };
+        } catch (photoError) {
+          // Teacher was created but photo upload failed - still add to list but show error
+          setAddPhotoUploadError(photoError instanceof Error ? photoError.message : "Failed to upload photo");
+        }
+      }
+
+      // Add the new teacher to the list (with or without photo depending on upload success)
+      setTeachers(prev => [...prev, newTeacher]);
+
+      // Only close modal if photo upload succeeded or no photo was selected
+      if (!addPhotoFile || !addPhotoUploadError) {
+        closeAddModal();
+      }
+    } catch (error) {
+      setCreateError(error instanceof Error ? error.message : "Failed to create teacher");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   const handleFormChange = (field: keyof typeof formData, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleAddFormChange = (field: keyof typeof addFormData, value: string) => {
+    setAddFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleAddPhotoFileChange = (file: File | null) => {
+    setAddPhotoFile(file);
+    setAddPhotoUploadError(null);
+
+    // If a file is selected, clear the URL field to avoid confusion
+    if (file) {
+      setAddFormData(prev => ({
+        ...prev,
+        photo_url: ""
+      }));
+    }
+  };
+
+  const handleAddClass = async (teacher: Teacher) => {
+    setSelectedTeacherForClass(teacher);
+    setClassFormData({
+      name_en: "",
+      name_zh: "",
+      description_en: "",
+      description_zh: "",
+      yoga_type_id: "",
+      schedule: "",
+      duration_minutes: 60,
+      difficulty: "beginner",
+      capacity: 10
+    });
+    setCreateClassError(null);
+
+    // Load yoga types if not already loaded
+    if (yogaTypes.length === 0) {
+      try {
+        const types = await getYogaTypes();
+        setYogaTypes(types);
+      } catch (error) {
+        setCreateClassError("Failed to load yoga types");
+        return;
+      }
+    }
+
+    setIsAddClassModalOpen(true);
+  };
+
+  const closeAddClassModal = () => {
+    setIsAddClassModalOpen(false);
+    setSelectedTeacherForClass(null);
+    setCreateClassError(null);
+  };
+
+  const handleClassFormChange = (field: keyof typeof classFormData, value: string | number) => {
+    setClassFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleCreateClass = async () => {
+    if (!selectedTeacherForClass) return;
+
+    setIsCreatingClass(true);
+    setCreateClassError(null);
+
+    try {
+      const newClass = await createClass({
+        name_en: classFormData.name_en,
+        name_zh: classFormData.name_zh,
+        description_en: classFormData.description_en,
+        description_zh: classFormData.description_zh,
+        teacher_id: selectedTeacherForClass.id,
+        yoga_type_id: classFormData.yoga_type_id,
+        schedule: classFormData.schedule,
+        duration_minutes: classFormData.duration_minutes,
+        difficulty: classFormData.difficulty,
+        capacity: classFormData.capacity
+      });
+
+      // Update the teacher classes cache to include the new class
+      setTeacherClasses(prev => ({
+        ...prev,
+        [selectedTeacherForClass.id]: [
+          ...(prev[selectedTeacherForClass.id] || []),
+          newClass
+        ]
+      }));
+
+      // Show the classes for this teacher if not already showing
+      if (showClasses !== selectedTeacherForClass.id) {
+        setShowClasses(selectedTeacherForClass.id);
+      }
+
+      closeAddClassModal();
+    } catch (error) {
+      setCreateClassError(error instanceof Error ? error.message : "Failed to create class");
+    } finally {
+      setIsCreatingClass(false);
+    }
+  };
+
+  const handleEditClass = async (yogaClass: YogaClass) => {
+    setSelectedClassForEdit(yogaClass);
+    setEditClassFormData({
+      name_en: yogaClass.name_en,
+      name_zh: yogaClass.name_zh,
+      description_en: yogaClass.description_en,
+      description_zh: yogaClass.description_zh,
+      teacher_id: yogaClass.teacher_id,
+      yoga_type_id: yogaClass.yoga_type_id,
+      schedule: yogaClass.schedule,
+      duration_minutes: yogaClass.duration_minutes,
+      difficulty: yogaClass.difficulty,
+      capacity: yogaClass.capacity
+    });
+    setUpdateClassError(null);
+
+    // Load yoga types if not already loaded
+    if (yogaTypes.length === 0) {
+      try {
+        const types = await getYogaTypes();
+        setYogaTypes(types);
+      } catch (error) {
+        setUpdateClassError("Failed to load yoga types");
+        return;
+      }
+    }
+
+    setIsEditClassModalOpen(true);
+  };
+
+  const closeEditClassModal = () => {
+    setIsEditClassModalOpen(false);
+    setSelectedClassForEdit(null);
+    setUpdateClassError(null);
+  };
+
+  const handleEditClassFormChange = (field: keyof typeof editClassFormData, value: string | number) => {
+    setEditClassFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleUpdateClass = async () => {
+    if (!selectedClassForEdit) return;
+
+    setIsUpdatingClass(true);
+    setUpdateClassError(null);
+
+    try {
+      const updatedClass = await updateClass(selectedClassForEdit.id, {
+        name_en: editClassFormData.name_en,
+        name_zh: editClassFormData.name_zh,
+        description_en: editClassFormData.description_en,
+        description_zh: editClassFormData.description_zh,
+        teacher_id: editClassFormData.teacher_id,
+        yoga_type_id: editClassFormData.yoga_type_id,
+        schedule: editClassFormData.schedule,
+        duration_minutes: editClassFormData.duration_minutes,
+        difficulty: editClassFormData.difficulty,
+        capacity: editClassFormData.capacity
+      });
+
+      // Update the teacher classes cache with the updated class
+      setTeacherClasses(prev => ({
+        ...prev,
+        [editClassFormData.teacher_id]: (prev[editClassFormData.teacher_id] || []).map(cls =>
+          cls.id === selectedClassForEdit.id ? updatedClass : cls
+        )
+      }));
+
+      // If the teacher changed, also update the new teacher's classes
+      if (editClassFormData.teacher_id !== selectedClassForEdit.teacher_id) {
+        setTeacherClasses(prev => ({
+          ...prev,
+          [selectedClassForEdit.teacher_id]: (prev[selectedClassForEdit.teacher_id] || []).filter(cls =>
+            cls.id !== selectedClassForEdit.id
+          ),
+          [editClassFormData.teacher_id]: [
+            ...(prev[editClassFormData.teacher_id] || []),
+            updatedClass
+          ]
+        }));
+      }
+
+      closeEditClassModal();
+    } catch (error) {
+      setUpdateClassError(error instanceof Error ? error.message : "Failed to update class");
+    } finally {
+      setIsUpdatingClass(false);
+    }
   };
 
   const handlePhotoUpload = async (file: File) => {
@@ -206,7 +515,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
                     <strong>Qualifications:</strong> {teacher.qualifications}
                   </div>
                 )}
-                <div className="flex gap-2 mt-4">
+                <div className="flex flex-wrap gap-2 mt-4">
                   <Button
                     variant="outline"
                     size="sm"
@@ -220,6 +529,13 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
                     onClick={() => handleViewClasses(teacher)}
                   >
                     {t("viewClasses")}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleAddClass(teacher)}
+                  >
+                    Add Class
                   </Button>
                 </div>
 
@@ -263,6 +579,16 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
                                   <strong>Type:</strong> {locale === "zh" ? yogaClass.yoga_type.name_zh : yogaClass.yoga_type.name_en}
                                 </p>
                               </div>
+                              <div className="ml-3 flex-shrink-0">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEditClass(yogaClass)}
+                                  className="text-xs px-2 py-1"
+                                >
+                                  Edit
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -291,10 +617,13 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
       {/* Edit Teacher Modal */}
       {isEditModalOpen && selectedTeacher && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-medium mb-4">Edit Teacher</h3>
+          <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] flex flex-col">
+            <div className="p-6 pb-4 border-b">
+              <h3 className="text-lg font-medium">Edit Teacher</h3>
+            </div>
 
-            <div className="space-y-4">
+            <div className="flex-1 overflow-y-auto p-6 pt-4">
+              <div className="space-y-4">
               {saveError && (
                 <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
                   {saveError}
@@ -409,22 +738,545 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
                   </div>
                 </div>
               </div>
+              </div>
             </div>
 
-            <div className="flex gap-2 mt-6">
-              <Button
-                onClick={handleSaveTeacher}
-                disabled={isSaving}
-              >
-                {isSaving ? "Saving..." : "Save Changes"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={closeEditModal}
-                disabled={isSaving}
-              >
-                Cancel
-              </Button>
+            <div className="p-6 pt-4 border-t">
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSaveTeacher}
+                  disabled={isSaving}
+                >
+                  {isSaving ? "Saving..." : "Save Changes"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={closeEditModal}
+                  disabled={isSaving}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Teacher Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] flex flex-col">
+            <div className="p-6 pb-4 border-b">
+              <h3 className="text-lg font-medium">Add New Teacher</h3>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 pt-4">
+              <div className="space-y-4">
+                {createError && (
+                  <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                    {createError}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Name (English)</label>
+                  <input
+                    type="text"
+                    value={addFormData.name_en}
+                    onChange={(e) => handleAddFormChange("name_en", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    placeholder="Enter teacher's English name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Name (Chinese)</label>
+                  <input
+                    type="text"
+                    value={addFormData.name_zh}
+                    onChange={(e) => handleAddFormChange("name_zh", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    placeholder="Enter teacher's Chinese name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Bio (English)</label>
+                  <textarea
+                    value={addFormData.bio_en}
+                    onChange={(e) => handleAddFormChange("bio_en", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    rows={3}
+                    placeholder="Enter teacher's English bio"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Bio (Chinese)</label>
+                  <textarea
+                    value={addFormData.bio_zh}
+                    onChange={(e) => handleAddFormChange("bio_zh", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    rows={3}
+                    placeholder="Enter teacher's Chinese bio"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Qualifications</label>
+                  <textarea
+                    value={addFormData.qualifications}
+                    onChange={(e) => handleAddFormChange("qualifications", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    rows={2}
+                    placeholder="Enter teacher's qualifications"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Photo</label>
+                  <div className="space-y-3">
+                    {/* Current photo preview */}
+                    {(addFormData.photo_url || addPhotoFile) && (
+                      <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-md">
+                        {addPhotoFile ? (
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-gray-200 rounded-md flex items-center justify-center">
+                              <span className="text-xs text-gray-600">File</span>
+                            </div>
+                            <div>
+                              <span className="text-sm text-gray-600">Selected file: {addPhotoFile.name}</span>
+                              <p className="text-xs text-gray-500">Will be uploaded after teacher creation</p>
+                            </div>
+                          </div>
+                        ) : addFormData.photo_url ? (
+                          <>
+                            <img
+                              src={addFormData.photo_url}
+                              alt="Photo preview"
+                              className="w-12 h-12 object-cover rounded-md"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                            <span className="text-sm text-gray-600">Photo from URL</span>
+                          </>
+                        ) : null}
+                      </div>
+                    )}
+
+                    {/* Photo upload errors */}
+                    {addPhotoUploadError && (
+                      <div className="p-2 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+                        {addPhotoUploadError}
+                      </div>
+                    )}
+
+                    {/* File upload */}
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Upload photo file:</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          handleAddPhotoFileChange(file || null);
+                        }}
+                        disabled={isCreating}
+                        className="w-full p-2 border rounded-md text-sm"
+                      />
+                      {addPhotoFile && (
+                        <button
+                          type="button"
+                          onClick={() => handleAddPhotoFileChange(null)}
+                          className="text-xs text-red-600 mt-1 hover:text-red-800"
+                          disabled={isCreating}
+                        >
+                          Remove selected file
+                        </button>
+                      )}
+                    </div>
+
+                    {/* URL input */}
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Or enter photo URL:</label>
+                      <input
+                        type="url"
+                        value={addFormData.photo_url}
+                        onChange={(e) => {
+                          handleAddFormChange("photo_url", e.target.value);
+                          // Clear file selection if URL is entered
+                          if (e.target.value && addPhotoFile) {
+                            setAddPhotoFile(null);
+                          }
+                        }}
+                        disabled={isCreating || !!addPhotoFile}
+                        className="w-full p-2 border rounded-md"
+                        placeholder="https://example.com/photo.jpg"
+                      />
+                      {!!addPhotoFile && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          URL input disabled while file is selected
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 pt-4 border-t">
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleCreateTeacher}
+                  disabled={isCreating}
+                >
+                  {isCreating ? "Creating..." : "Create Teacher"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={closeAddModal}
+                  disabled={isCreating}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Class Modal */}
+      {isAddClassModalOpen && selectedTeacherForClass && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] flex flex-col">
+            <div className="p-6 pb-4 border-b">
+              <h3 className="text-lg font-medium">
+                Add Class for {locale === "zh" ? selectedTeacherForClass.name_zh || selectedTeacherForClass.name_en : selectedTeacherForClass.name_en}
+              </h3>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 pt-4">
+              <div className="space-y-4">
+                {createClassError && (
+                  <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                    {createClassError}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Class Name (English) *</label>
+                  <input
+                    type="text"
+                    value={classFormData.name_en}
+                    onChange={(e) => handleClassFormChange("name_en", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    placeholder="Enter class name in English"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Class Name (Chinese) *</label>
+                  <input
+                    type="text"
+                    value={classFormData.name_zh}
+                    onChange={(e) => handleClassFormChange("name_zh", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    placeholder="Enter class name in Chinese"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Description (English)</label>
+                  <textarea
+                    value={classFormData.description_en}
+                    onChange={(e) => handleClassFormChange("description_en", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    rows={3}
+                    placeholder="Enter class description in English"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Description (Chinese)</label>
+                  <textarea
+                    value={classFormData.description_zh}
+                    onChange={(e) => handleClassFormChange("description_zh", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    rows={3}
+                    placeholder="Enter class description in Chinese"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Yoga Type *</label>
+                  <select
+                    value={classFormData.yoga_type_id}
+                    onChange={(e) => handleClassFormChange("yoga_type_id", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    required
+                  >
+                    <option value="">Select yoga type</option>
+                    {yogaTypes.map((type) => (
+                      <option key={type.id} value={type.id}>
+                        {locale === "zh" ? type.name_zh || type.name_en : type.name_en}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Schedule *</label>
+                  <input
+                    type="text"
+                    value={classFormData.schedule}
+                    onChange={(e) => handleClassFormChange("schedule", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    placeholder="e.g., Monday 10:00-11:00, Weekly on Tuesday 18:00"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Examples: "Monday 10:00-11:00", "Weekly on Tuesday 18:00", "Daily 07:00-08:00"
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Duration (minutes) *</label>
+                    <input
+                      type="number"
+                      value={classFormData.duration_minutes}
+                      onChange={(e) => handleClassFormChange("duration_minutes", parseInt(e.target.value) || 60)}
+                      className="w-full p-2 border rounded-md"
+                      min="15"
+                      max="180"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Capacity *</label>
+                    <input
+                      type="number"
+                      value={classFormData.capacity}
+                      onChange={(e) => handleClassFormChange("capacity", parseInt(e.target.value) || 10)}
+                      className="w-full p-2 border rounded-md"
+                      min="1"
+                      max="50"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Difficulty Level *</label>
+                  <select
+                    value={classFormData.difficulty}
+                    onChange={(e) => handleClassFormChange("difficulty", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    required
+                  >
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                    <option value="all-levels">All Levels</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 pt-4 border-t">
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleCreateClass}
+                  disabled={isCreatingClass || !classFormData.name_en || !classFormData.name_zh || !classFormData.yoga_type_id || !classFormData.schedule}
+                >
+                  {isCreatingClass ? "Creating..." : "Create Class"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={closeAddClassModal}
+                  disabled={isCreatingClass}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Class Modal */}
+      {isEditClassModalOpen && selectedClassForEdit && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] flex flex-col">
+            <div className="p-6 pb-4 border-b">
+              <h3 className="text-lg font-medium">
+                Edit Class: {locale === "zh" ? selectedClassForEdit.name_zh : selectedClassForEdit.name_en}
+              </h3>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 pt-4">
+              <div className="space-y-4">
+                {updateClassError && (
+                  <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                    {updateClassError}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Class Name (English) *</label>
+                  <input
+                    type="text"
+                    value={editClassFormData.name_en}
+                    onChange={(e) => handleEditClassFormChange("name_en", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Class Name (Chinese) *</label>
+                  <input
+                    type="text"
+                    value={editClassFormData.name_zh}
+                    onChange={(e) => handleEditClassFormChange("name_zh", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Description (English)</label>
+                  <textarea
+                    value={editClassFormData.description_en}
+                    onChange={(e) => handleEditClassFormChange("description_en", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Description (Chinese)</label>
+                  <textarea
+                    value={editClassFormData.description_zh}
+                    onChange={(e) => handleEditClassFormChange("description_zh", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Teacher *</label>
+                  <select
+                    value={editClassFormData.teacher_id}
+                    onChange={(e) => handleEditClassFormChange("teacher_id", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    required
+                  >
+                    <option value="">Select teacher</option>
+                    {teachers.map((teacher) => (
+                      <option key={teacher.id} value={teacher.id}>
+                        {locale === "zh" ? teacher.name_zh || teacher.name_en : teacher.name_en}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Yoga Type *</label>
+                  <select
+                    value={editClassFormData.yoga_type_id}
+                    onChange={(e) => handleEditClassFormChange("yoga_type_id", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    required
+                  >
+                    <option value="">Select yoga type</option>
+                    {yogaTypes.map((type) => (
+                      <option key={type.id} value={type.id}>
+                        {locale === "zh" ? type.name_zh || type.name_en : type.name_en}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Schedule *</label>
+                  <input
+                    type="text"
+                    value={editClassFormData.schedule}
+                    onChange={(e) => handleEditClassFormChange("schedule", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Examples: "Monday 10:00-11:00", "Weekly on Tuesday 18:00", "Daily 07:00-08:00"
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Duration (minutes) *</label>
+                    <input
+                      type="number"
+                      value={editClassFormData.duration_minutes}
+                      onChange={(e) => handleEditClassFormChange("duration_minutes", parseInt(e.target.value) || 60)}
+                      className="w-full p-2 border rounded-md"
+                      min="15"
+                      max="180"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Capacity *</label>
+                    <input
+                      type="number"
+                      value={editClassFormData.capacity}
+                      onChange={(e) => handleEditClassFormChange("capacity", parseInt(e.target.value) || 10)}
+                      className="w-full p-2 border rounded-md"
+                      min="1"
+                      max="50"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Difficulty Level *</label>
+                  <select
+                    value={editClassFormData.difficulty}
+                    onChange={(e) => handleEditClassFormChange("difficulty", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    required
+                  >
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                    <option value="all-levels">All Levels</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 pt-4 border-t">
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleUpdateClass}
+                  disabled={isUpdatingClass || !editClassFormData.name_en || !editClassFormData.name_zh || !editClassFormData.teacher_id || !editClassFormData.yoga_type_id || !editClassFormData.schedule}
+                >
+                  {isUpdatingClass ? "Updating..." : "Update Class"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={closeEditClassModal}
+                  disabled={isUpdatingClass}
+                >
+                  Cancel
+                </Button>
+              </div>
             </div>
           </div>
         </div>
