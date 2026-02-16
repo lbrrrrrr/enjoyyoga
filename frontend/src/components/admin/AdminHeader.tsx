@@ -2,26 +2,80 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { AdminUser } from "@/lib/admin-api";
+import { AdminUser, adminLogout } from "@/lib/admin-api";
+import { getAdminUserFromCookie, clearSessionCookies } from "@/lib/session";
 
 export function AdminHeader() {
   const [admin, setAdmin] = useState<AdminUser | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations("admin");
 
   useEffect(() => {
-    const adminData = localStorage.getItem("admin_user");
-    if (adminData) {
-      setAdmin(JSON.parse(adminData));
-    }
+    // Initial load - check for admin data
+    const checkAdminStatus = () => {
+      const adminData = getAdminUserFromCookie();
+      setAdmin(adminData);
+    };
+
+    checkAdminStatus();
+
+    // Check session status periodically (every 30 seconds)
+    const interval = setInterval(checkAdminStatus, 30000);
+
+    return () => clearInterval(interval);
+  }, []); // Remove admin from dependency to avoid infinite loop
+
+  // Also check when the component becomes visible or window gets focus
+  useEffect(() => {
+    const checkAdminData = () => {
+      const adminData = getAdminUserFromCookie();
+      setAdmin(adminData);
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkAdminData();
+      }
+    };
+
+    const handleFocus = () => {
+      checkAdminData();
+    };
+
+    const handleSessionChange = () => {
+      checkAdminData();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('adminSessionChanged', handleSessionChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('adminSessionChanged', handleSessionChange);
+    };
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("admin_token");
-    localStorage.removeItem("admin_user");
-    router.push("/admin/login");
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await adminLogout();
+      clearSessionCookies();
+      setAdmin(null); // Clear admin state immediately
+      router.push(`/${locale}/admin/login`);
+    } catch (error) {
+      // Even if logout fails, clear local session
+      clearSessionCookies();
+      setAdmin(null); // Clear admin state immediately
+      router.push(`/${locale}/admin/login`);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -33,13 +87,15 @@ export function AdminHeader() {
 
         <div className="flex items-center space-x-4">
           {admin && (
-            <div className="text-sm text-gray-600">
-              Welcome, {admin.username}
-            </div>
+            <>
+              <div className="text-sm text-gray-600">
+                Welcome, {admin.username}
+              </div>
+              <Button variant="outline" size="sm" onClick={handleLogout} disabled={isLoggingOut}>
+                {isLoggingOut ? "Logging out..." : t("nav.logout")}
+              </Button>
+            </>
           )}
-          <Button variant="outline" size="sm" onClick={handleLogout}>
-            {t("nav.logout")}
-          </Button>
         </div>
       </div>
     </header>

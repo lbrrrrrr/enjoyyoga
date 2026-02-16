@@ -4,8 +4,11 @@ from datetime import timedelta
 from typing import List
 from pathlib import Path
 import shutil
+import json
+import base64
+from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Response, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
@@ -34,8 +37,12 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 
 @router.post("/login", response_model=AdminTokenOut)
-async def admin_login(credentials: AdminLoginSchema, db: AsyncSession = Depends(get_db)):
-    """Authenticate admin user and return JWT token."""
+async def admin_login(
+    credentials: AdminLoginSchema,
+    response: Response,
+    db: AsyncSession = Depends(get_db)
+):
+    """Authenticate admin user and set session cookies."""
     admin = await authenticate_admin(db, credentials.username, credentials.password)
     if not admin:
         raise HTTPException(
@@ -44,9 +51,46 @@ async def admin_login(credentials: AdminLoginSchema, db: AsyncSession = Depends(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token_expires = timedelta(minutes=1440)  # 24 hours
+    access_token_expires = timedelta(minutes=30)  # 30 minutes for session
     access_token = create_access_token(
         data={"sub": str(admin.id)}, expires_delta=access_token_expires
+    )
+
+    # Set session cookies
+    # Use secure=False in development (HTTP), secure=True in production (HTTPS)
+    is_production = settings.server_url.startswith("https://")
+
+    response.set_cookie(
+        key="admin_session",
+        value=access_token,
+        max_age=1800,  # 30 minutes in seconds
+        httponly=True,
+        secure=is_production,
+        samesite="lax",  # Changed from "strict" to "lax" for development
+        path="/"
+    )
+
+    # Create admin user data as JSON
+    admin_user_data = {
+        "id": str(admin.id),
+        "username": admin.username,
+        "email": admin.email,
+        "role": admin.role
+    }
+
+    # Convert to JSON and encode as Base64 to avoid cookie character issues
+    admin_user_json = json.dumps(admin_user_data)
+    admin_user_base64 = base64.b64encode(admin_user_json.encode()).decode()
+
+
+    response.set_cookie(
+        key="admin_user",
+        value=admin_user_base64,  # Use Base64 encoded JSON
+        max_age=1800,  # 30 minutes in seconds
+        httponly=False,  # Allow client-side access for user info
+        secure=is_production,
+        samesite="lax",  # Changed from "strict" to "lax" for development
+        path="/"
     )
 
     return AdminTokenOut(
@@ -54,6 +98,64 @@ async def admin_login(credentials: AdminLoginSchema, db: AsyncSession = Depends(
         token_type="bearer",
         admin=AdminUserOut.model_validate(admin)
     )
+
+
+@router.post("/logout")
+async def admin_logout(response: Response, admin: AdminUser = Depends(get_current_admin)):
+    """Logout admin user and clear session cookies."""
+    # Clear session cookies
+    response.delete_cookie(key="admin_session", path="/")
+    response.delete_cookie(key="admin_user", path="/")
+
+    return {"message": "Successfully logged out"}
+
+
+@router.get("/test-cookies")
+async def test_cookies(request: Request):
+    """Debug endpoint to check what cookies are being received."""
+    cookies = request.cookies
+    return {
+        "message": "Cookie test endpoint",
+        "cookies_received": dict(cookies),
+        "admin_session": cookies.get("admin_session", "NOT FOUND"),
+        "admin_user": cookies.get("admin_user", "NOT FOUND")
+    }
+
+
+@router.post("/test-login")
+async def test_admin_login(response: Response):
+    """Test endpoint to manually set cookies with known values."""
+    # Create test admin user data
+    admin_user_data = {
+        "id": "test-id-123",
+        "username": "test-admin",
+        "email": "test@example.com",
+        "role": "admin"
+    }
+
+    # Convert to JSON and encode as Base64
+    admin_user_json = json.dumps(admin_user_data)
+    admin_user_base64 = base64.b64encode(admin_user_json.encode()).decode()
+
+    print(f"TEST: Original JSON: {admin_user_json}")
+    print(f"TEST: Base64 encoded: {admin_user_base64}")
+
+    # Set test cookies
+    response.set_cookie(
+        key="admin_user",
+        value=admin_user_base64,
+        max_age=1800,
+        httponly=False,
+        secure=False,  # Force false for testing
+        samesite="lax",
+        path="/"
+    )
+
+    return {
+        "message": "Test cookies set",
+        "original_json": admin_user_json,
+        "base64_value": admin_user_base64
+    }
 
 
 @router.get("/me", response_model=AdminUserOut)

@@ -1,18 +1,22 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 async function fetchAdminAPI<T>(path: string, options?: RequestInit): Promise<T> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
-
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
-      ...(token && { 'Authorization': `Bearer ${token}` }),
       'Content-Type': 'application/json',
       ...options?.headers,
     },
+    credentials: 'include', // Include cookies in requests
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      // Session expired, redirect to login
+      if (typeof window !== 'undefined') {
+        window.location.href = '/admin/login';
+      }
+    }
     const error = await res.json().catch(() => ({}));
     throw new Error(error.detail || `Admin API error: ${res.status}`);
   }
@@ -61,10 +65,33 @@ export interface RegistrationWithSchedule {
 }
 
 export async function adminLogin(username: string, password: string): Promise<AdminToken> {
-  return fetchAdminAPI<AdminToken>('/api/admin/login', {
+  const res = await fetch(`${API_BASE}/api/admin/login`, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
     body: JSON.stringify({ username, password }),
   });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.detail || `Login failed: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function adminLogout(): Promise<void> {
+  try {
+    await fetch(`${API_BASE}/api/admin/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+  } catch (error) {
+    // Even if logout fails on server side, we still clear client side
+    console.warn('Logout request failed:', error);
+  }
 }
 
 export function getAdminStats(): Promise<AdminStats> {
@@ -137,20 +164,22 @@ export async function uploadTeacherPhoto(teacherId: string, file: File): Promise
   photo_url: string;
   teacher: Teacher;
 }> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
-
   const formData = new FormData();
   formData.append('file', file);
 
   const res = await fetch(`${API_BASE}/api/admin/teachers/${teacherId}/photo`, {
     method: 'POST',
-    headers: {
-      ...(token && { 'Authorization': `Bearer ${token}` }),
-    },
+    credentials: 'include',
     body: formData,
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      // Session expired, redirect to login
+      if (typeof window !== 'undefined') {
+        window.location.href = '/admin/login';
+      }
+    }
     const error = await res.json().catch(() => ({}));
     throw new Error(error.detail || `Photo upload failed: ${res.status}`);
   }

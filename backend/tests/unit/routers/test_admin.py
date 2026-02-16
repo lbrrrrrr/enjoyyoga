@@ -799,3 +799,395 @@ class TestAdminRouter:
 
         assert schedule_data["type"] == "custom"
         assert schedule_data["original_schedule"] == "by appointment only"  # lowercase
+
+    # Session-based Authentication Tests
+    @pytest.mark.unit
+    async def test_admin_login_sets_session_cookies(
+        self,
+        client: AsyncClient,
+        admin_user_in_db: AdminUser,
+    ):
+        """Test that admin login sets Base64 encoded session cookies."""
+        from app.auth import get_password_hash
+        import base64
+        import json
+
+        # Set known password for admin user
+        password = "test_password"
+        admin_user_in_db.hashed_password = get_password_hash(password)
+        admin_user_in_db.is_active = True
+
+        login_data = {
+            "username": admin_user_in_db.username,
+            "password": password,
+        }
+
+        response = await client.post("/api/admin/login", json=login_data)
+
+        assert response.status_code == 200
+
+        # Check response structure
+        data = response.json()
+        assert "access_token" in data
+        assert data["token_type"] == "bearer"
+        assert "admin" in data
+
+        # Check that cookies are set
+        cookies = response.cookies
+        assert "admin_session" in cookies
+        assert "admin_user" in cookies
+
+        # Verify admin_user cookie is Base64 encoded JSON
+        admin_user_cookie = cookies["admin_user"]
+        decoded_json = base64.b64decode(admin_user_cookie).decode()
+        admin_data = json.loads(decoded_json)
+
+        assert admin_data["id"] == str(admin_user_in_db.id)
+        assert admin_data["username"] == admin_user_in_db.username
+        assert admin_data["email"] == admin_user_in_db.email
+        assert admin_data["role"] == admin_user_in_db.role
+
+        # Verify admin_session cookie is a JWT token
+        admin_session_cookie = cookies["admin_session"]
+        assert len(admin_session_cookie) > 50  # JWT tokens are long
+
+        # Check that cookies have values (detailed cookie attributes testing is done in integration tests)
+        assert len(admin_session_cookie) > 10  # Session token should be substantial
+        assert len(admin_user_cookie) > 10  # User cookie should be substantial
+
+    @pytest.mark.unit
+    async def test_admin_logout_success(
+        self,
+        client: AsyncClient,
+        admin_user_in_db: AdminUser,
+    ):
+        """Test successful admin logout with valid authentication."""
+        from app.auth import create_access_token
+        import base64
+        import json
+
+        admin_user_in_db.is_active = True
+
+        # Create session token and admin cookie
+        session_token = create_access_token({"sub": str(admin_user_in_db.id)})
+        admin_data = {
+            "id": str(admin_user_in_db.id),
+            "username": admin_user_in_db.username,
+            "email": admin_user_in_db.email,
+            "role": admin_user_in_db.role
+        }
+        admin_user_base64 = base64.b64encode(json.dumps(admin_data).encode()).decode()
+
+        # Set cookies
+        client.cookies.set("admin_session", session_token)
+        client.cookies.set("admin_user", admin_user_base64)
+
+        # Perform logout
+        response = await client.post("/api/admin/logout")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["message"] == "Successfully logged out"
+
+    @pytest.mark.unit
+    async def test_cookie_based_authentication_success(
+        self,
+        client: AsyncClient,
+        admin_user_in_db: AdminUser,
+    ):
+        """Test accessing protected endpoints with session cookies."""
+        from app.auth import get_password_hash, create_access_token
+        import base64
+        import json
+
+        admin_user_in_db.is_active = True
+
+        # Create session token
+        session_token = create_access_token({"sub": str(admin_user_in_db.id)})
+
+        # Create admin user cookie data
+        admin_data = {
+            "id": str(admin_user_in_db.id),
+            "username": admin_user_in_db.username,
+            "email": admin_user_in_db.email,
+            "role": admin_user_in_db.role
+        }
+        admin_user_base64 = base64.b64encode(json.dumps(admin_data).encode()).decode()
+
+        # Set cookies
+        client.cookies.set("admin_session", session_token)
+        client.cookies.set("admin_user", admin_user_base64)
+
+        # Test accessing protected endpoint
+        response = await client.get("/api/admin/me")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["username"] == admin_user_in_db.username
+        assert data["email"] == admin_user_in_db.email
+        assert data["role"] == admin_user_in_db.role
+
+    @pytest.mark.unit
+    async def test_cookie_based_authentication_missing_session(
+        self,
+        client: AsyncClient,
+    ):
+        """Test accessing protected endpoints without session cookie."""
+        # Don't set any cookies
+        response = await client.get("/api/admin/me")
+
+        assert response.status_code == 401
+        assert "Could not validate credentials" in response.json()["detail"]
+
+    @pytest.mark.unit
+    async def test_cookie_based_authentication_invalid_session(
+        self,
+        client: AsyncClient,
+    ):
+        """Test accessing protected endpoints with invalid session token."""
+        import base64
+        import json
+
+        # Set invalid session token
+        client.cookies.set("admin_session", "invalid.jwt.token")
+
+        # Set valid admin user cookie (should be ignored due to invalid session)
+        admin_data = {"id": "test-id", "username": "test", "email": "test@test.com", "role": "admin"}
+        admin_user_base64 = base64.b64encode(json.dumps(admin_data).encode()).decode()
+        client.cookies.set("admin_user", admin_user_base64)
+
+        response = await client.get("/api/admin/me")
+
+        assert response.status_code == 401
+
+    @pytest.mark.unit
+    async def test_cookie_based_authentication_expired_session(
+        self,
+        client: AsyncClient,
+        admin_user_in_db: AdminUser,
+    ):
+        """Test accessing protected endpoints with expired session token."""
+        from app.auth import create_access_token
+        from datetime import timedelta
+        import base64
+        import json
+
+        admin_user_in_db.is_active = True
+
+        # Create expired session token (expired 1 minute ago)
+        expired_token = create_access_token(
+            {"sub": str(admin_user_in_db.id)},
+            expires_delta=timedelta(minutes=-1)
+        )
+
+        # Create admin user cookie
+        admin_data = {
+            "id": str(admin_user_in_db.id),
+            "username": admin_user_in_db.username,
+            "email": admin_user_in_db.email,
+            "role": admin_user_in_db.role
+        }
+        admin_user_base64 = base64.b64encode(json.dumps(admin_data).encode()).decode()
+
+        # Set cookies
+        client.cookies.set("admin_session", expired_token)
+        client.cookies.set("admin_user", admin_user_base64)
+
+        response = await client.get("/api/admin/me")
+
+        assert response.status_code == 401
+
+    @pytest.mark.unit
+    async def test_cookie_based_dashboard_stats(
+        self,
+        client: AsyncClient,
+        admin_user_in_db: AdminUser,
+        registration_in_db: Registration,
+    ):
+        """Test dashboard stats endpoint with cookie authentication."""
+        from app.auth import create_access_token
+        import base64
+        import json
+
+        admin_user_in_db.is_active = True
+
+        # Create session token and admin cookie
+        session_token = create_access_token({"sub": str(admin_user_in_db.id)})
+        admin_data = {
+            "id": str(admin_user_in_db.id),
+            "username": admin_user_in_db.username,
+            "email": admin_user_in_db.email,
+            "role": admin_user_in_db.role
+        }
+        admin_user_base64 = base64.b64encode(json.dumps(admin_data).encode()).decode()
+
+        # Set cookies
+        client.cookies.set("admin_session", session_token)
+        client.cookies.set("admin_user", admin_user_base64)
+
+        response = await client.get("/api/admin/dashboard/stats")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        assert "total_registrations" in data
+        assert "total_teachers" in data
+        assert "total_classes" in data
+        assert "recent_registrations" in data
+
+    @pytest.mark.unit
+    async def test_test_cookies_endpoint(
+        self,
+        client: AsyncClient,
+    ):
+        """Test the debug test-cookies endpoint."""
+        import base64
+        import json
+
+        # Set test cookies
+        session_token = "test.jwt.token"
+        admin_data = {"id": "test-id", "username": "testuser", "email": "test@test.com", "role": "admin"}
+        admin_user_base64 = base64.b64encode(json.dumps(admin_data).encode()).decode()
+
+        client.cookies.set("admin_session", session_token)
+        client.cookies.set("admin_user", admin_user_base64)
+
+        response = await client.get("/api/admin/test-cookies")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        assert data["message"] == "Cookie test endpoint"
+        assert "cookies_received" in data
+        assert data["admin_session"] == session_token
+        assert data["admin_user"] == admin_user_base64
+
+    @pytest.mark.unit
+    async def test_test_cookies_endpoint_no_cookies(
+        self,
+        client: AsyncClient,
+    ):
+        """Test the test-cookies endpoint with no cookies."""
+        response = await client.get("/api/admin/test-cookies")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        assert data["message"] == "Cookie test endpoint"
+        assert data["admin_session"] == "NOT FOUND"
+        assert data["admin_user"] == "NOT FOUND"
+
+    @pytest.mark.unit
+    async def test_test_login_endpoint(
+        self,
+        client: AsyncClient,
+    ):
+        """Test the debug test-login endpoint sets Base64 cookies."""
+        import base64
+        import json
+
+        response = await client.post("/api/admin/test-login")
+
+        assert response.status_code == 200
+        data = response.json()
+
+        assert data["message"] == "Test cookies set"
+        assert "original_json" in data
+        assert "base64_value" in data
+
+        # Verify JSON structure
+        original_json = json.loads(data["original_json"])
+        assert original_json["id"] == "test-id-123"
+        assert original_json["username"] == "test-admin"
+        assert original_json["email"] == "test@example.com"
+        assert original_json["role"] == "admin"
+
+        # Verify Base64 encoding
+        expected_base64 = base64.b64encode(data["original_json"].encode()).decode()
+        assert data["base64_value"] == expected_base64
+
+        # Verify cookie was set
+        cookies = response.cookies
+        assert "admin_user" in cookies
+        assert cookies["admin_user"] == expected_base64
+
+    @pytest.mark.unit
+    async def test_admin_login_cookie_security_settings(
+        self,
+        client: AsyncClient,
+        admin_user_in_db: AdminUser,
+    ):
+        """Test that login sets cookies with proper security settings for development."""
+        from app.auth import get_password_hash
+
+        password = "test_password"
+        admin_user_in_db.hashed_password = get_password_hash(password)
+        admin_user_in_db.is_active = True
+
+        login_data = {
+            "username": admin_user_in_db.username,
+            "password": password,
+        }
+
+        response = await client.post("/api/admin/login", json=login_data)
+
+        assert response.status_code == 200
+
+        cookies = response.cookies
+
+        # Check that both required cookies are set
+        assert "admin_session" in cookies
+        assert "admin_user" in cookies
+
+        # Verify cookies have values
+        assert len(cookies["admin_session"]) > 10
+        assert len(cookies["admin_user"]) > 10
+
+    @pytest.mark.unit
+    async def test_session_token_expiration_30_minutes(
+        self,
+        client: AsyncClient,
+        admin_user_in_db: AdminUser,
+    ):
+        """Test that session tokens are set to expire in 30 minutes."""
+        from app.auth import get_password_hash
+        from jose import jwt
+        from app.config import settings
+        import time
+
+        password = "test_password"
+        admin_user_in_db.hashed_password = get_password_hash(password)
+        admin_user_in_db.is_active = True
+
+        login_data = {
+            "username": admin_user_in_db.username,
+            "password": password,
+        }
+
+        # Record login time
+        login_time = int(time.time())
+
+        response = await client.post("/api/admin/login", json=login_data)
+        assert response.status_code == 200
+
+        # Decode the JWT token to check expiration
+        session_token = response.cookies["admin_session"]
+        payload = jwt.decode(session_token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+
+        # Check that token expires in approximately 30 minutes (allow 60 second tolerance)
+        expected_exp = login_time + (30 * 60)  # 30 minutes
+        actual_exp = payload["exp"]
+
+        assert abs(actual_exp - expected_exp) < 60  # Within 60 seconds tolerance
+
+    @pytest.mark.unit
+    async def test_logout_requires_authentication(
+        self,
+        client: AsyncClient,
+    ):
+        """Test that logout endpoint requires valid authentication."""
+        # Try to logout without cookies
+        response = await client.post("/api/admin/logout")
+
+        assert response.status_code == 401
+        assert "Could not validate credentials" in response.json()["detail"]

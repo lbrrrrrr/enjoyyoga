@@ -8,11 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { adminLogin } from "@/lib/admin-api";
+import { useLocale } from "next-intl";
+import { notifySessionChange } from "@/lib/session";
 
 export default function AdminLogin() {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations("admin");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -26,9 +29,11 @@ export default function AdminLogin() {
 
     try {
       const response = await adminLogin(username, password);
-      localStorage.setItem("admin_token", response.access_token);
-      localStorage.setItem("admin_user", JSON.stringify(response.admin));
-      router.push("/admin/dashboard");
+      // The server will set the session cookies automatically via credentials: 'include'
+      // Notify components that session has changed
+      notifySessionChange();
+      // Redirect to dashboard
+      router.push(`/${locale}/admin/dashboard`);
     } catch (error) {
       setStatus("error");
       setErrorMessage(error instanceof Error ? error.message : "Login failed");

@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import (
     authenticate_admin,
     create_access_token,
-    get_current_admin,
+    get_current_admin_bearer,
     get_password_hash,
     verify_password,
 )
@@ -193,7 +193,7 @@ class TestAuthFunctions:
         assert result is None
 
     @pytest.mark.unit
-    async def test_get_current_admin_success(
+    async def test_get_current_admin_bearer_success(
         self,
         db_session: AsyncSession,
         admin_user_in_db: AdminUser,
@@ -203,25 +203,25 @@ class TestAuthFunctions:
         token_data = {"sub": str(admin_user_in_db.id)}
         token = create_access_token(token_data)
 
-        result = await get_current_admin(token, db_session)
+        result = await get_current_admin_bearer(token, db_session)
 
         assert result is not None
         assert result.username == admin_user_in_db.username
         assert result.id == admin_user_in_db.id
 
     @pytest.mark.unit
-    async def test_get_current_admin_invalid_token_format(self, db_session: AsyncSession):
+    async def test_get_current_admin_bearer_invalid_token_format(self, db_session: AsyncSession):
         """Test current admin retrieval with invalid token format."""
         invalid_token = "invalid.token.format"
 
         with pytest.raises(HTTPException) as exc_info:
-            await get_current_admin(invalid_token, db_session)
+            await get_current_admin_bearer(invalid_token, db_session)
 
         assert exc_info.value.status_code == 401
         assert "Could not validate credentials" in str(exc_info.value.detail)
 
     @pytest.mark.unit
-    async def test_get_current_admin_expired_token(self, db_session: AsyncSession):
+    async def test_get_current_admin_bearer_expired_token(self, db_session: AsyncSession):
         """Test current admin retrieval with expired token."""
         # Create expired token
         token_data = {"sub": "testuser"}
@@ -229,25 +229,25 @@ class TestAuthFunctions:
         expired_token = create_access_token(token_data, expired_delta)
 
         with pytest.raises(HTTPException) as exc_info:
-            await get_current_admin(expired_token, db_session)
+            await get_current_admin_bearer(expired_token, db_session)
 
         assert exc_info.value.status_code == 401
 
     @pytest.mark.unit
-    async def test_get_current_admin_user_not_found(self, db_session: AsyncSession):
+    async def test_get_current_admin_bearer_user_not_found(self, db_session: AsyncSession):
         """Test current admin retrieval when user doesn't exist in database."""
         # Create token for non-existent user
         token_data = {"sub": "nonexistent_user"}
         token = create_access_token(token_data)
 
         with pytest.raises(HTTPException) as exc_info:
-            await get_current_admin(token, db_session)
+            await get_current_admin_bearer(token, db_session)
 
         assert exc_info.value.status_code == 401
         assert "Could not validate credentials" in str(exc_info.value.detail)
 
     @pytest.mark.unit
-    async def test_get_current_admin_inactive_user(
+    async def test_get_current_admin_bearer_inactive_user(
         self,
         db_session: AsyncSession,
         admin_user_in_db: AdminUser,
@@ -262,20 +262,20 @@ class TestAuthFunctions:
         token = create_access_token(token_data)
 
         with pytest.raises(HTTPException) as exc_info:
-            await get_current_admin(token, db_session)
+            await get_current_admin_bearer(token, db_session)
 
         assert exc_info.value.status_code == 401
         assert "Could not validate credentials" in str(exc_info.value.detail)
 
     @pytest.mark.unit
-    async def test_get_current_admin_no_username_in_token(self, db_session: AsyncSession):
+    async def test_get_current_admin_bearer_no_username_in_token(self, db_session: AsyncSession):
         """Test current admin retrieval when token has no username."""
         # Create token without 'sub' claim
         token_data = {"role": "admin"}
         token = create_access_token(token_data)
 
         with pytest.raises(HTTPException) as exc_info:
-            await get_current_admin(token, db_session)
+            await get_current_admin_bearer(token, db_session)
 
         assert exc_info.value.status_code == 401
         assert "Could not validate credentials" in str(exc_info.value.detail)
