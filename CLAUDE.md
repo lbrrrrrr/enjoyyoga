@@ -81,6 +81,26 @@ Requires two terminals running simultaneously:
 1. Backend: `cd backend && uv run uvicorn app.main:app --reload`
 2. Frontend: `cd frontend && npm run dev`
 
+## GitHub Actions
+
+### Automated PR Reviews
+
+The repository includes automated code review using Claude AI for all pull requests.
+
+**Setup**:
+1. Get Claude API key from [console.anthropic.com](https://console.anthropic.com)
+2. Add `ANTHROPIC_API_KEY` secret in GitHub repository settings
+3. Open a PR to trigger automatic review
+
+**Features**:
+- Triggers on PR open, update, and reopen
+- Reviews for security, bugs, code quality, and best practices
+- Posts detailed feedback as PR comments
+- Handles large PRs gracefully (>100KB diffs skipped)
+- Uses Claude Sonnet 4.5 for comprehensive analysis
+
+See `.github/workflows/README.md` for detailed setup instructions.
+
 ## Architecture
 
 ### Backend Structure

@@ -1,0 +1,100 @@
+name: Claude PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get PR diff
+        id: diff
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Get the diff for this PR
+          gh pr diff ${{ github.event.pull_request.number }} > pr_diff.txt
+
+          # Check if diff is too large (Claude has context limits)
+          DIFF_SIZE=$(wc -c < pr_diff.txt)
+          if [ $DIFF_SIZE -gt 100000 ]; then
+            echo "diff_too_large=true" >> $GITHUB_OUTPUT
+          else
+            echo "diff_too_large=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Review with Claude
+        if: steps.diff.outputs.diff_too_large == 'false'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # Read the diff
+          DIFF=$(cat pr_diff.txt)
+
+          # Prepare the prompt for Claude
+          cat > prompt.json <<'EOF'
+          {
+            "model": "claude-sonnet-4-5-20250929",
+            "max_tokens": 4096,
+            "messages": [
+              {
+                "role": "user",
+                "content": "You are a code reviewer for the enjoyyoga project - a bilingual yoga business management application with FastAPI backend and Next.js frontend.\n\nPlease review the following pull request diff and provide:\n1. **Summary**: Brief overview of changes\n2. **Issues**: Any bugs, security vulnerabilities, or problems you find\n3. **Suggestions**: Improvements for code quality, performance, or maintainability\n4. **Positive feedback**: What was done well\n\nFocus on:\n- Security vulnerabilities (SQL injection, XSS, authentication issues)\n- Bugs and logic errors\n- Code quality and best practices\n- Performance concerns\n- Consistency with existing codebase patterns\n\nBe constructive and specific. If the code looks good, say so!\n\n---\n\nPR Title: ${{ github.event.pull_request.title }}\nPR Description: ${{ github.event.pull_request.body }}\n\n---\n\nDiff:\n```diff\n${DIFF}\n```"
+              }
+            ]
+          }
+          EOF
+
+          # Call Claude API
+          REVIEW=$(curl -s https://api.anthropic.com/v1/messages \
+            -H "content-type: application/json" \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -d @prompt.json | jq -r '.content[0].text')
+
+          # Save review to file
+          echo "$REVIEW" > review.txt
+
+          # Prepare comment body
+          cat > comment.md <<EOF
+          ## 🤖 Claude AI Code Review
+
+          $REVIEW
+
+          ---
+          *Powered by Claude Sonnet 4.5*
+          EOF
+
+          cat comment.md
+
+      - name: Post review comment
+        if: steps.diff.outputs.diff_too_large == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body-file comment.md
+
+      - name: Handle large diff
+        if: steps.diff.outputs.diff_too_large == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "## ⚠️ PR Too Large for Automated Review
+
+          This pull request is too large for automated Claude review (>100KB diff).
+
+          Please consider:
+          - Breaking this into smaller PRs
+          - Using the manual \`/review-pr\` command with specific files
+          - Requesting human review for large changes"
