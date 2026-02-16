@@ -4,7 +4,8 @@
     "classes": "课程",
     "teachers": "老师",
     "yogaTypes": "瑜伽类型",
-    "register": "报名"
+    "register": "报名",
+    "paymentStatus": "支付状态"
   },
   "home": {
     "title": "欢迎来到 enjoyyoga",
@@ -156,6 +157,7 @@
       },
       "category": {
         "scheduling": "课程安排",
+        "payment": "报名与支付",
         "general": "瑜伽咨询",
         "business": "商务合作"
       },
@@ -276,6 +278,7 @@
         "placeholder": "选择类别",
         "options": {
           "scheduling": "课程安排和预订",
+          "payment": "报名与支付状态查询",
           "general": "瑜伽咨询",
           "business": "商务合作咨询"
         }

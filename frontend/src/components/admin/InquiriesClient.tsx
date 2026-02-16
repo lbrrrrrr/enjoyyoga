@@ -173,6 +173,7 @@ export function InquiriesClient() {
               >
                 <option value="">{t("filters.allCategories")}</option>
                 <option value="scheduling">{t("category.scheduling")}</option>
+                <option value="payment">{t("category.payment")}</option>
                 <option value="general">{t("category.general")}</option>
                 <option value="business">{t("category.business")}</option>
               </select>

@@ -14,6 +14,7 @@ export function Header() {
     { href: `/${locale}/teachers`, label: t("teachers") },
     { href: `/${locale}/yoga-types`, label: t("yogaTypes") },
     { href: `/${locale}/register`, label: t("register") },
+    { href: `/${locale}/payment/status`, label: t("paymentStatus") },
   ];
 
   return (

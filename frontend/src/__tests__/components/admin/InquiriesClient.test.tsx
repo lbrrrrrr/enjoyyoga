@@ -106,6 +106,7 @@ const mockMessages = {
       },
       category: {
         scheduling: 'Scheduling',
+        payment: 'Registration & Payment',
         general: 'General',
         business: 'Business'
       },

@@ -4,7 +4,8 @@
     "classes": "Classes",
     "teachers": "Teachers",
     "yogaTypes": "Yoga Types",
-    "register": "Register"
+    "register": "Register",
+    "paymentStatus": "Payment Status"
   },
   "home": {
     "title": "Welcome to enjoyyoga",
@@ -156,6 +157,7 @@
       },
       "category": {
         "scheduling": "Class Scheduling",
+        "payment": "Registration & Payment",
         "general": "General Yoga Questions",
         "business": "Business Inquiries"
       },
@@ -276,6 +278,7 @@
         "placeholder": "Select a category",
         "options": {
           "scheduling": "Class Scheduling & Booking",
+          "payment": "Registration & Payment Status",
           "general": "General Yoga Questions",
           "business": "Business & Partnership Inquiries"
         }

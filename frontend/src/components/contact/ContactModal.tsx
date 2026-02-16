@@ -96,6 +96,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
               >
                 <option value="">{t("form.category.placeholder")}</option>
                 <option value="scheduling">{t("form.category.options.scheduling")}</option>
+                <option value="payment">{t("form.category.options.payment")}</option>
                 <option value="general">{t("form.category.options.general")}</option>
                 <option value="business">{t("form.category.options.business")}</option>
               </select>
