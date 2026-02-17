@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getClass } from "@/lib/api";
+import { formatSchedule } from "@/lib/format-schedule";
 
 export default async function ClassDetailPage({
   params,
@@ -29,6 +30,15 @@ export default async function ClassDetailPage({
   const desc = (obj: { description_en: string; description_zh: string }) =>
     locale === "zh" ? obj.description_zh : obj.description_en;
 
+  const difficultyMap: Record<string, string> = {
+    beginner: t("beginner"),
+    intermediate: t("intermediate"),
+    advanced: t("advanced"),
+    "all levels": t("allLevels"),
+  };
+  const translateDifficulty = (d: string) =>
+    difficultyMap[d.toLowerCase()] || d;
+
   return (
     <div className="container mx-auto max-w-2xl px-4 py-12">
       <Button asChild variant="ghost" size="sm" className="mb-4">
@@ -43,7 +53,7 @@ export default async function ClassDetailPage({
           <div className="grid grid-cols-2 gap-2 text-sm">
             <p>
               <span className="font-medium">{t("schedule")}:</span>{" "}
-              {yogaClass.schedule}
+              {formatSchedule(yogaClass.schedule, t)}
             </p>
             <p>
               <span className="font-medium">{t("duration")}:</span>{" "}
@@ -51,7 +61,7 @@ export default async function ClassDetailPage({
             </p>
             <p>
               <span className="font-medium">{t("difficulty")}:</span>{" "}
-              {yogaClass.difficulty}
+              {translateDifficulty(yogaClass.difficulty)}
             </p>
             <p>
               <span className="font-medium">{t("capacity")}:</span>{" "}

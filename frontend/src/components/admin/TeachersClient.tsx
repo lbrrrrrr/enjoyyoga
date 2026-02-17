@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslations, useLocale } from "next-intl";
 import { getClassesByTeacher, YogaClass, Teacher, getYogaTypes, YogaType } from "@/lib/api";
 import { createTeacher, updateTeacher, uploadTeacherPhoto, createClass, updateClass, YogaClassCreate } from "@/lib/admin-api";
+import { formatSchedule } from "@/lib/format-schedule";
 
 interface TeachersClientProps {
   initialTeachers: Teacher[];
@@ -95,7 +96,17 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
   const [photoUploadError, setPhotoUploadError] = useState<string | null>(null);
 
   const t = useTranslations("admin.teachers");
+  const tClasses = useTranslations("classes");
   const locale = useLocale();
+
+  const difficultyMap: Record<string, string> = {
+    beginner: tClasses("beginner"),
+    intermediate: tClasses("intermediate"),
+    advanced: tClasses("advanced"),
+    "all levels": tClasses("allLevels"),
+  };
+  const translateDifficulty = (d: string) =>
+    difficultyMap[d.toLowerCase()] || d;
 
   const handleEditTeacher = (teacher: Teacher) => {
     setSelectedTeacher(teacher);
@@ -580,16 +591,16 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
                                   {locale === "zh" ? yogaClass.name_zh : yogaClass.name_en}
                                 </h5>
                                 <p className="text-xs text-gray-600 mt-1">
-                                  <strong>Schedule:</strong> {yogaClass.schedule}
+                                  <strong>{tClasses("schedule")}:</strong> {formatSchedule(yogaClass.schedule, tClasses)}
                                 </p>
                                 <p className="text-xs text-gray-600">
-                                  <strong>Duration:</strong> {yogaClass.duration_minutes} min
+                                  <strong>{tClasses("duration")}:</strong> {yogaClass.duration_minutes} {tClasses("minutes")}
                                 </p>
                                 <p className="text-xs text-gray-600">
-                                  <strong>Difficulty:</strong> {yogaClass.difficulty}
+                                  <strong>{tClasses("difficulty")}:</strong> {translateDifficulty(yogaClass.difficulty)}
                                 </p>
                                 <p className="text-xs text-gray-600">
-                                  <strong>Capacity:</strong> {yogaClass.capacity}
+                                  <strong>{tClasses("capacity")}:</strong> {yogaClass.capacity}
                                 </p>
                                 <p className="text-xs text-gray-600">
                                   <strong>Price:</strong>{" "}
@@ -1061,11 +1072,11 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
                     value={classFormData.schedule}
                     onChange={(e) => handleClassFormChange("schedule", e.target.value)}
                     className="w-full p-2 border rounded-md"
-                    placeholder="e.g., Monday 10:00-11:00, Weekly on Tuesday 18:00"
+                    placeholder="e.g., Mon/Wed/Fri 7:00 AM"
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Examples: "Monday 10:00-11:00", "Weekly on Tuesday 18:00", "Daily 07:00-08:00"
+                    Format: Mon/Wed/Fri 7:00 AM (3-letter days with /, time with AM/PM)
                   </p>
                 </div>
 
@@ -1276,10 +1287,11 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
                     value={editClassFormData.schedule}
                     onChange={(e) => handleEditClassFormChange("schedule", e.target.value)}
                     className="w-full p-2 border rounded-md"
+                    placeholder="e.g., Mon/Wed/Fri 7:00 AM"
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Examples: "Monday 10:00-11:00", "Weekly on Tuesday 18:00", "Daily 07:00-08:00"
+                    Format: Mon/Wed/Fri 7:00 AM (3-letter days with /, time with AM/PM)
                   </p>
                 </div>
 

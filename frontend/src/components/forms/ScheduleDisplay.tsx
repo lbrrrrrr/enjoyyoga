@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { formatSchedule } from "@/lib/format-schedule";
 
 interface ScheduleDisplayProps {
   schedule: string;
@@ -17,44 +18,6 @@ export function ScheduleDisplay({ schedule, className = "" }: ScheduleDisplayPro
       </div>
     );
   }
-
-  // Parse and display the schedule in a user-friendly format
-  const formatSchedule = (scheduleStr: string) => {
-    // Try to parse common formats like "Mon/Wed/Fri 7:00 AM"
-    const match = scheduleStr.match(/([a-zA-Z/]+)\s+(\d{1,2}:\d{2}\s*[APap][Mm])/);
-
-    if (match) {
-      const [, days, time] = match;
-      const dayNames = days.split('/').map(day => {
-        const dayMap: Record<string, string> = {
-          'mon': t('monday'),
-          'tue': t('tuesday'),
-          'wed': t('wednesday'),
-          'thu': t('thursday'),
-          'fri': t('friday'),
-          'sat': t('saturday'),
-          'sun': t('sunday'),
-          'monday': t('monday'),
-          'tuesday': t('tuesday'),
-          'wednesday': t('wednesday'),
-          'thursday': t('thursday'),
-          'friday': t('friday'),
-          'saturday': t('saturday'),
-          'sunday': t('sunday')
-        };
-        return dayMap[day.toLowerCase().trim()] || day;
-      });
-
-      const formattedDays = dayNames.length > 1
-        ? `${dayNames.slice(0, -1).join(', ')} ${t('and')} ${dayNames[dayNames.length - 1]}`
-        : dayNames[0];
-
-      return `${formattedDays} ${t('at')} ${time}`;
-    }
-
-    // If parsing fails, return the original schedule
-    return scheduleStr;
-  };
 
   return (
     <div className={`rounded-lg bg-muted/50 p-3 ${className}`}>
@@ -75,7 +38,7 @@ export function ScheduleDisplay({ schedule, className = "" }: ScheduleDisplayPro
         <span className="text-sm font-medium">{t("classSchedule")}:</span>
       </div>
       <p className="mt-1 text-sm text-muted-foreground">
-        {formatSchedule(schedule)}
+        {formatSchedule(schedule, t)}
       </p>
     </div>
   );

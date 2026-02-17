@@ -539,7 +539,11 @@ class TestRegistrationsRouter:
 
         await db_session.commit()
 
-        response = await client.get(f"/api/registrations/classes/{yoga_class_in_db.id}/available-dates")
+        # Use explicit from_date so the test is not dependent on the current date
+        response = await client.get(
+            f"/api/registrations/classes/{yoga_class_in_db.id}/available-dates",
+            params={"from_date": "2026-02-01"},
+        )
 
         assert response.status_code == 200
         data = response.json()
