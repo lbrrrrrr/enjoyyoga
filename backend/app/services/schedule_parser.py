@@ -21,6 +21,114 @@ class ScheduleParserService:
         'sunday': 6, 'sun': 6
     }
 
+    # Reverse mapping: weekday number → 3-letter abbreviation
+    DAY_ABBREVS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+    # Canonical schedule regex
+    CANONICAL_RE = re.compile(
+        r'^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)(/(Mon|Tue|Wed|Thu|Fri|Sat|Sun))* \d{1,2}:\d{2} (AM|PM)$'
+    )
+
+    @staticmethod
+    def normalize_schedule(schedule: str) -> str:
+        """
+        Normalize a schedule string to canonical format: ``Mon/Wed/Fri 7:00 AM``.
+
+        Handles:
+        - Full day names → 3-letter abbreviations (Wednesday → Wed)
+        - Comma separators → ``/`` (MON,WED → Mon/Wed)
+        - 24-hour time → 12-hour AM/PM (18:00 → 6:00 PM)
+        - Time ranges → start time only (10:00-12:00 → 10:00 AM)
+        - Case normalization (MON → Mon)
+        """
+        if not schedule or not schedule.strip():
+            return schedule
+
+        text = schedule.strip()
+
+        # --- parse days portion ---------------------------------------------------
+        # Collect known day tokens from the leading part of the string.
+        # We split on ``/`` or ``,`` (with optional surrounding whitespace), and also
+        # allow bare whitespace separation *only* when day names are full-length so
+        # that the time part is not accidentally consumed.
+        day_name_map = {
+            'monday': 'Mon', 'mon': 'Mon',
+            'tuesday': 'Tue', 'tue': 'Tue', 'tues': 'Tue',
+            'wednesday': 'Wed', 'wed': 'Wed',
+            'thursday': 'Thu', 'thu': 'Thu', 'thurs': 'Thu',
+            'friday': 'Fri', 'fri': 'Fri',
+            'saturday': 'Sat', 'sat': 'Sat',
+            'sunday': 'Sun', 'sun': 'Sun',
+        }
+
+        # Try to match days + time in one regex.  Days may be separated by / or ,
+        # Time may be 12h (with AM/PM) or 24h, optionally followed by a range end.
+        m = re.match(
+            r'(?i)'
+            r'([a-z/,\s]+?)'           # days (greedy but lazy enough)
+            r'\s+'
+            r'(\d{1,2}:\d{2})'         # start time HH:MM
+            r'\s*'
+            r'(?:[APap][Mm])?'          # optional AM/PM on start
+            r'(?:\s*-\s*\d{1,2}:\d{2}(?:\s*[APap][Mm])?)?'  # optional range end
+            r'\s*'
+            r'([APap][Mm])?'            # trailing AM/PM (covers "7:00 AM" where AM is after space)
+            r'\s*$',
+            text,
+        )
+
+        if not m:
+            return schedule  # can't parse – return as-is
+
+        days_raw = m.group(1)
+        time_raw = m.group(2)
+
+        # Determine AM/PM.  Check original string for any AM/PM token.
+        ampm_match = re.search(r'(?i)([ap]m)', text)
+        ampm_token = ampm_match.group(1).upper() if ampm_match else None
+
+        # Parse individual day tokens
+        tokens = re.split(r'[/,]+', days_raw)
+        day_abbrevs = []
+        for tok in tokens:
+            tok = tok.strip().lower()
+            if tok in day_name_map:
+                day_abbrevs.append(day_name_map[tok])
+
+        if not day_abbrevs:
+            return schedule  # no recognisable days
+
+        days_str = '/'.join(day_abbrevs)
+
+        # Parse time
+        hour, minute = (int(x) for x in time_raw.split(':'))
+
+        if ampm_token:
+            # Already 12h – just normalise
+            if ampm_token == 'PM' and hour != 12:
+                hour_24 = hour + 12
+            elif ampm_token == 'AM' and hour == 12:
+                hour_24 = 0
+            else:
+                hour_24 = hour
+        else:
+            # Assume 24-hour
+            hour_24 = hour
+
+        # Convert 24h → 12h AM/PM
+        if hour_24 == 0:
+            display_hour, suffix = 12, 'AM'
+        elif hour_24 < 12:
+            display_hour, suffix = hour_24, 'AM'
+        elif hour_24 == 12:
+            display_hour, suffix = 12, 'PM'
+        else:
+            display_hour, suffix = hour_24 - 12, 'PM'
+
+        time_str = f"{display_hour}:{minute:02d} {suffix}"
+
+        return f"{days_str} {time_str}"
+
     def __init__(self, default_timezone: str = "America/New_York"):
         self.default_timezone = default_timezone
 

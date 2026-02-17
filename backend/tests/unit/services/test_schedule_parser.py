@@ -517,6 +517,60 @@ class TestScheduleParserService:
             assert result["pattern"]["duration_minutes"] == 90
             assert result["pattern"]["time"] == "18:00"
 
+    # --- normalize_schedule tests ---
+
+    @pytest.mark.unit
+    def test_normalize_schedule_already_canonical(self):
+        """Test that canonical input is returned unchanged."""
+        assert ScheduleParserService.normalize_schedule("Mon/Wed/Fri 7:00 AM") == "Mon/Wed/Fri 7:00 AM"
+
+    @pytest.mark.unit
+    def test_normalize_schedule_full_day_names(self):
+        """Test full day names are abbreviated."""
+        assert ScheduleParserService.normalize_schedule("Wednesday 6:00 PM") == "Wed 6:00 PM"
+        assert ScheduleParserService.normalize_schedule("Monday/Wednesday/Friday 7:00 AM") == "Mon/Wed/Fri 7:00 AM"
+
+    @pytest.mark.unit
+    def test_normalize_schedule_comma_separators(self):
+        """Test comma-separated days are converted to /."""
+        assert ScheduleParserService.normalize_schedule("MON,WED,FRI 8:00 AM") == "Mon/Wed/Fri 8:00 AM"
+
+    @pytest.mark.unit
+    def test_normalize_schedule_24h_to_12h(self):
+        """Test 24-hour time is converted to 12-hour AM/PM."""
+        assert ScheduleParserService.normalize_schedule("Mon/Wed/Fri 19:00") == "Mon/Wed/Fri 7:00 PM"
+        assert ScheduleParserService.normalize_schedule("Mon 8:00") == "Mon 8:00 AM"
+
+    @pytest.mark.unit
+    def test_normalize_schedule_time_range_to_start_only(self):
+        """Test time ranges keep only start time."""
+        assert ScheduleParserService.normalize_schedule("Mon/Wed/Fri 10:00-12:00") == "Mon/Wed/Fri 10:00 AM"
+        assert ScheduleParserService.normalize_schedule("Wednesday 18:00 - 19:30") == "Wed 6:00 PM"
+
+    @pytest.mark.unit
+    def test_normalize_schedule_case_normalization(self):
+        """Test case normalization."""
+        assert ScheduleParserService.normalize_schedule("MON/WED/FRI 7:00 AM") == "Mon/Wed/Fri 7:00 AM"
+        assert ScheduleParserService.normalize_schedule("TUE,THU 19:00") == "Tue/Thu 7:00 PM"
+
+    @pytest.mark.unit
+    def test_normalize_schedule_midnight_and_noon(self):
+        """Test edge cases for midnight and noon."""
+        assert ScheduleParserService.normalize_schedule("Mon 0:00") == "Mon 12:00 AM"
+        assert ScheduleParserService.normalize_schedule("Mon 12:00") == "Mon 12:00 PM"
+
+    @pytest.mark.unit
+    def test_normalize_schedule_empty_and_none(self):
+        """Test empty/None input."""
+        assert ScheduleParserService.normalize_schedule("") == ""
+        assert ScheduleParserService.normalize_schedule("  ") == "  "
+        assert ScheduleParserService.normalize_schedule(None) is None
+
+    @pytest.mark.unit
+    def test_normalize_schedule_unparseable(self):
+        """Test unparseable input is returned as-is."""
+        assert ScheduleParserService.normalize_schedule("By appointment") == "By appointment"
+
     @pytest.mark.unit
     def test_parse_schedule_string_all_formats_coexist(self):
         """Test that all three format types work correctly."""

@@ -657,7 +657,7 @@ class TestAdminRouter:
             "description_zh": "带时长的测试课程",
             "teacher_id": str(teacher_in_db.id),
             "yoga_type_id": str(yoga_type_in_db.id),
-            "schedule": "Wednesday 18:00 - 19:30",  # Duration format
+            "schedule": "Wed 6:00 PM",  # Canonical format
             "schedule_type": "recurring",
             "duration_minutes": 90,
             "difficulty": "intermediate",
@@ -691,7 +691,7 @@ class TestAdminRouter:
         assert schedule_data["type"] == "weekly_recurring"
         assert schedule_data["pattern"]["days"] == ["wednesday"]
         assert schedule_data["pattern"]["time"] == "18:00"
-        assert schedule_data["pattern"]["duration_minutes"] == 90  # Calculated from duration
+        assert schedule_data["pattern"]["duration_minutes"] == 60  # Default duration (canonical format)
 
     @pytest.mark.unit
     async def test_update_class_with_schedule_parsing(
@@ -736,7 +736,7 @@ class TestAdminRouter:
             "description_zh": "更新描述",
             "teacher_id": str(teacher_in_db.id),
             "yoga_type_id": str(yoga_type_in_db.id),
-            "schedule": "Monday 14:30 - 16:00",  # New duration format
+            "schedule": "Mon 2:30 PM",  # Canonical format
             "schedule_type": "recurring",
             "duration_minutes": 90,
             "difficulty": "intermediate",
@@ -754,7 +754,7 @@ class TestAdminRouter:
         data = response.json()
 
         # Verify the schedule was updated in response
-        assert data["schedule"] == "Monday 14:30 - 16:00"
+        assert data["schedule"] == "Mon 2:30 PM"
 
         # Check the database directly for updated schedule_data parsing
         from sqlalchemy import select
@@ -769,7 +769,7 @@ class TestAdminRouter:
         assert schedule_data["type"] == "weekly_recurring"
         assert schedule_data["pattern"]["days"] == ["monday"]
         assert schedule_data["pattern"]["time"] == "14:30"
-        assert schedule_data["pattern"]["duration_minutes"] == 90  # Calculated duration
+        assert schedule_data["pattern"]["duration_minutes"] == 60  # Default duration (canonical format)
 
     @pytest.mark.unit
     async def test_create_class_with_24hour_format_schedule(
@@ -791,7 +791,7 @@ class TestAdminRouter:
             "description_zh": "24小时制测试课程",
             "teacher_id": str(teacher_in_db.id),
             "yoga_type_id": str(yoga_type_in_db.id),
-            "schedule": "Sat/Sun 19:30",  # 24-hour format
+            "schedule": "Sat/Sun 7:30 PM",  # Canonical format
             "schedule_type": "recurring",
             "duration_minutes": 60,
             "difficulty": "beginner",
@@ -836,7 +836,7 @@ class TestAdminRouter:
         yoga_type_in_db,
         db_session,
     ):
-        """Test creating class with unparseable schedule format falls back to custom type."""
+        """Test creating class with unparseable schedule format is rejected by validation."""
         token = create_access_token({"sub": str(admin_user_in_db.id)})
         headers = {"Authorization": f"Bearer {token}"}
 
@@ -861,25 +861,9 @@ class TestAdminRouter:
             headers=headers
         )
 
-        assert response.status_code == 200
+        assert response.status_code == 422
         data = response.json()
-
-        # Check the database directly for schedule_data parsing
-        from app.models.yoga_class import YogaClass
-        from sqlalchemy import select
-        import uuid
-
-        class_id = uuid.UUID(data["id"])  # Convert string to UUID
-        query = select(YogaClass).where(YogaClass.id == class_id)
-        result = await db_session.execute(query)
-        created_class = result.scalar_one()
-
-        # Verify it falls back to custom type
-        import json
-        schedule_data = json.loads(created_class.schedule_data)
-
-        assert schedule_data["type"] == "custom"
-        assert schedule_data["original_schedule"] == "by appointment only"  # lowercase
+        assert "schedule" in str(data).lower()
 
     # Session-based Authentication Tests
     @pytest.mark.unit
