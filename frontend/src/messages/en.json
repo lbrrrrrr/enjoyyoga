@@ -19,6 +19,7 @@
     "duration": "Duration",
     "difficulty": "Difficulty",
     "capacity": "Capacity",
+    "location": "Location",
     "minutes": "min",
     "teacher": "Teacher",
     "type": "Type",

@@ -202,6 +202,7 @@ export interface YogaClassCreate {
   duration_minutes: number;
   difficulty: string;
   capacity: number;
+  location?: string | null;
   schedule_type?: string;
   is_active?: boolean;
   price?: number | null;

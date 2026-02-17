@@ -71,6 +71,12 @@ export default async function ClassesPage({
                   <span className="font-medium">{t("type")}:</span>{" "}
                   {name(cls.yoga_type)}
                 </p>
+                {cls.location && (
+                  <p>
+                    <span className="font-medium">{t("location")}:</span>{" "}
+                    {cls.location}
+                  </p>
+                )}
                 <p>
                   <span className="font-medium">{t("price")}:</span>{" "}
                   {(() => {

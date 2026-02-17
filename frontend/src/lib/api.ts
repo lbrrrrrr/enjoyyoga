@@ -56,6 +56,7 @@ export interface YogaClass {
   duration_minutes: number;
   difficulty: string;
   capacity: number;
+  location: string | null;
   created_at: string;
   price: number | null;
   price_usd: number | null;

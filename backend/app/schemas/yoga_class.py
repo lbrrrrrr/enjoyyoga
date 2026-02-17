@@ -26,6 +26,7 @@ class YogaClassCreate(BaseModel):
     duration_minutes: int
     difficulty: str
     capacity: int
+    location: Optional[str] = None
     schedule_type: str = "recurring"
     is_active: bool = True
     price: Optional[float] = None
@@ -56,6 +57,7 @@ class YogaClassOut(BaseModel):
     duration_minutes: int
     difficulty: str
     capacity: int
+    location: Optional[str] = None
     created_at: datetime
     price: Optional[float] = None
     price_usd: Optional[float] = None

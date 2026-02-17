@@ -434,6 +434,7 @@ async def create_class(
         duration_minutes=class_data.duration_minutes,
         difficulty=class_data.difficulty,
         capacity=class_data.capacity,
+        location=class_data.location,
         schedule_type=class_data.schedule_type,
         is_active=class_data.is_active,
         price=class_data.price,
@@ -494,6 +495,7 @@ async def update_class(
     yoga_class.duration_minutes = class_data.duration_minutes
     yoga_class.difficulty = class_data.difficulty
     yoga_class.capacity = class_data.capacity
+    yoga_class.location = class_data.location
     yoga_class.schedule_type = class_data.schedule_type
     yoga_class.is_active = class_data.is_active
     yoga_class.price = class_data.price

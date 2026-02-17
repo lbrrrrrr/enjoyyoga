@@ -63,6 +63,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
     duration_minutes: 60,
     difficulty: "beginner",
     capacity: 10,
+    location: "",
     price: null as number | null,
     price_usd: null as number | null,
     currency: "CNY"
@@ -84,6 +85,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
     duration_minutes: 60,
     difficulty: "beginner",
     capacity: 10,
+    location: "",
     price: null as number | null,
     price_usd: null as number | null,
     currency: "CNY"
@@ -294,6 +296,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
       duration_minutes: 60,
       difficulty: "beginner",
       capacity: 10,
+      location: "",
       price: null,
       price_usd: null,
       currency: "CNY"
@@ -345,6 +348,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
         duration_minutes: classFormData.duration_minutes,
         difficulty: classFormData.difficulty,
         capacity: classFormData.capacity,
+        location: classFormData.location || null,
         price: classFormData.price,
         price_usd: classFormData.price_usd,
         currency: classFormData.currency
@@ -383,6 +387,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
       duration_minutes: yogaClass.duration_minutes,
       difficulty: yogaClass.difficulty,
       capacity: yogaClass.capacity,
+      location: yogaClass.location || "",
       price: yogaClass.price ?? null,
       price_usd: yogaClass.price_usd ?? null,
       currency: yogaClass.currency || "CNY"
@@ -434,6 +439,7 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
         duration_minutes: editClassFormData.duration_minutes,
         difficulty: editClassFormData.difficulty,
         capacity: editClassFormData.capacity,
+        location: editClassFormData.location || null,
         price: editClassFormData.price,
         price_usd: editClassFormData.price_usd,
         currency: editClassFormData.currency
@@ -1123,6 +1129,17 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
                   </select>
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium mb-1">Location</label>
+                  <input
+                    type="text"
+                    value={classFormData.location}
+                    onChange={(e) => handleClassFormChange("location", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    placeholder="e.g., Serenity Studio, 123 Lotus Lane"
+                  />
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Price per Session (CNY)</label>
@@ -1336,6 +1353,17 @@ export function TeachersClient({ initialTeachers }: TeachersClientProps) {
                     <option value="advanced">Advanced</option>
                     <option value="all-levels">All Levels</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Location</label>
+                  <input
+                    type="text"
+                    value={editClassFormData.location}
+                    onChange={(e) => handleEditClassFormChange("location", e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    placeholder="e.g., Serenity Studio, 123 Lotus Lane"
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
