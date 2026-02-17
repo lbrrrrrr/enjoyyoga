@@ -144,7 +144,7 @@ export default async function ClassDetailPage({
             </p>
           </div>
           <Button asChild className="mt-4 rounded-full">
-            <Link href={`/${locale}/register`}>Register</Link>
+            <Link href={`/${locale}/register?classId=${yogaClass.id}`}>Register</Link>
           </Button>
         </CardContent>
       </Card>
