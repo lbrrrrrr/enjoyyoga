@@ -33,8 +33,10 @@ describe('API Client', () => {
         name_en: 'Morning Hatha',
         name_zh: '晨间哈他',
         teacher_id: '1',
-        yoga_type_id: '1'
+        yoga_type_id: '1',
+        location: 'Serenity Studio, 123 Lotus Lane'
       })
+      expect(classes[1].location).toBeNull()
     })
 
     it('should fetch a specific class', async () => {
@@ -43,6 +45,7 @@ describe('API Client', () => {
       expect(yogaClass).toMatchObject({
         id: '1',
         name_en: 'Morning Hatha',
+        location: 'Serenity Studio, 123 Lotus Lane',
         teacher: expect.objectContaining({
           name_en: 'Sarah Johnson'
         }),
@@ -50,6 +53,16 @@ describe('API Client', () => {
           name_en: 'Hatha Yoga'
         })
       })
+    })
+
+    it('should handle class with null location', async () => {
+      const yogaClass = await api.getClass('2')
+
+      expect(yogaClass).toMatchObject({
+        id: '2',
+        name_en: 'Evening Flow'
+      })
+      expect(yogaClass.location).toBeNull()
     })
 
     it('should handle class not found', async () => {

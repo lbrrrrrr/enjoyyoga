@@ -28,6 +28,9 @@ class YogaClass(Base):
     schedule_type: Mapped[str] = mapped_column(String(20), default="recurring")  # recurring, one_time, custom
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)  # Enable/disable class
 
+    # Location field (optional, English only)
+    location: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
     # Pricing fields
     price: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)  # null means free (CNY)
     price_usd: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)  # null means not available in USD

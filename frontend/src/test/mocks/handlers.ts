@@ -60,6 +60,7 @@ const mockClasses = [
     duration_minutes: 60,
     difficulty: 'beginner',
     capacity: 20,
+    location: 'Serenity Studio, 123 Lotus Lane',
     created_at: '2024-01-01T00:00:00Z',
     teacher: mockTeachers[0],
     yoga_type: mockYogaTypes[0]
@@ -76,6 +77,7 @@ const mockClasses = [
     duration_minutes: 75,
     difficulty: 'intermediate',
     capacity: 15,
+    location: null,
     created_at: '2024-01-01T00:00:00Z',
     teacher: mockTeachers[1],
     yoga_type: mockYogaTypes[1]

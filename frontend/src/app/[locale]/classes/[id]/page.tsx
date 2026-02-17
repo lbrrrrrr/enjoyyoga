@@ -67,6 +67,12 @@ export default async function ClassDetailPage({
               <span className="font-medium">{t("capacity")}:</span>{" "}
               {yogaClass.capacity}
             </p>
+            {yogaClass.location && (
+              <p className="col-span-2">
+                <span className="font-medium">{t("location")}:</span>{" "}
+                {yogaClass.location}
+              </p>
+            )}
           </div>
           {/* Pricing section */}
           <div className="border-t pt-3">

@@ -67,6 +67,7 @@ async def seed():
             duration_minutes=60,
             difficulty="beginner",
             capacity=20,
+            location="Serenity Studio, 123 Lotus Lane, Suite 4B",
         )
         class2 = YogaClass(
             id=uuid.uuid4(),
@@ -80,6 +81,7 @@ async def seed():
             duration_minutes=75,
             difficulty="beginner",
             capacity=15,
+            location="Harmony Wellness Center, 456 Bamboo Ave",
         )
         session.add_all([class1, class2])
 
