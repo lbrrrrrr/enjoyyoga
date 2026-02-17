@@ -210,7 +210,8 @@ describe('Admin API Client', () => {
       difficulty: 'beginner',
       capacity: 25,
       schedule_type: 'recurring',
-      is_active: true
+      is_active: true,
+      location: 'Downtown Yoga Studio, 456 Main St'
     }
 
     it('should create a new class', async () => {

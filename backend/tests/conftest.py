@@ -134,6 +134,7 @@ def sample_yoga_class():
         "capacity": 15,
         "duration_minutes": 60,
         "difficulty": "beginner",
+        "location": "Serenity Studio, 123 Lotus Lane",
         "is_active": True,
     }
 

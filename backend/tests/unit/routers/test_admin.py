@@ -602,7 +602,8 @@ class TestAdminRouter:
             "duration_minutes": 60,
             "difficulty": "beginner",
             "capacity": 20,
-            "is_active": True
+            "is_active": True,
+            "location": "Serenity Studio, 123 Lotus Lane"
         }
 
         response = await client.post(
@@ -616,6 +617,7 @@ class TestAdminRouter:
 
         # Verify the raw schedule string is saved in response
         assert data["schedule"] == "Mon/Wed/Fri 7:00 AM"
+        assert data["location"] == "Serenity Studio, 123 Lotus Lane"
 
         # Check the database directly for schedule_data parsing
         from app.models.yoga_class import YogaClass
@@ -741,7 +743,8 @@ class TestAdminRouter:
             "duration_minutes": 90,
             "difficulty": "intermediate",
             "capacity": 12,
-            "is_active": True
+            "is_active": True,
+            "location": "Harmony Wellness Center, 456 Bamboo Ave"
         }
 
         response = await client.put(
@@ -755,6 +758,7 @@ class TestAdminRouter:
 
         # Verify the schedule was updated in response
         assert data["schedule"] == "Mon 2:30 PM"
+        assert data["location"] == "Harmony Wellness Center, 456 Bamboo Ave"
 
         # Check the database directly for updated schedule_data parsing
         from sqlalchemy import select
@@ -864,6 +868,143 @@ class TestAdminRouter:
         assert response.status_code == 422
         data = response.json()
         assert "schedule" in str(data).lower()
+
+    @pytest.mark.unit
+    async def test_create_class_without_location(
+        self,
+        client: AsyncClient,
+        admin_user_in_db: AdminUser,
+        teacher_in_db,
+        yoga_type_in_db,
+        db_session,
+    ):
+        """Test that location defaults to null when not provided."""
+        token = create_access_token({"sub": str(admin_user_in_db.id)})
+        headers = {"Authorization": f"Bearer {token}"}
+
+        class_data = {
+            "name_en": "No Location Class",
+            "name_zh": "无地点课程",
+            "description_en": "Class without location",
+            "description_zh": "无地点的课程",
+            "teacher_id": str(teacher_in_db.id),
+            "yoga_type_id": str(yoga_type_in_db.id),
+            "schedule": "Tue 10:00 AM",
+            "schedule_type": "recurring",
+            "duration_minutes": 60,
+            "difficulty": "beginner",
+            "capacity": 15,
+            "is_active": True
+        }
+
+        response = await client.post(
+            "/api/admin/classes",
+            json=class_data,
+            headers=headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["location"] is None
+
+    @pytest.mark.unit
+    async def test_create_class_with_location(
+        self,
+        client: AsyncClient,
+        admin_user_in_db: AdminUser,
+        teacher_in_db,
+        yoga_type_in_db,
+        db_session,
+    ):
+        """Test creating a class with a location value."""
+        token = create_access_token({"sub": str(admin_user_in_db.id)})
+        headers = {"Authorization": f"Bearer {token}"}
+
+        class_data = {
+            "name_en": "Located Class",
+            "name_zh": "有地点课程",
+            "description_en": "Class with location",
+            "description_zh": "有地点的课程",
+            "teacher_id": str(teacher_in_db.id),
+            "yoga_type_id": str(yoga_type_in_db.id),
+            "schedule": "Thu 5:00 PM",
+            "schedule_type": "recurring",
+            "duration_minutes": 75,
+            "difficulty": "intermediate",
+            "capacity": 20,
+            "is_active": True,
+            "location": "Zen Garden Studio, 789 Peace Blvd"
+        }
+
+        response = await client.post(
+            "/api/admin/classes",
+            json=class_data,
+            headers=headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["location"] == "Zen Garden Studio, 789 Peace Blvd"
+
+    @pytest.mark.unit
+    async def test_update_class_location_to_null(
+        self,
+        client: AsyncClient,
+        admin_user_in_db: AdminUser,
+        teacher_in_db,
+        yoga_type_in_db,
+        db_session,
+    ):
+        """Test updating a class to remove its location."""
+        from app.models.yoga_class import YogaClass
+
+        yoga_class = YogaClass(
+            name_en="Class With Location",
+            name_zh="有地点课程",
+            description_en="Has a location",
+            description_zh="有地点",
+            teacher_id=teacher_in_db.id,
+            yoga_type_id=yoga_type_in_db.id,
+            schedule="Fri 9:00 AM",
+            schedule_type="recurring",
+            duration_minutes=60,
+            difficulty="beginner",
+            capacity=10,
+            is_active=True,
+            location="Old Location, 123 Main St"
+        )
+        db_session.add(yoga_class)
+        await db_session.commit()
+        await db_session.refresh(yoga_class)
+
+        token = create_access_token({"sub": str(admin_user_in_db.id)})
+        headers = {"Authorization": f"Bearer {token}"}
+
+        update_data = {
+            "name_en": "Class With Location",
+            "name_zh": "有地点课程",
+            "description_en": "Has a location",
+            "description_zh": "有地点",
+            "teacher_id": str(teacher_in_db.id),
+            "yoga_type_id": str(yoga_type_in_db.id),
+            "schedule": "Fri 9:00 AM",
+            "schedule_type": "recurring",
+            "duration_minutes": 60,
+            "difficulty": "beginner",
+            "capacity": 10,
+            "is_active": True,
+            "location": None
+        }
+
+        response = await client.put(
+            f"/api/admin/classes/{yoga_class.id}",
+            json=update_data,
+            headers=headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["location"] is None
 
     # Session-based Authentication Tests
     @pytest.mark.unit
