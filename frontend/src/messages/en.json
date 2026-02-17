@@ -5,7 +5,8 @@
     "teachers": "Teachers",
     "yogaTypes": "Yoga Types",
     "register": "Register",
-    "paymentStatus": "Payment Status"
+    "paymentStatus": "Payment Status",
+    "policies": "Policies"
   },
   "home": {
     "title": "Welcome to Enjoy Yoga",
@@ -341,6 +342,37 @@
     "success": {
       "title": "Message Sent!",
       "message": "Thank you for contacting us. We'll get back to you within 24-48 hours."
+    }
+  },
+  "policies": {
+    "title": "Studio Policies",
+    "payment": {
+      "title": "Accepted Payments",
+      "body": "We accept WeChat Pay and Venmo via static QR code. After registering for a paid class, you will receive a unique reference number. Scan our WeChat Pay or Venmo QR code, transfer the correct amount, and include your reference number in the payment note. Our admin will manually verify and confirm your payment, after which you will receive a confirmation email."
+    },
+    "cancellation": {
+      "title": "Cancellation & Refund Policy",
+      "body": "You may cancel your registration up to 24 hours before the scheduled class start time for a full refund. Cancellations made within 24 hours of the class will not be eligible for a refund. To cancel, please contact us using the Contact Us button below."
+    },
+    "contact": {
+      "title": "Contact Us",
+      "body": "Have a question? Use the Contact Us button at the bottom-right of any page to send us a message. We're happy to help with scheduling, payments, general inquiries, or business matters. Our team will respond to you by email."
+    },
+    "health": {
+      "title": "Health & Safety",
+      "body": "We recommend consulting your doctor before beginning any yoga practice, especially if you have pre-existing medical conditions or injuries. Please inform your instructor of any physical limitations before class begins. Participation in all classes is at your own risk."
+    },
+    "rules": {
+      "title": "Class Rules",
+      "body": "Please arrive 5-10 minutes before class starts to get settled. Silence your phone and avoid disruptions during class. Remove shoes before entering the studio. Please do not record video or take photos during class without the instructor's permission."
+    },
+    "packages": {
+      "title": "Package Terms",
+      "body": "Multi-session packages are valid for the specific class they are purchased for and are non-transferable to other students or classes. Partially used packages are not eligible for a refund. Package sessions must be used within the validity period stated at the time of purchase."
+    },
+    "verification": {
+      "title": "Payment Verification",
+      "body": "After submitting your payment, our admin will verify it within 1 business day. You will receive a confirmation email once verified. If you do not receive a confirmation within 1 business day, please contact us using the Contact Us button."
     }
   },
   "footer": {
