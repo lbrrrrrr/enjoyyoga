@@ -15,14 +15,15 @@ import { AvailableDatesSelector } from "./AvailableDatesSelector";
 interface RegistrationFormProps {
   classes: YogaClass[];
   locale: string;
+  defaultClassId?: string;
 }
 
-export function RegistrationForm({ classes, locale }: RegistrationFormProps) {
+export function RegistrationForm({ classes, locale, defaultClassId }: RegistrationFormProps) {
   const t = useTranslations("register");
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
-  const [selectedClass, setSelectedClass] = useState("");
+  const [selectedClass, setSelectedClass] = useState(defaultClassId ?? "");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedPackageId, setSelectedPackageId] = useState<string>("");
