@@ -16,8 +16,16 @@ cd backend
 uv sync
 cp .env.example .env  # Edit with database credentials
 uv run alembic upgrade head
+uv run python setup_admin.py              # Create admin user + default email templates
+uv run python setup_contact_templates.py  # Contact inquiry email templates
+uv run python setup_payment_templates.py  # Payment email templates
 
-# Start development server
+# Start development server (with email enabled)
+cd backend
+export SMTP_PASSWORD=$(security find-generic-password -a "enjoyyoga" -s "smtp-password" -w)
+uv run uvicorn app.main:app --reload
+
+# Start development server (without email — prints to console)
 cd backend
 uv run uvicorn app.main:app --reload
 
@@ -267,7 +275,7 @@ See `.github/workflows/README.md` for detailed documentation, troubleshooting, a
 
 ### Email Notifications
 - SMTP configuration for production email sending
-- Development mode prints emails to console
+- Development mode prints emails to console (when SMTP credentials are not set)
 - Customizable notification templates
 - Registration confirmation emails (includes tracking URL)
 - Payment pending emails (amount, reference number, instructions, tracking URL)
@@ -276,6 +284,69 @@ See `.github/workflows/README.md` for detailed documentation, troubleshooting, a
 - Contact inquiry confirmation emails (bilingual)
 - Admin notification emails for new inquiries
 - Reply emails with conversation threading
+
+#### Email Setup (Local Development)
+
+SMTP password is stored in **macOS Keychain** (never in `.env` or source files):
+
+```bash
+# One-time: store Gmail App Password in Keychain
+security add-generic-password -a "enjoyyoga" -s "smtp-password" -w "your-gmail-app-password"
+
+# Start server with email enabled
+export SMTP_PASSWORD=$(security find-generic-password -a "enjoyyoga" -s "smtp-password" -w)
+uv run uvicorn app.main:app --reload
+
+# To update the password
+security delete-generic-password -a "enjoyyoga" -s "smtp-password"
+security add-generic-password -a "enjoyyoga" -s "smtp-password" -w "new-password"
+```
+
+Gmail requires a **Gmail App Password** (not your regular password):
+1. Enable 2-Step Verification at [myaccount.google.com](https://myaccount.google.com) → Security
+2. Go to Security → 2-Step Verification → App passwords
+3. Create an app password for "Mail" and use the 16-character code
+
+Without `SMTP_PASSWORD` set, the server runs in dev mode and prints emails to console.
+
+#### Email Setup (Production) — TODO
+
+For production deployments, migrate from Gmail to a cloud secret manager:
+- **AWS**: Use AWS Secrets Manager or SSM Parameter Store; load via IAM role
+- **GCP**: Use GCP Secret Manager; load via service account
+- **Azure**: Use Azure Key Vault
+- **Self-hosted**: Use HashiCorp Vault or similar
+
+The SMTP provider should also be upgraded from personal Gmail to a transactional email service (e.g., AWS SES, SendGrid, Mailgun, Postmark) for better deliverability, higher sending limits, and a professional sender domain.
+
+## Production Deployment — TODO
+
+Checklist of tasks required before deploying to production:
+
+### Secrets & Credentials
+- [ ] Migrate SMTP password from macOS Keychain to a cloud secret manager (AWS Secrets Manager, GCP Secret Manager, etc.)
+- [ ] Set a strong, unique `JWT_SECRET_KEY` (not the default)
+- [ ] Configure `CORS_ORIGINS` to only allow the production frontend domain
+- [ ] Set `FRONTEND_URL` to the production frontend URL
+- [ ] Set `SERVER_URL` to the production backend URL
+
+### Email
+- [ ] Replace personal Gmail with a transactional email service (AWS SES, SendGrid, Mailgun, or Postmark)
+- [ ] Set up a professional sender domain with SPF, DKIM, and DMARC records
+- [ ] Update `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL` for the new provider
+
+### Database & Templates
+- [ ] Run database migrations: `uv run alembic upgrade head`
+- [ ] Seed admin user: `uv run python setup_admin.py`
+- [ ] Seed email templates: `uv run python setup_contact_templates.py`
+- [ ] Seed payment templates: `uv run python setup_payment_templates.py`
+- [ ] Review and customize email template content via admin panel (default templates are basic)
+
+### Infrastructure
+- [ ] Set up PostgreSQL with proper backups and connection pooling
+- [ ] Configure HTTPS for both frontend and backend
+- [ ] Set up logging and monitoring (replace console `print` statements with proper logging)
+- [ ] Configure rate limiting on public endpoints (registration, contact, tracking recovery)
 
 ### Admin Panel
 - JWT-protected admin routes
