@@ -215,7 +215,16 @@ tests/
    - Admin payment API endpoints (listing, filtering, confirm/cancel)
    - Public payment status check endpoint
 
-3. **Integration Tests**: Add tests for full API workflows
+3. **Tracking System Tests**: Add comprehensive unit tests for registration tracking:
+   - TrackingService business logic (get_or_create_token, email normalization, build_tracking_url)
+   - Tracking router endpoints (GET /api/track/{token}, POST /api/track/request-link)
+   - Token uniqueness per email and idempotent creation
+   - Invalid token handling (404 responses)
+   - Anti-enumeration: request-link always returns 200
+   - Tracking URL generation with configurable frontend_url
+   - Email integration: tracking_url included in registration/payment email templates
+
+4. **Integration Tests**: Add tests for full API workflows
 4. **Performance Tests**: Add tests for capacity and load scenarios
 5. **Contract Tests**: Add API contract validation
 6. **Coverage Reports**: Set up automated coverage reporting

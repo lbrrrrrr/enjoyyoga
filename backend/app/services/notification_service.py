@@ -18,7 +18,7 @@ class NotificationService:
     def __init__(self):
         pass
 
-    async def send_confirmation_email(self, registration: Registration, db: AsyncSession) -> bool:
+    async def send_confirmation_email(self, registration: Registration, db: AsyncSession, tracking_url: str = "") -> bool:
         """Send registration confirmation email."""
         try:
             # Get email template
@@ -33,7 +33,8 @@ class NotificationService:
                 "email": registration.email,
                 "registration_id": str(registration.id),
                 "status": registration.status,
-                "language": registration.preferred_language
+                "language": registration.preferred_language,
+                "tracking_url": tracking_url
             }
 
             # Select content based on language preference
@@ -261,7 +262,7 @@ class NotificationService:
             print(f"Error sending inquiry reply email: {e}")
             return False
 
-    async def send_payment_pending_email(self, registration: Registration, payment: Payment, db: AsyncSession) -> bool:
+    async def send_payment_pending_email(self, registration: Registration, payment: Payment, db: AsyncSession, tracking_url: str = "") -> bool:
         """Send payment pending email to user with amount and reference number."""
         try:
             template = await self._get_template("payment_pending", "email", db)
@@ -276,7 +277,8 @@ class NotificationService:
                 "amount": f"{float(payment.amount):.2f}",
                 "currency": payment.currency,
                 "reference_number": payment.reference_number,
-                "language": registration.preferred_language
+                "language": registration.preferred_language,
+                "tracking_url": tracking_url
             }
 
             if registration.preferred_language == "zh":
@@ -307,7 +309,7 @@ class NotificationService:
             print(f"Error sending payment pending email: {e}")
             return False
 
-    async def send_payment_confirmed_email(self, registration: Registration, payment: Payment, db: AsyncSession) -> bool:
+    async def send_payment_confirmed_email(self, registration: Registration, payment: Payment, db: AsyncSession, tracking_url: str = "") -> bool:
         """Send payment confirmed email to user."""
         try:
             template = await self._get_template("payment_confirmed", "email", db)
@@ -322,7 +324,8 @@ class NotificationService:
                 "amount": f"{float(payment.amount):.2f}",
                 "currency": payment.currency,
                 "reference_number": payment.reference_number,
-                "language": registration.preferred_language
+                "language": registration.preferred_language,
+                "tracking_url": tracking_url
             }
 
             if registration.preferred_language == "zh":
@@ -353,6 +356,47 @@ class NotificationService:
 
         except Exception as e:
             print(f"Error sending payment confirmed email: {e}")
+            return False
+
+    async def send_tracking_link_email(self, email: str, tracking_url: str, preferred_language: str, db: AsyncSession) -> bool:
+        """Send an email with the tracking link for registration history."""
+        try:
+            template = await self._get_template("tracking_link_request", "email", db)
+            if not template:
+                print(f"No email template found for tracking link request")
+                return False
+
+            variables = {
+                "email": email,
+                "tracking_url": tracking_url,
+            }
+
+            if preferred_language == "zh":
+                subject = template.subject_zh
+                content = template.content_zh
+            else:
+                subject = template.subject_en
+                content = template.content_en
+
+            for key, value in variables.items():
+                subject = subject.replace(f"{{{{{key}}}}}", str(value))
+                content = content.replace(f"{{{{{key}}}}}", str(value))
+
+            email_sent = await self._send_smtp_email(
+                to_email=email,
+                subject=subject,
+                content=content,
+            )
+
+            if email_sent:
+                print(f"Tracking link email sent successfully to {email}")
+                return True
+            else:
+                print(f"Failed to send tracking link email to {email}")
+                return False
+
+        except Exception as e:
+            print(f"Error sending tracking link email: {e}")
             return False
 
     async def schedule_reminder(self, registration: Registration) -> bool:
@@ -409,7 +453,7 @@ The enjoyyoga Team""",
 
 最好的问候，
 enjoyyoga团队""",
-                "variables": json.dumps(["name", "email", "registration_id", "status", "language"]),
+                "variables": json.dumps(["name", "email", "registration_id", "status", "language", "tracking_url"]),
                 "is_active": True
             },
             {
@@ -581,7 +625,7 @@ The enjoyyoga Team""",
 
 最好的问候，
 enjoyyoga团队""",
-                "variables": json.dumps(["name", "email", "registration_id", "amount", "currency", "reference_number", "language"]),
+                "variables": json.dumps(["name", "email", "registration_id", "amount", "currency", "reference_number", "language", "tracking_url"]),
                 "is_active": True
             },
             {
@@ -617,7 +661,37 @@ The enjoyyoga Team""",
 
 最好的问候，
 enjoyyoga团队""",
-                "variables": json.dumps(["name", "email", "registration_id", "amount", "currency", "reference_number", "language"]),
+                "variables": json.dumps(["name", "email", "registration_id", "amount", "currency", "reference_number", "language", "tracking_url"]),
+                "is_active": True
+            },
+            {
+                "template_type": "tracking_link_request",
+                "channel": "email",
+                "subject_en": "Your Registration Tracking Link - enjoyyoga",
+                "subject_zh": "您的报名查询链接 - enjoyyoga",
+                "content_en": """Hello,
+
+You requested a link to view your registration history at enjoyyoga.
+
+Click the link below to see all your registrations and payment status:
+{{tracking_url}}
+
+If you did not request this link, you can safely ignore this email.
+
+Best regards,
+The enjoyyoga Team""",
+                "content_zh": """您好，
+
+您请求了查看enjoyyoga报名记录的链接。
+
+请点击以下链接查看您的所有报名和支付状态：
+{{tracking_url}}
+
+如果您没有请求此链接，请忽略此邮件。
+
+最好的问候，
+enjoyyoga团队""",
+                "variables": json.dumps(["email", "tracking_url"]),
                 "is_active": True
             }
         ]

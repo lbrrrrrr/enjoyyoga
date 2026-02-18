@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 from app.config import settings
-from app.routers import classes, teachers, yoga_types, registrations, admin, contact, payments, consent
+from app.routers import classes, teachers, yoga_types, registrations, admin, contact, payments, consent, tracking
 
 app = FastAPI(title="enjoyyoga API")
 
@@ -34,6 +34,7 @@ app.include_router(payments.router)
 app.include_router(payments.admin_router)
 app.include_router(consent.router)
 app.include_router(consent.admin_router)
+app.include_router(tracking.router)
 
 
 @app.get("/api/health")

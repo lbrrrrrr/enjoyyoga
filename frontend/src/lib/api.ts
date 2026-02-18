@@ -439,3 +439,43 @@ export function getPaymentSettings() {
 export function getPaymentByRegistration(registrationId: string) {
   return fetchAPI<PaymentInfo>(`/api/payments/registration/${registrationId}`);
 }
+
+// Tracking interfaces and functions
+export interface TrackingRegistrationItem {
+  registration_id: string;
+  class_name_en: string;
+  class_name_zh: string;
+  status: string;
+  target_date: string | null;
+  target_time: string | null;
+  created_at: string;
+  payment_status: string | null;
+  reference_number: string | null;
+  amount: number | null;
+  currency: string | null;
+}
+
+export interface TrackingResponse {
+  email: string;
+  registrations: TrackingRegistrationItem[];
+  total: number;
+}
+
+export function getRegistrationsByToken(token: string) {
+  return fetchAPI<TrackingResponse>(`/api/track/${token}`);
+}
+
+export async function requestTrackingLink(
+  email: string,
+  preferredLanguage: string = "en"
+): Promise<{ message: string }> {
+  const res = await fetch(`${API_BASE}/api/track/request-link`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, preferred_language: preferredLanguage }),
+  });
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status}`);
+  }
+  return res.json();
+}

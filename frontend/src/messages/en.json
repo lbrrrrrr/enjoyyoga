@@ -438,6 +438,41 @@
       "body": "After submitting your payment, our admin will verify it within 1 business day. You will receive a confirmation email once verified. If you do not receive a confirmation within 1 business day, please contact us using the Contact Us button."
     }
   },
+  "tracking": {
+    "title": "Your Registrations",
+    "subtitle": "View all your class registrations and payment status",
+    "loading": "Loading your registrations...",
+    "invalidLink": "This tracking link is invalid or has expired.",
+    "email": "Email",
+    "noRegistrations": "No registrations found for this email.",
+    "className": "Class",
+    "date": "Date",
+    "time": "Time",
+    "status": "Status",
+    "registeredOn": "Registered",
+    "paymentStatus": "Payment",
+    "referenceNumber": "Reference",
+    "amount": "Amount",
+    "statusConfirmed": "Confirmed",
+    "statusPendingPayment": "Pending Payment",
+    "statusWaitlist": "Waitlist",
+    "statusCancelled": "Cancelled",
+    "paymentConfirmed": "Paid",
+    "paymentPending": "Pending",
+    "paymentCancelled": "Cancelled",
+    "lostLink": "Lost your tracking link?",
+    "requestNewLink": "Request a new one",
+    "recovery": {
+      "title": "Request Tracking Link",
+      "subtitle": "Enter your email to receive a link to view your registrations",
+      "email": "Email Address",
+      "emailPlaceholder": "Enter your email address",
+      "submit": "Send Tracking Link",
+      "sending": "Sending...",
+      "success": "If you have registrations with this email, a tracking link has been sent. Please check your inbox.",
+      "error": "Something went wrong. Please try again."
+    }
+  },
   "footer": {
     "rights": "All rights reserved."
   },

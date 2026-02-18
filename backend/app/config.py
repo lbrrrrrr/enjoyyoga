@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     smtp_from_name: str = "enjoyyoga"
     smtp_use_tls: bool = True
 
+    # Frontend URL for tracking links
+    frontend_url: str = "http://localhost:3000"
+
     # Upload directory settings
     upload_dir: str = "uploads"
 
