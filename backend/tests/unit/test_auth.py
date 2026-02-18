@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 from fastapi import HTTPException
-from jose import jwt
+import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import (
