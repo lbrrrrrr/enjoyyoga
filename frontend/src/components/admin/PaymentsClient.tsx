@@ -206,6 +206,7 @@ export function PaymentsClient() {
                         <Button
                           size="sm"
                           variant="default"
+                          disabled={actionLoading}
                           onClick={(e) => {
                             e.stopPropagation();
                             handleConfirm(payment.id);
