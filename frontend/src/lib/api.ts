@@ -384,6 +384,112 @@ export async function createInquiryReply(
   return res.json();
 }
 
+// Consent/Waiver interfaces and functions
+export interface ConsentRecord {
+  id: string;
+  email: string;
+  name: string;
+  yoga_type_id: string;
+  consent_text_version: string;
+  ip_address: string | null;
+  user_id: string | null;
+  signed_at: string;
+}
+
+export interface ConsentCheckResult {
+  has_consent: boolean;
+  consent: ConsentRecord | null;
+}
+
+export interface ConsentListItem {
+  id: string;
+  email: string;
+  name: string;
+  yoga_type_id: string;
+  yoga_type_name_en: string | null;
+  yoga_type_name_zh: string | null;
+  consent_text_version: string;
+  signed_at: string;
+}
+
+export interface ConsentStats {
+  total: number;
+  by_yoga_type: {
+    yoga_type_id: string;
+    name_en: string;
+    name_zh: string;
+    count: number;
+  }[];
+}
+
+export async function checkConsent(
+  email: string,
+  yogaTypeId: string
+): Promise<ConsentCheckResult> {
+  const params = new URLSearchParams({ email, yoga_type_id: yogaTypeId });
+  return fetchAPI<ConsentCheckResult>(`/api/consent/check?${params.toString()}`);
+}
+
+export async function signConsent(data: {
+  email: string;
+  name: string;
+  yoga_type_id: string;
+  consent_text_version?: string;
+}): Promise<ConsentRecord> {
+  const res = await fetch(`${API_BASE}/api/consent/sign`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `API error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function getAdminConsents(
+  email?: string,
+  yogaTypeId?: string,
+  limit: number = 50,
+  offset: number = 0
+): Promise<ConsentListItem[]> {
+  const params = new URLSearchParams();
+  if (email) params.append("email", email);
+  if (yogaTypeId) params.append("yoga_type_id", yogaTypeId);
+  params.append("limit", limit.toString());
+  params.append("offset", offset.toString());
+
+  const token = localStorage.getItem("admin_token");
+  const res = await fetch(
+    `${API_BASE}/api/admin/consent/consents?${params.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function getConsentStats(): Promise<ConsentStats> {
+  const token = localStorage.getItem("admin_token");
+  const res = await fetch(`${API_BASE}/api/admin/consent/stats`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status}`);
+  }
+  return res.json();
+}
+
 // Payment functions
 export function getPaymentStatus(referenceNumber: string) {
   return fetchAPI<PaymentInfo>(`/api/payments/status/${referenceNumber}`);
