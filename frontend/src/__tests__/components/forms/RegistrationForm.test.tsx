@@ -5,11 +5,23 @@ import * as api from '@/lib/api'
 import userEvent from '@testing-library/user-event'
 
 vi.mock('@/lib/api', () => ({
-  createRegistration: vi.fn(),
   createRegistrationWithSchedule: vi.fn(),
   checkConsent: vi.fn(),
   signConsent: vi.fn(),
-  getAvailableDates: vi.fn().mockResolvedValue([]),
+  getAvailableDates: vi.fn().mockResolvedValue([
+    {
+      date_time: '2026-03-02T08:00:00',
+      formatted_date: 'Monday, March 2',
+      formatted_time: '8:00 AM',
+      available_spots: 10,
+    },
+    {
+      date_time: '2026-03-04T08:00:00',
+      formatted_date: 'Wednesday, March 4',
+      formatted_time: '8:00 AM',
+      available_spots: 5,
+    },
+  ]),
 }))
 
 vi.mock('next/navigation', () => ({
@@ -19,6 +31,13 @@ vi.mock('next/navigation', () => ({
     back: vi.fn(),
   }),
 }))
+
+/** Select the first available date button in the AvailableDatesSelector. */
+async function selectFirstDate(user: ReturnType<typeof userEvent.setup>) {
+  // Wait for dates to load, then click the first one
+  const dateButton = await screen.findByText('Monday, March 2')
+  await user.click(dateButton)
+}
 
 const mockMessages = {
   register: {
@@ -44,6 +63,11 @@ const mockMessages = {
     selectOption: 'Select payment option',
     singleSession: 'Single Session',
     sessions: 'sessions',
+    selectDate: 'Select a Date',
+    loadingDates: 'Loading available dates...',
+    noDatesAvailable: 'No dates available',
+    spotsAvailable: 'spots available',
+    classFull: 'Class full',
   },
   consent: {
     check: {
@@ -280,7 +304,7 @@ describe('RegistrationForm - Consent Flow', () => {
       })
     })
 
-    it('should disable submit button when consent is missing', async () => {
+    it('should disable submit button when consent is missing even with date selected', async () => {
       const user = userEvent.setup()
       renderWithIntl(
         <RegistrationForm classes={mockClasses} locale="en" />,
@@ -289,6 +313,9 @@ describe('RegistrationForm - Consent Flow', () => {
 
       const classSelect = screen.getByLabelText('Select a class')
       await user.selectOptions(classSelect, 'class-1')
+
+      // Select a date
+      await selectFirstDate(user)
 
       const emailInput = screen.getByLabelText('Email Address')
       await user.type(emailInput, 'john@example.com')
@@ -403,7 +430,10 @@ describe('RegistrationForm - Consent Flow', () => {
         })
       })
 
-      // After successful signing, submit button should be enabled
+      // Select a date so the date requirement is also met
+      await selectFirstDate(user)
+
+      // After successful signing + date selected, submit button should be enabled
       await waitFor(() => {
         expect(screen.getByText('Submit Registration')).not.toBeDisabled()
       })
@@ -431,6 +461,9 @@ describe('RegistrationForm - Consent Flow', () => {
       })
 
       expect(screen.queryByText('You need to sign a health & liability waiver before registering for this class.')).not.toBeInTheDocument()
+
+      // Select a date so the date requirement is also met
+      await selectFirstDate(user)
       expect(screen.getByText('Submit Registration')).not.toBeDisabled()
     })
   })
@@ -457,6 +490,9 @@ describe('RegistrationForm - Consent Flow', () => {
 
       // Should not show warning and should not block submission
       expect(screen.queryByText('You need to sign a health & liability waiver before registering for this class.')).not.toBeInTheDocument()
+
+      // Select a date so the date requirement is also met
+      await selectFirstDate(user)
       expect(screen.getByText('Submit Registration')).not.toBeDisabled()
     })
   })

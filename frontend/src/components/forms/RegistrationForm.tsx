@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { createRegistration, createRegistrationWithSchedule, checkConsent, type YogaClass } from "@/lib/api";
+import { createRegistrationWithSchedule, checkConsent, type YogaClass } from "@/lib/api";
 import { ScheduleDisplay } from "./ScheduleDisplay";
 import { AvailableDatesSelector } from "./AvailableDatesSelector";
 import { ConsentModal } from "./ConsentModal";
@@ -72,37 +72,25 @@ export function RegistrationForm({ classes, locale, defaultClassId }: Registrati
     const formData = new FormData(e.currentTarget);
 
     try {
-      // Use enhanced registration API if date is selected
-      if (selectedDate && selectedTime) {
-        const result = await createRegistrationWithSchedule({
-          class_id: formData.get("class_id") as string,
-          name: formData.get("name") as string,
-          email: formData.get("email") as string,
-          phone: (formData.get("phone") as string) || undefined,
-          message: (formData.get("message") as string) || undefined,
-          target_date: selectedDate,
-          target_time: selectedTime,
-          preferred_language: formData.get("preferred_language") as string || "en",
-          email_notifications: formData.get("email_notifications") === "on",
-          sms_notifications: formData.get("sms_notifications") === "on",
-          package_id: selectedPackageId || undefined,
-          payment_method: selectedPaymentMethod || undefined,
-        });
+      const result = await createRegistrationWithSchedule({
+        class_id: formData.get("class_id") as string,
+        name: formData.get("name") as string,
+        email: formData.get("email") as string,
+        phone: (formData.get("phone") as string) || undefined,
+        message: (formData.get("message") as string) || undefined,
+        target_date: selectedDate,
+        target_time: selectedTime,
+        preferred_language: formData.get("preferred_language") as string || "en",
+        email_notifications: formData.get("email_notifications") === "on",
+        sms_notifications: formData.get("sms_notifications") === "on",
+        package_id: selectedPackageId || undefined,
+        payment_method: selectedPaymentMethod || undefined,
+      });
 
-        // If pending payment, redirect to payment page
-        if (result.status === "pending_payment") {
-          router.push(`/${locale}/payment/${result.id}`);
-          return;
-        }
-      } else {
-        // Fallback to basic registration
-        await createRegistration({
-          class_id: formData.get("class_id") as string,
-          name: formData.get("name") as string,
-          email: formData.get("email") as string,
-          phone: (formData.get("phone") as string) || undefined,
-          message: (formData.get("message") as string) || undefined,
-        });
+      // If pending payment, redirect to payment page
+      if (result.status === "pending_payment") {
+        router.push(`/${locale}/payment/${result.id}`);
+        return;
       }
 
       setStatus("success");
@@ -388,7 +376,7 @@ export function RegistrationForm({ classes, locale, defaultClassId }: Registrati
           <Button
             type="submit"
             className="w-full rounded-full"
-            disabled={consentStatus === "missing"}
+            disabled={consentStatus === "missing" || (!!selectedClass && !selectedDate)}
           >
             {hasPrice ? t("submitAndPay") : t("submit")}
           </Button>
