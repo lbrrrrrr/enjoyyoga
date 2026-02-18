@@ -16,6 +16,7 @@
   },
   "classes": {
     "title": "我们的课程",
+    "subtitle": "找到适合您的瑜伽课程",
     "schedule": "时间表",
     "duration": "时长",
     "difficulty": "难度",
@@ -48,14 +49,17 @@
   },
   "teachers": {
     "title": "我们的老师",
+    "subtitle": "认识我们经验丰富的老师",
     "qualifications": "资质",
     "viewProfile": "查看简介"
   },
   "yogaTypes": {
-    "title": "瑜伽类型"
+    "title": "瑜伽类型",
+    "subtitle": "探索不同风格的瑜伽"
   },
   "register": {
     "title": "课程报名",
+    "subtitle": "预约即将开始的课程",
     "selectClass": "选择课程",
     "name": "您的姓名",
     "email": "电子邮箱",
@@ -371,6 +375,7 @@
   },
   "consent": {
     "title": "健康与责任免除声明",
+    "subtitle": "请在首次上课前阅读并签署",
     "selectYogaType": "选择瑜伽类型",
     "selectYogaTypePlaceholder": "选择您要签署声明的瑜伽类型",
     "waiverText": "本人确认瑜伽运动涉及可能导致受伤风险的身体活动和体式。本人确认身体健康，没有任何会妨碍参与的医疗状况。本人理解参与是自愿的，风险自负。本人免除工作室、教练和工作人员对课堂期间发生的任何伤害的责任。本人同意在每次课程前告知教练任何健康问题或身体限制。",

@@ -16,6 +16,7 @@
   },
   "classes": {
     "title": "Our Classes",
+    "subtitle": "Find the perfect class for your practice",
     "schedule": "Schedule",
     "duration": "Duration",
     "difficulty": "Difficulty",
@@ -48,14 +49,17 @@
   },
   "teachers": {
     "title": "Our Teachers",
+    "subtitle": "Meet our experienced instructors",
     "qualifications": "Qualifications",
     "viewProfile": "View Profile"
   },
   "yogaTypes": {
-    "title": "Yoga Types"
+    "title": "Yoga Types",
+    "subtitle": "Explore different styles of yoga"
   },
   "register": {
     "title": "Register for a Class",
+    "subtitle": "Reserve your spot in an upcoming class",
     "selectClass": "Select a class",
     "name": "Your Name",
     "email": "Email Address",
@@ -371,6 +375,7 @@
   },
   "consent": {
     "title": "Health & Liability Waiver",
+    "subtitle": "Please review and sign before your first class",
     "selectYogaType": "Select Yoga Type",
     "selectYogaTypePlaceholder": "Choose the yoga type you are signing for",
     "waiverText": "I acknowledge that yoga involves physical activity and poses that may carry risk of injury. I confirm that I am in good health and have no medical conditions that would prevent me from participating. I understand that participation is voluntary and at my own risk. I release the studio, its instructors, and staff from any liability for injuries sustained during class. I agree to inform my instructor of any health concerns or physical limitations before each session.",

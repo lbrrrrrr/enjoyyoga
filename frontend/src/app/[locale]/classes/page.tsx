@@ -38,7 +38,12 @@ export default async function ClassesPage({
     <div className="container mx-auto px-4 py-12">
       <div className="mb-10 text-center">
         <h1 className="zen-heading mb-3 text-3xl">{t("title")}</h1>
-        <div className="mx-auto h-px w-16 bg-primary/40" />
+        <div className="mb-3 flex items-center justify-center gap-3">
+          <div className="h-px w-12 bg-primary/40" />
+          <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+          <div className="h-px w-12 bg-primary/40" />
+        </div>
+        <p className="text-muted-foreground">{t("subtitle")}</p>
       </div>
       {classes.length === 0 ? (
         <p className="text-muted-foreground">No classes available yet.</p>
@@ -50,7 +55,7 @@ export default async function ClassesPage({
                 <CardTitle className="zen-heading">{name(cls)}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                <p className="text-muted-foreground">{desc(cls)}</p>
+                <p className="text-base leading-relaxed text-muted-foreground">{desc(cls)}</p>
                 <p>
                   <span className="font-medium">{t("schedule")}:</span>{" "}
                   {formatSchedule(cls.schedule, t)}
