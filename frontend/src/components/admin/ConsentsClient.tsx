@@ -5,14 +5,13 @@ import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getYogaTypes, type YogaType } from "@/lib/api";
 import {
   getAdminConsents,
-  getConsentStats,
-  getYogaTypes,
+  getAdminConsentStats,
   type ConsentListItem,
   type ConsentStats,
-  type YogaType,
-} from "@/lib/api";
+} from "@/lib/admin-api";
 
 export function ConsentsClient() {
   const t = useTranslations("admin.consents");
@@ -32,7 +31,7 @@ export function ConsentsClient() {
           emailFilter || undefined,
           yogaTypeFilter || undefined
         ),
-        getConsentStats(),
+        getAdminConsentStats(),
         getYogaTypes(),
       ]);
       setConsents(consentsData);

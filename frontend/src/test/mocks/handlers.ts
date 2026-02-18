@@ -801,6 +801,55 @@ export const handlers = [
     }, { status: 201 })
   }),
 
+  // Admin API - Consent Management
+  http.get(`${API_BASE}/api/admin/consent/consents`, ({ request }) => {
+    const url = new URL(request.url)
+    const email = url.searchParams.get('email')
+    const yogaTypeId = url.searchParams.get('yoga_type_id')
+
+    let consents = [
+      {
+        id: 'consent-1',
+        email: 'alice@example.com',
+        name: 'Alice',
+        yoga_type_id: 'yt-1',
+        yoga_type_name_en: 'Hatha Yoga',
+        yoga_type_name_zh: '哈他瑜伽',
+        consent_text_version: '1.0',
+        signed_at: '2024-01-15T10:00:00Z'
+      },
+      {
+        id: 'consent-2',
+        email: 'bob@example.com',
+        name: 'Bob',
+        yoga_type_id: 'yt-2',
+        yoga_type_name_en: 'Vinyasa Yoga',
+        yoga_type_name_zh: '流瑜伽',
+        consent_text_version: '1.0',
+        signed_at: '2024-01-16T10:00:00Z'
+      }
+    ]
+
+    if (email) {
+      consents = consents.filter(c => c.email === email)
+    }
+    if (yogaTypeId) {
+      consents = consents.filter(c => c.yoga_type_id === yogaTypeId)
+    }
+
+    return HttpResponse.json(consents)
+  }),
+
+  http.get(`${API_BASE}/api/admin/consent/stats`, () => {
+    return HttpResponse.json({
+      total: 5,
+      by_yoga_type: [
+        { yoga_type_id: 'yt-1', name_en: 'Hatha Yoga', name_zh: '哈他瑜伽', count: 3 },
+        { yoga_type_id: 'yt-2', name_en: 'Vinyasa Yoga', name_zh: '流瑜伽', count: 2 }
+      ]
+    })
+  }),
+
   http.put(`${API_BASE}/api/admin/packages/:packageId`, async ({ params, request }) => {
     const { packageId } = params
     const data = await request.json() as Record<string, unknown>
