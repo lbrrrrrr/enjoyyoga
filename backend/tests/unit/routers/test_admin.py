@@ -1357,7 +1357,7 @@ class TestAdminRouter:
     ):
         """Test that session tokens are set to expire in 30 minutes."""
         from app.auth import get_password_hash
-        from jose import jwt
+        import jwt
         from app.config import settings
         import time
 

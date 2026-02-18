@@ -5,7 +5,8 @@ import uuid
 from fastapi import Depends, HTTPException, status, Request, Cookie
 from fastapi.security import HTTPBearer
 from fastapi.security.utils import get_authorization_scheme_param
-from jose import JWTError, jwt
+import jwt
+from jwt.exceptions import PyJWTError
 import hashlib
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -35,7 +36,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
         expire = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_access_token_expire_minutes)
 
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+    encoded_jwt = jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)  # type: ignore[arg-type]
     return encoded_jwt
 
 
@@ -72,7 +73,7 @@ async def get_current_admin_bearer(token = Depends(security), db: AsyncSession =
             admin_id = uuid.UUID(admin_id_str)
         except ValueError:
             raise credentials_exception
-    except JWTError:
+    except PyJWTError:
         raise credentials_exception
 
     query = select(AdminUser).where(AdminUser.id == admin_id, AdminUser.is_active == True)
@@ -122,7 +123,7 @@ async def get_current_admin(
             admin_id = uuid.UUID(admin_id_str)
         except ValueError:
             raise credentials_exception
-    except JWTError:
+    except PyJWTError:
         raise credentials_exception
 
     query = select(AdminUser).where(AdminUser.id == admin_id, AdminUser.is_active == True)
