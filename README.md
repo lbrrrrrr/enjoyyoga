@@ -1,6 +1,6 @@
 # enjoyyoga
 
-A bilingual (English/Chinese) web application for a yoga business, featuring class listings, teacher profiles, yoga type descriptions, a class registration system, and a contact inquiry management system with admin reply functionality.
+A bilingual (English/Chinese) web application for a yoga business, featuring class listings, teacher profiles, yoga type descriptions, a class registration system, contact inquiry management system with admin reply functionality, and registration tracking via magic link.
 
 ## Tech Stack
 
@@ -367,6 +367,39 @@ Four email templates handle all contact inquiry communications:
 - Contact form is publicly accessible to all website visitors
 - Admin management requires JWT authentication
 - All admin actions are logged and tracked for accountability
+
+## Registration Tracking (Magic Link)
+
+The application includes a registration tracking system that allows users to check the status of all their registrations and payments without needing an account.
+
+### How It Works
+
+- When a user registers for a class, a **unique tracking token** (64-character cryptographic hex string) is generated for their email address
+- A **tracking link** is included in every registration confirmation and payment email
+- Users click the link to view all their registrations, class details, dates, status, and payment information
+- One token per email — created on first registration, reused for all subsequent ones
+
+### Features
+
+- **Tracking Page** (`/[locale]/track/{token}`): Shows all registrations for the email with class name, date, status badges, and payment details
+- **Recovery Page** (`/[locale]/track`): Users who lose their link can enter their email to receive it again
+- **Anti-Enumeration**: Recovery endpoint always returns success regardless of whether the email exists
+- **Bilingual**: Full English/Chinese support for the tracking and recovery pages
+
+### User Flow
+
+1. User registers for a class → receives email with tracking link
+2. User clicks tracking link → sees all registrations and payment status
+3. If link is lost → user visits `/[locale]/track`, enters email, receives new email with the link
+
+### API Endpoints
+
+- `GET /api/track/{token}` — Returns all registrations for the token's email
+- `POST /api/track/request-link` — Sends tracking link email to the given address
+
+### Configuration
+
+Set `FRONTEND_URL` in `.env` for production (default: `http://localhost:3000`). This is used to build tracking URLs in emails.
 
 ## Production Deployment
 
