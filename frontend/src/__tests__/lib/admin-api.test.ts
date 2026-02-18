@@ -465,6 +465,83 @@ describe('Admin API Client', () => {
     })
   })
 
+  describe('Consent Management', () => {
+    it('should fetch all consent records', async () => {
+      const consents = await adminApi.getAdminConsents()
+
+      expect(consents).toHaveLength(2)
+      expect(consents[0]).toMatchObject({
+        id: 'consent-1',
+        email: 'alice@example.com',
+        name: 'Alice',
+        yoga_type_name_en: 'Hatha Yoga'
+      })
+    })
+
+    it('should filter consent records by email', async () => {
+      const consents = await adminApi.getAdminConsents('alice@example.com')
+
+      expect(consents).toHaveLength(1)
+      expect(consents[0].email).toBe('alice@example.com')
+    })
+
+    it('should filter consent records by yoga type', async () => {
+      const consents = await adminApi.getAdminConsents(undefined, 'yt-2')
+
+      expect(consents).toHaveLength(1)
+      expect(consents[0].yoga_type_id).toBe('yt-2')
+    })
+
+    it('should pass pagination parameters', async () => {
+      const consents = await adminApi.getAdminConsents(undefined, undefined, 10, 0)
+
+      expect(consents).toHaveLength(2)
+    })
+
+    it('should fetch consent statistics', async () => {
+      const stats = await adminApi.getAdminConsentStats()
+
+      expect(stats).toMatchObject({
+        total: 5,
+        by_yoga_type: expect.arrayContaining([
+          expect.objectContaining({
+            yoga_type_id: 'yt-1',
+            name_en: 'Hatha Yoga',
+            count: 3
+          })
+        ])
+      })
+    })
+
+    it('should handle 401 error on consent list', async () => {
+      server.use(
+        http.get('http://localhost:8000/api/admin/consent/consents', () => {
+          return HttpResponse.json(
+            { detail: 'Not authenticated' },
+            { status: 401 }
+          )
+        })
+      )
+
+      await expect(adminApi.getAdminConsents()).rejects.toThrow('Not authenticated')
+      expect(window.location.href).toBe('/admin/login')
+    })
+
+    it('should handle 401 error on consent stats', async () => {
+      server.use(
+        http.get('http://localhost:8000/api/admin/consent/stats', () => {
+          return HttpResponse.json(
+            { detail: 'Not authenticated' },
+            { status: 401 }
+          )
+        })
+      )
+
+      await expect(adminApi.getAdminConsentStats()).rejects.toThrow('Not authenticated')
+      expect(window.location.href).toBe('/admin/login')
+    })
+  })
+
   describe('Error Handling and Authentication', () => {
     it('should handle 401 errors by redirecting to login', async () => {
       server.use(
