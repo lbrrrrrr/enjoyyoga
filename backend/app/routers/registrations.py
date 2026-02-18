@@ -16,6 +16,7 @@ from app.services.registration_service import RegistrationService
 from app.services.schedule_parser import ScheduleParserService
 from app.services.notification_service import NotificationService
 from app.services.payment_service import PaymentService
+from app.services.tracking_service import TrackingService
 
 router = APIRouter(prefix="/api/registrations", tags=["registrations"])
 
@@ -29,11 +30,17 @@ async def create_registration_with_schedule(
     registration_service = RegistrationService()
     notification_service = NotificationService()
     payment_service = PaymentService()
+    tracking_service = TrackingService()
 
     try:
         registration = await registration_service.create_registration_with_schedule(
             data.model_dump(), db
         )
+
+        # Get or create tracking token for the email
+        tracking_token = await tracking_service.get_or_create_token(registration.email, db)
+        locale = registration.preferred_language or "en"
+        tracking_url = tracking_service.build_tracking_url(tracking_token.token, locale)
 
         if registration.status == "pending_payment":
             # Get the yoga class for payment creation
@@ -50,14 +57,14 @@ async def create_registration_with_schedule(
 
             # Send payment instructions email instead of confirmation
             if registration.email_notifications:
-                await notification_service.send_payment_pending_email(registration, payment, db)
+                await notification_service.send_payment_pending_email(registration, payment, db, tracking_url=tracking_url)
 
             # Refresh to include payment relationship
             await db.refresh(registration, ["payment"])
         else:
             # Free class — existing flow
             if registration.email_notifications:
-                await notification_service.send_confirmation_email(registration, db)
+                await notification_service.send_confirmation_email(registration, db, tracking_url=tracking_url)
 
         # Schedule reminder if notifications are enabled
         if registration.email_notifications or registration.sms_notifications:

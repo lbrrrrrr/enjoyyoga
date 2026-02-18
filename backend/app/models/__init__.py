@@ -11,5 +11,6 @@ from app.models.class_package import ClassPackage
 from app.models.payment import Payment
 from app.models.payment_settings import PaymentSettings
 from app.models.consent_record import ConsentRecord
+from app.models.tracking_token import TrackingToken
 
-__all__ = ["YogaType", "Teacher", "YogaClass", "Registration", "ClassSession", "AdminUser", "NotificationTemplate", "ContactInquiry", "InquiryReply", "ClassPackage", "Payment", "PaymentSettings", "ConsentRecord"]
+__all__ = ["YogaType", "Teacher", "YogaClass", "Registration", "ClassSession", "AdminUser", "NotificationTemplate", "ContactInquiry", "InquiryReply", "ClassPackage", "Payment", "PaymentSettings", "ConsentRecord", "TrackingToken"]

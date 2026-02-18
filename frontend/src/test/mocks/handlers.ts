@@ -850,6 +850,52 @@ export const handlers = [
     })
   }),
 
+  // Public API - Tracking
+  http.get(`${API_BASE}/api/track/:token`, ({ params }) => {
+    const { token } = params
+    if (token === 'invalid-token') {
+      return HttpResponse.json({ detail: 'Invalid tracking link' }, { status: 404 })
+    }
+    return HttpResponse.json({
+      email: 'john@example.com',
+      registrations: [
+        {
+          registration_id: 'reg-1',
+          class_name_en: 'Morning Hatha',
+          class_name_zh: '晨间哈他',
+          status: 'confirmed',
+          target_date: '2026-03-15',
+          target_time: '08:00',
+          created_at: '2026-01-15T00:00:00Z',
+          payment_status: 'confirmed',
+          reference_number: 'EY-20260215-AB3X',
+          amount: 100.0,
+          currency: 'CNY'
+        },
+        {
+          registration_id: 'reg-2',
+          class_name_en: 'Evening Flow',
+          class_name_zh: '晚间流瑜伽',
+          status: 'pending_payment',
+          target_date: '2026-03-16',
+          target_time: '19:00',
+          created_at: '2026-01-16T00:00:00Z',
+          payment_status: 'pending',
+          reference_number: 'EY-20260216-CD5Y',
+          amount: 80.0,
+          currency: 'CNY'
+        }
+      ],
+      total: 2
+    })
+  }),
+
+  http.post(`${API_BASE}/api/track/request-link`, async ({ request }) => {
+    return HttpResponse.json({
+      message: 'If an account exists for this email, a tracking link has been sent.'
+    })
+  }),
+
   http.put(`${API_BASE}/api/admin/packages/:packageId`, async ({ params, request }) => {
     const { packageId } = params
     const data = await request.json() as Record<string, unknown>

@@ -450,6 +450,58 @@ describe('API Client', () => {
     })
   })
 
+  describe('Tracking API', () => {
+    it('should fetch registrations by tracking token', async () => {
+      const data = await api.getRegistrationsByToken('valid-token-123')
+
+      expect(data.email).toBe('john@example.com')
+      expect(data.total).toBe(2)
+      expect(data.registrations).toHaveLength(2)
+      expect(data.registrations[0]).toMatchObject({
+        registration_id: 'reg-1',
+        class_name_en: 'Morning Hatha',
+        class_name_zh: '晨间哈他',
+        status: 'confirmed'
+      })
+    })
+
+    it('should include payment info in tracking response', async () => {
+      const data = await api.getRegistrationsByToken('valid-token-123')
+
+      const reg = data.registrations[0]
+      expect(reg.payment_status).toBe('confirmed')
+      expect(reg.reference_number).toBe('EY-20260215-AB3X')
+      expect(reg.amount).toBe(100.0)
+      expect(reg.currency).toBe('CNY')
+    })
+
+    it('should throw error for invalid tracking token', async () => {
+      await expect(api.getRegistrationsByToken('invalid-token')).rejects.toThrow()
+    })
+
+    it('should request tracking link successfully', async () => {
+      const result = await api.requestTrackingLink('test@example.com', 'en')
+
+      expect(result.message).toContain('tracking link')
+    })
+
+    it('should request tracking link with default language', async () => {
+      const result = await api.requestTrackingLink('test@example.com')
+
+      expect(result).toHaveProperty('message')
+    })
+
+    it('should handle tracking link request error', async () => {
+      server.use(
+        http.post('http://localhost:8000/api/track/request-link', () => {
+          return new HttpResponse(null, { status: 500 })
+        })
+      )
+
+      await expect(api.requestTrackingLink('test@example.com')).rejects.toThrow()
+    })
+  })
+
   describe('Request Headers and Authentication', () => {
     it('should include admin token in authorization header for admin endpoints', async () => {
       let capturedHeaders: Record<string, string> = {}

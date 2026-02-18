@@ -175,6 +175,7 @@ async def confirm_payment(
 
     # Send payment confirmed email
     from app.services.notification_service import NotificationService
+    from app.services.tracking_service import TrackingService
     from app.models.registration import Registration
     from sqlalchemy import select
 
@@ -184,7 +185,11 @@ async def confirm_payment(
         reg_result = await db.execute(reg_query)
         registration = reg_result.scalar_one_or_none()
         if registration and registration.email_notifications:
-            await notification_service.send_payment_confirmed_email(registration, payment, db)
+            tracking_service = TrackingService()
+            tracking_token = await tracking_service.get_or_create_token(registration.email, db)
+            locale = registration.preferred_language or "en"
+            tracking_url = tracking_service.build_tracking_url(tracking_token.token, locale)
+            await notification_service.send_payment_confirmed_email(registration, payment, db, tracking_url=tracking_url)
 
     return PaymentOut.model_validate(payment)
 

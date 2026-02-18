@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-enjoyyoga is a bilingual (English/Chinese) yoga business management application with class listings, teacher profiles, yoga type descriptions, class registration system, health & liability consent form, WeChat Pay integration (static QR code), contact inquiry management with email notifications and admin reply functionality, and a policies page covering studio rules, payments, and cancellations.
+enjoyyoga is a bilingual (English/Chinese) yoga business management application with class listings, teacher profiles, yoga type descriptions, class registration system, health & liability consent form, WeChat Pay integration (static QR code), contact inquiry management with email notifications and admin reply functionality, registration tracking via magic link, and a policies page covering studio rules, payments, and cancellations.
 
 ## Development Commands
 
@@ -158,15 +158,15 @@ See `.github/workflows/README.md` for detailed documentation, troubleshooting, a
 **Framework**: FastAPI with async SQLAlchemy ORM, PostgreSQL database
 
 **Key Directories**:
-- `app/models/` - SQLAlchemy models (yoga_class.py, teacher.py, registration.py, payment.py, class_package.py, payment_settings.py, contact_inquiry.py, inquiry_reply.py, consent_record.py, etc.)
-- `app/routers/` - FastAPI route handlers (classes.py, teachers.py, admin.py, payments.py, contact.py, consent.py, etc.)
-- `app/schemas/` - Pydantic models for request/response validation (payment.py, contact.py, consent.py, etc.)
-- `app/services/` - Business logic (registration_service.py, payment_service.py, notification_service.py, schedule_parser.py, contact_service.py, consent_service.py)
+- `app/models/` - SQLAlchemy models (yoga_class.py, teacher.py, registration.py, payment.py, class_package.py, payment_settings.py, contact_inquiry.py, inquiry_reply.py, consent_record.py, tracking_token.py, etc.)
+- `app/routers/` - FastAPI route handlers (classes.py, teachers.py, admin.py, payments.py, contact.py, consent.py, tracking.py, etc.)
+- `app/schemas/` - Pydantic models for request/response validation (payment.py, contact.py, consent.py, tracking.py, etc.)
+- `app/services/` - Business logic (registration_service.py, payment_service.py, notification_service.py, schedule_parser.py, contact_service.py, consent_service.py, tracking_service.py)
 - `alembic/` - Database migration files
 
 **Authentication**: JWT-based admin authentication in `app/auth.py`
 
-**Configuration**: Environment-based settings in `app/config.py` (database URL, CORS, JWT, SMTP)
+**Configuration**: Environment-based settings in `app/config.py` (database URL, CORS, JWT, SMTP, frontend URL)
 
 **Entry Point**: `app/main.py` - FastAPI application setup with CORS and router inclusion
 
@@ -177,7 +177,7 @@ See `.github/workflows/README.md` for detailed documentation, troubleshooting, a
 **Internationalization**: next-intl with English/Chinese locales using `[locale]` dynamic routing
 
 **Key Directories**:
-- `src/app/[locale]/` - Internationalized pages (admin/, classes/, teachers/, payment/, consent/, policies/, admin/inquiries/, admin/payments/, admin/payment-settings/, admin/consents/, etc.)
+- `src/app/[locale]/` - Internationalized pages (admin/, classes/, teachers/, payment/, consent/, policies/, track/, admin/inquiries/, admin/payments/, admin/payment-settings/, admin/consents/, etc.)
 - `src/components/` - Reusable UI components (built with shadcn/ui, includes contact/ and admin/ subdirectories for PaymentsClient, PaymentSettingsClient, ConsentsClient, etc.)
 - `src/lib/` - Utility functions and API clients
 - `src/messages/` - Translation files for English/Chinese
@@ -199,10 +199,11 @@ See `.github/workflows/README.md` for detailed documentation, troubleshooting, a
 - `ContactInquiry` - Contact form submissions with categorization, status tracking, and admin notes
 - `InquiryReply` - Admin replies to contact inquiries with email delivery tracking
 - `ConsentRecord` - Signed health & liability waivers per email + yoga type combination
+- `TrackingToken` - Persistent per-email tokens for registration tracking via magic link
 - `AdminUser` - Admin authentication
 - `NotificationTemplate` - Email template management
 
-**Relationships**: Classes belong to teachers and yoga types; classes have many packages; registrations link students to specific class sessions and have an optional payment; payments reference packages and are confirmed by admin users; contact inquiries have many replies from admin users; consent records link an email address to a yoga type with a unique constraint preventing duplicates
+**Relationships**: Classes belong to teachers and yoga types; classes have many packages; registrations link students to specific class sessions and have an optional payment; payments reference packages and are confirmed by admin users; contact inquiries have many replies from admin users; consent records link an email address to a yoga type with a unique constraint preventing duplicates; tracking tokens map one-to-one with email addresses for persistent registration tracking
 
 ## Key Features
 
@@ -256,13 +257,22 @@ See `.github/workflows/README.md` for detailed documentation, troubleshooting, a
 - Bilingual payment emails (pending + confirmed)
 - Free classes (price=null) bypass the entire payment flow
 
+### Registration Tracking (Magic Link)
+- Persistent tracking token per email address (64-char hex, cryptographically random)
+- Token created on first registration, reused for all subsequent registrations from the same email
+- Tracking link included in all registration/payment emails (`{{tracking_url}}` template variable)
+- Tracking page at `/[locale]/track/{token}` shows all registrations for that email with class info, dates, status, and payment details
+- Recovery page at `/[locale]/track` lets users request the link again by entering their email (always returns success to prevent email enumeration)
+- Recovery sends a `tracking_link_request` email template with the tracking URL
+
 ### Email Notifications
 - SMTP configuration for production email sending
 - Development mode prints emails to console
 - Customizable notification templates
-- Registration confirmation emails
-- Payment pending emails (amount, reference number, instructions)
-- Payment confirmed emails
+- Registration confirmation emails (includes tracking URL)
+- Payment pending emails (amount, reference number, instructions, tracking URL)
+- Payment confirmed emails (includes tracking URL)
+- Tracking link request emails (sent from recovery page)
 - Contact inquiry confirmation emails (bilingual)
 - Admin notification emails for new inquiries
 - Reply emails with conversation threading
@@ -307,7 +317,8 @@ Business logic isolated in service classes:
 - `PaymentService` - Payment CRUD, reference number generation, confirm/cancel flows, package management, payment settings
 - `ContactService` - Manages contact inquiries, replies, and statistics
 - `ConsentService` - Checks, creates, and lists consent records; enforces email normalisation and idempotency
-- `NotificationService` - Manages email sending (SMTP or console output) including payment and inquiry notifications
+- `TrackingService` - Creates/retrieves per-email tracking tokens, builds tracking URLs for magic link access
+- `NotificationService` - Manages email sending (SMTP or console output) including payment, inquiry, and tracking link notifications
 - `ScheduleParser` - Parses complex scheduling strings into class sessions
 
 ### Frontend State Management
@@ -775,3 +786,88 @@ A static bilingual informational page at `/[locale]/policies` that communicates 
 ### Translations
 
 `src/messages/en.json` and `src/messages/zh.json` both contain a `"policies"` key with all section titles and body text. Navigation also uses `"nav.policies"` key for the link label.
+
+## Registration Tracking System (Magic Link)
+
+### Overview
+
+The registration tracking system gives users a persistent, secure way to check the status of all their registrations and payments without needing an account. A unique magic link (tracking URL) is included in every registration and payment email. Users who lose the link can recover it via a simple email form.
+
+### Database Model
+
+**TrackingToken** (`app/models/tracking_token.py`):
+- **Fields**: id (UUID PK), email (String 300, unique, indexed), token (String 64, unique, indexed, default `secrets.token_hex(32)`), created_at (DateTime with timezone)
+- **Pattern**: One token per email address — created on first registration, reused for all subsequent ones
+- **Migration**: `alembic/versions/268f5619f962_add_tracking_tokens_table.py`
+
+### Schemas (`app/schemas/tracking.py`)
+
+- `TrackingRegistrationItem` — registration_id, class_name_en/zh, status, target_date/time, created_at, payment_status, reference_number, amount, currency
+- `TrackingResponse` — email, registrations list, total count
+- `TrackingLinkRequest` — email, preferred_language
+
+### API Endpoints (`app/routers/tracking.py`)
+
+**Public Tracking API** (`/api/track`):
+- `GET /{token}` — Returns all registrations for the email associated with this token (with class info and payment details). Returns 404 for invalid tokens.
+- `POST /request-link` — Accepts email and preferred_language, sends tracking link email. Always returns 200 to prevent email enumeration.
+
+### Service Layer
+
+**TrackingService** (`app/services/tracking_service.py`):
+- `get_or_create_token(email, db)` — Normalizes email (lowercase + strip), returns existing or creates new `TrackingToken`
+- `get_email_by_token(token, db)` — Returns email or None
+- `build_tracking_url(token, locale)` — Returns `{frontend_url}/{locale}/track/{token}`
+
+**NotificationService Extensions**:
+- `send_tracking_link_email(email, tracking_url, preferred_language, db)` — Sends email with tracking link (for recovery page)
+- `send_confirmation_email()`, `send_payment_pending_email()`, `send_payment_confirmed_email()` — All accept optional `tracking_url` parameter, included in template variables
+
+### Configuration
+
+- `frontend_url` setting added to `app/config.py` (default: `http://localhost:3000`) — used to build tracking URLs
+- Set via `FRONTEND_URL` environment variable in production
+
+### Email Integration
+
+All registration/payment emails now include a `{{tracking_url}}` template variable. The tracking URL is generated during:
+1. **Registration creation** (`app/routers/registrations.py`) — passed to both `send_confirmation_email()` and `send_payment_pending_email()`
+2. **Payment confirmation** (`app/routers/payments.py`) — passed to `send_payment_confirmed_email()`
+
+A new `tracking_link_request` email template is added to `NotificationService.create_default_templates()` for the recovery flow.
+
+> **Note:** Existing templates in DB won't auto-update (idempotent creation). To add `{{tracking_url}}` to live deployments, delete old template rows or edit via admin panel.
+
+### Frontend Pages
+
+**Tracking Page** (`src/app/[locale]/track/[token]/page.tsx`):
+- Client component, calls `getRegistrationsByToken(token)` on mount
+- Displays email identifier, list of registration cards with: class name (locale-aware), date, time, status badge, payment info (status, reference number, amount)
+- Links to recovery page in footer
+- Shows error state for invalid tokens
+
+**Recovery Page** (`src/app/[locale]/track/page.tsx`):
+- Client component with email input form
+- Calls `requestTrackingLink(email, locale)` on submit
+- Always shows success message after submit (prevents email enumeration)
+
+**API Client** (`src/lib/api.ts`):
+- `getRegistrationsByToken(token)` — GET `/api/track/{token}`
+- `requestTrackingLink(email, preferredLanguage)` — POST `/api/track/request-link`
+
+### User Flow
+
+1. User registers for a class
+2. System creates/retrieves a tracking token for the user's email
+3. Tracking URL is included in the confirmation or payment email
+4. User clicks the link → sees all their registrations with status and payment details
+5. If the link is lost, user visits `/[locale]/track`, enters their email, and receives a new email with the link
+
+### Translations
+
+`src/messages/en.json` and `src/messages/zh.json` contain keys under `"tracking"`:
+- Page titles, subtitle, loading/error messages
+- Registration card labels (class, date, time, status, payment, reference, amount)
+- Status labels (confirmed, pending payment, waitlist, cancelled)
+- Payment status labels (paid, pending, cancelled)
+- Recovery form: title, subtitle, email field, submit button, success/error messages

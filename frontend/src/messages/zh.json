@@ -438,6 +438,41 @@
       "body": "提交付款后，管理员将在1个工作日内核实您的付款。核实完成后，您将收到确认邮件。如在1个工作日内未收到确认邮件，请使用页面右下角的「联系我们」按钮与我们联系。"
     }
   },
+  "tracking": {
+    "title": "您的报名记录",
+    "subtitle": "查看您的所有课程报名和支付状态",
+    "loading": "正在加载您的报名记录...",
+    "invalidLink": "此追踪链接无效或已过期。",
+    "email": "邮箱",
+    "noRegistrations": "未找到此邮箱的报名记录。",
+    "className": "课程",
+    "date": "日期",
+    "time": "时间",
+    "status": "状态",
+    "registeredOn": "报名时间",
+    "paymentStatus": "支付",
+    "referenceNumber": "参考编号",
+    "amount": "金额",
+    "statusConfirmed": "已确认",
+    "statusPendingPayment": "待付款",
+    "statusWaitlist": "候补",
+    "statusCancelled": "已取消",
+    "paymentConfirmed": "已支付",
+    "paymentPending": "待支付",
+    "paymentCancelled": "已取消",
+    "lostLink": "丢失了追踪链接？",
+    "requestNewLink": "重新获取",
+    "recovery": {
+      "title": "获取追踪链接",
+      "subtitle": "输入您的邮箱以接收查看报名记录的链接",
+      "email": "电子邮箱",
+      "emailPlaceholder": "请输入您的邮箱地址",
+      "submit": "发送追踪链接",
+      "sending": "发送中...",
+      "success": "如果您使用此邮箱有过报名记录，追踪链接已发送。请查看您的收件箱。",
+      "error": "出现错误，请重试。"
+    }
+  },
   "footer": {
     "rights": "版权所有。"
   },
