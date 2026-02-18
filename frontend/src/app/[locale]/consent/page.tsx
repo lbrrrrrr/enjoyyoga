@@ -22,7 +22,15 @@ export default async function ConsentPage({
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <h1 className="zen-heading mb-8 text-center text-3xl">{t("title")}</h1>
+      <div className="mb-10 text-center">
+        <h1 className="zen-heading mb-3 text-3xl">{t("title")}</h1>
+        <div className="mb-3 flex items-center justify-center gap-3">
+          <div className="h-px w-12 bg-primary/40" />
+          <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+          <div className="h-px w-12 bg-primary/40" />
+        </div>
+        <p className="text-muted-foreground">{t("subtitle")}</p>
+      </div>
       <ConsentForm
         yogaTypes={yogaTypes}
         locale={locale}

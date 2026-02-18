@@ -47,9 +47,14 @@ export default async function ClassDetailPage({
       <Card>
         <CardHeader>
           <CardTitle className="zen-heading text-2xl">{name(yogaClass)}</CardTitle>
+          <div className="mt-3 flex items-center justify-center gap-3">
+            <div className="h-px w-12 bg-primary/40" />
+            <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+            <div className="h-px w-12 bg-primary/40" />
+          </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p>{desc(yogaClass)}</p>
+          <p className="text-base leading-relaxed text-muted-foreground">{desc(yogaClass)}</p>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <p>
               <span className="font-medium">{t("schedule")}:</span>{" "}
