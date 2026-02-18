@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,13 @@ export function ConsentModal({
   const [agreed, setAgreed] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Sync name when modal opens with latest prefill value
+  useEffect(() => {
+    if (isOpen) {
+      setName(prefillName);
+    }
+  }, [isOpen, prefillName]);
 
   if (!isOpen) return null;
 
