@@ -6,11 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.database import get_db
-from app.models.registration import Registration
 from app.models.yoga_class import YogaClass
 from app.schemas.registration import (
-    RegistrationCreate,
-    RegistrationOut,
     RegistrationCreateWithSchedule,
     RegistrationOutWithSchedule,
     AvailableDateOut
@@ -21,16 +18,6 @@ from app.services.notification_service import NotificationService
 from app.services.payment_service import PaymentService
 
 router = APIRouter(prefix="/api/registrations", tags=["registrations"])
-
-
-@router.post("", response_model=RegistrationOut, status_code=201)
-async def create_registration(data: RegistrationCreate, db: AsyncSession = Depends(get_db)):
-    """Backward compatible registration endpoint."""
-    registration = Registration(**data.model_dump())
-    db.add(registration)
-    await db.commit()
-    await db.refresh(registration)
-    return registration
 
 
 @router.post("/with-schedule", response_model=RegistrationOutWithSchedule, status_code=201)

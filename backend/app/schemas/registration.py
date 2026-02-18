@@ -6,23 +6,15 @@ from pydantic import BaseModel, EmailStr
 from app.schemas.payment import PaymentOut
 
 
-class RegistrationCreate(BaseModel):
-    class_id: uuid.UUID
-    name: str
-    email: str
-    phone: str | None = None
-    message: str | None = None
-
-
 class RegistrationCreateWithSchedule(BaseModel):
-    """Enhanced registration schema with schedule support."""
+    """Registration schema with required schedule fields."""
     class_id: uuid.UUID
     name: str
     email: str
     phone: str | None = None
     message: str | None = None
-    target_date: Optional[date] = None  # When user wants to attend
-    target_time: Optional[time] = None  # Specific time slot
+    target_date: date
+    target_time: time
     # New notification preferences
     preferred_language: str = "en"
     email_notifications: bool = True
@@ -30,18 +22,6 @@ class RegistrationCreateWithSchedule(BaseModel):
     # Payment support
     package_id: Optional[uuid.UUID] = None
     payment_method: Optional[str] = None  # "wechat_qr" or "venmo_qr"
-
-
-class RegistrationOut(BaseModel):
-    id: uuid.UUID
-    class_id: uuid.UUID
-    name: str
-    email: str
-    phone: str | None
-    message: str | None
-    created_at: datetime
-
-    model_config = {"from_attributes": True}
 
 
 class RegistrationOutWithSchedule(BaseModel):

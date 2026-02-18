@@ -14,93 +14,67 @@ class TestRegistrationsRouter:
     """Test cases for registrations router endpoints."""
 
     @pytest.mark.unit
-    async def test_create_registration_basic_success(
-        self,
-        client: AsyncClient,
-        yoga_class_in_db: YogaClass,
-    ):
-        """Test successful basic registration creation."""
-        registration_data = {
-            "name": "John Doe",
-            "email": "john@example.com",
-            "phone": "+1234567890",
-            "message": "Looking forward to the class!",
-            "class_id": str(yoga_class_in_db.id),
-        }
-
-        response = await client.post("/api/registrations", json=registration_data)
-
-        assert response.status_code == 201
-        data = response.json()
-        assert data["name"] == "John Doe"
-        assert data["email"] == "john@example.com"
-        assert data["class_id"] == str(yoga_class_in_db.id)
-
-    @pytest.mark.unit
     async def test_create_registration_missing_required_fields(self, client: AsyncClient):
         """Test registration creation with missing required fields."""
         # Missing name
         response = await client.post(
-            "/api/registrations",
+            "/api/registrations/with-schedule",
             json={
                 "email": "john@example.com",
                 "class_id": str(uuid.uuid4()),
-                "preferred_language": "en",
+                "target_date": "2024-03-11",
+                "target_time": "07:00",
             }
         )
         assert response.status_code == 422
 
         # Missing email
         response = await client.post(
-            "/api/registrations",
+            "/api/registrations/with-schedule",
             json={
                 "name": "John Doe",
                 "class_id": str(uuid.uuid4()),
-                "preferred_language": "en",
+                "target_date": "2024-03-11",
+                "target_time": "07:00",
             }
         )
         assert response.status_code == 422
 
         # Missing class_id
         response = await client.post(
-            "/api/registrations",
+            "/api/registrations/with-schedule",
             json={
                 "name": "John Doe",
                 "email": "john@example.com",
-                "preferred_language": "en",
+                "target_date": "2024-03-11",
+                "target_time": "07:00",
             }
         )
         assert response.status_code == 422
 
-    @pytest.mark.unit
-    async def test_create_registration_invalid_email(
-        self,
-        client: AsyncClient,
-        yoga_class_in_db: YogaClass,
-    ):
-        """Test registration creation with invalid email format."""
-        registration_data = {
-            "name": "John Doe",
-            "email": "invalid-email-format",
-            "class_id": str(yoga_class_in_db.id),
-        }
+        # Missing target_date
+        response = await client.post(
+            "/api/registrations/with-schedule",
+            json={
+                "name": "John Doe",
+                "email": "john@example.com",
+                "class_id": str(uuid.uuid4()),
+                "target_time": "07:00",
+            }
+        )
+        assert response.status_code == 422
 
-        response = await client.post("/api/registrations", json=registration_data)
-        # Basic endpoint doesn't validate email format, so it succeeds
-        assert response.status_code == 201
-
-    @pytest.mark.unit
-    async def test_create_registration_invalid_class_id(self, client: AsyncClient):
-        """Test registration creation with non-existent class."""
-        registration_data = {
-            "name": "John Doe",
-            "email": "john@example.com",
-            "class_id": str(uuid.uuid4()),  # Non-existent class
-        }
-
-        response = await client.post("/api/registrations", json=registration_data)
-        # Basic endpoint doesn't validate class existence, so it succeeds
-        assert response.status_code == 201
+        # Missing target_time
+        response = await client.post(
+            "/api/registrations/with-schedule",
+            json={
+                "name": "John Doe",
+                "email": "john@example.com",
+                "class_id": str(uuid.uuid4()),
+                "target_date": "2024-03-11",
+            }
+        )
+        assert response.status_code == 422
 
     @pytest.mark.unit
     async def test_create_registration_with_schedule_success(
@@ -457,44 +431,6 @@ class TestRegistrationsRouter:
 
             assert response2.status_code == 400
             assert "full" in response2.json()["detail"]
-
-    @pytest.mark.unit
-    async def test_registration_with_optional_fields(
-        self,
-        client: AsyncClient,
-        yoga_class_in_db: YogaClass,
-    ):
-        """Test registration creation with all optional fields."""
-        registration_data = {
-            "name": "John Doe",
-            "email": "john@example.com",
-            "phone": "+1234567890",
-            "message": "Looking forward to the class!",
-            "class_id": str(yoga_class_in_db.id),
-        }
-
-        response = await client.post("/api/registrations", json=registration_data)
-
-        assert response.status_code == 201
-        data = response.json()
-        assert data["phone"] == "+1234567890"
-        assert data["message"] == "Looking forward to the class!"
-
-    @pytest.mark.unit
-    async def test_registration_language_preference_validation(
-        self,
-        client: AsyncClient,
-        yoga_class_in_db: YogaClass,
-    ):
-        """Test basic registration without language preference (basic endpoint doesn't validate)."""
-        registration_data = {
-            "name": "John Doe",
-            "email": "john@example.com",
-            "class_id": str(yoga_class_in_db.id),
-        }
-
-        response = await client.post("/api/registrations", json=registration_data)
-        assert response.status_code == 201
 
     @pytest.mark.unit
     async def test_available_dates_capacity_calculation(
