@@ -18,7 +18,7 @@ class NotificationService:
     def __init__(self):
         pass
 
-    async def send_confirmation_email(self, registration: Registration, db: AsyncSession, tracking_url: str = "") -> bool:
+    async def send_confirmation_email(self, registration: Registration, db: AsyncSession, tracking_url: str = "", class_name_en: str = "", class_name_zh: str = "", class_date: str = "", class_time: str = "", class_location: str = "") -> bool:
         """Send registration confirmation email."""
         try:
             # Get email template
@@ -34,7 +34,12 @@ class NotificationService:
                 "registration_id": str(registration.id),
                 "status": registration.status,
                 "language": registration.preferred_language,
-                "tracking_url": tracking_url
+                "tracking_url": tracking_url,
+                "class_name_en": class_name_en,
+                "class_name_zh": class_name_zh,
+                "class_date": class_date,
+                "class_time": class_time,
+                "class_location": class_location,
             }
 
             # Select content based on language preference
@@ -262,7 +267,7 @@ class NotificationService:
             print(f"Error sending inquiry reply email: {e}")
             return False
 
-    async def send_payment_pending_email(self, registration: Registration, payment: Payment, db: AsyncSession, tracking_url: str = "") -> bool:
+    async def send_payment_pending_email(self, registration: Registration, payment: Payment, db: AsyncSession, tracking_url: str = "", class_name_en: str = "", class_name_zh: str = "", class_date: str = "", class_time: str = "", class_location: str = "") -> bool:
         """Send payment pending email to user with amount and reference number."""
         try:
             template = await self._get_template("payment_pending", "email", db)
@@ -278,7 +283,12 @@ class NotificationService:
                 "currency": payment.currency,
                 "reference_number": payment.reference_number,
                 "language": registration.preferred_language,
-                "tracking_url": tracking_url
+                "tracking_url": tracking_url,
+                "class_name_en": class_name_en,
+                "class_name_zh": class_name_zh,
+                "class_date": class_date,
+                "class_time": class_time,
+                "class_location": class_location,
             }
 
             if registration.preferred_language == "zh":
@@ -309,7 +319,7 @@ class NotificationService:
             print(f"Error sending payment pending email: {e}")
             return False
 
-    async def send_payment_confirmed_email(self, registration: Registration, payment: Payment, db: AsyncSession, tracking_url: str = "") -> bool:
+    async def send_payment_confirmed_email(self, registration: Registration, payment: Payment, db: AsyncSession, tracking_url: str = "", class_name_en: str = "", class_name_zh: str = "", class_date: str = "", class_time: str = "", class_location: str = "") -> bool:
         """Send payment confirmed email to user."""
         try:
             template = await self._get_template("payment_confirmed", "email", db)
@@ -325,7 +335,12 @@ class NotificationService:
                 "currency": payment.currency,
                 "reference_number": payment.reference_number,
                 "language": registration.preferred_language,
-                "tracking_url": tracking_url
+                "tracking_url": tracking_url,
+                "class_name_en": class_name_en,
+                "class_name_zh": class_name_zh,
+                "class_date": class_date,
+                "class_time": class_time,
+                "class_location": class_location,
             }
 
             if registration.preferred_language == "zh":
@@ -429,31 +444,39 @@ class NotificationService:
                 "subject_zh": "报名确认 - enjoyyoga",
                 "content_en": """Dear {{name}},
 
-Your registration for yoga class has been confirmed!
+Your registration has been confirmed!
 
-Registration Details:
-- Registration ID: {{registration_id}}
-- Status: {{status}}
-- Email: {{email}}
+Class Details:
+- Class: {{class_name_en}}
+- Date: {{class_date}}
+- Time: {{class_time}}
+- Location: {{class_location}}
 
-We look forward to seeing you at the class.
+You can view all your registrations and check their status anytime using your personal tracking link:
+{{tracking_url}}
+
+We look forward to seeing you at the class!
 
 Best regards,
 The enjoyyoga Team""",
                 "content_zh": """亲爱的 {{name}}，
 
-您的瑜伽课程报名已确认！
+您的报名已确认！
 
-报名详情：
-- 报名ID：{{registration_id}}
-- 状态：{{status}}
-- 邮箱：{{email}}
+课程详情：
+- 课程：{{class_name_zh}}
+- 日期：{{class_date}}
+- 时间：{{class_time}}
+- 地点：{{class_location}}
 
-我们期待在课堂上见到您。
+您可以随时通过以下个人链接查看所有报名记录和状态：
+{{tracking_url}}
+
+我们期待在课堂上见到您！
 
 最好的问候，
 enjoyyoga团队""",
-                "variables": json.dumps(["name", "email", "registration_id", "status", "language", "tracking_url"]),
+                "variables": json.dumps(["name", "email", "registration_id", "status", "language", "tracking_url", "class_name_en", "class_name_zh", "class_date", "class_time", "class_location"]),
                 "is_active": True
             },
             {
@@ -585,12 +608,17 @@ enjoyyoga团队""",
 
 Thank you for registering for a yoga class at enjoyyoga!
 
+Class Details:
+- Class: {{class_name_en}}
+- Date: {{class_date}}
+- Time: {{class_time}}
+- Location: {{class_location}}
+
 Your registration requires payment to be confirmed. Please complete the payment using the details below:
 
 Payment Details:
 - Amount: {{currency}} {{amount}}
 - Reference Number: {{reference_number}}
-- Registration ID: {{registration_id}}
 
 How to Pay:
 1. Open WeChat and scan the QR code on our payment page
@@ -598,6 +626,9 @@ How to Pay:
 3. IMPORTANT: Include the reference number {{reference_number}} in the payment note/message
 
 Your registration will be confirmed once we verify your payment.
+
+You can view all your registrations and track payment status anytime using your personal tracking link:
+{{tracking_url}}
 
 If you have any questions, please contact us.
 
@@ -607,12 +638,17 @@ The enjoyyoga Team""",
 
 感谢您在enjoyyoga报名瑜伽课程！
 
+课程详情：
+- 课程：{{class_name_zh}}
+- 日期：{{class_date}}
+- 时间：{{class_time}}
+- 地点：{{class_location}}
+
 您的报名需要完成付款后才能确认。请使用以下信息完成支付：
 
 付款详情：
 - 金额：{{currency}} {{amount}}
 - 参考编号：{{reference_number}}
-- 报名ID：{{registration_id}}
 
 支付方式：
 1. 打开微信扫描我们支付页面上的二维码
@@ -621,11 +657,14 @@ The enjoyyoga Team""",
 
 我们确认收到您的付款后，您的报名将被确认。
 
+您可以随时通过以下个人链接查看所有报名记录和支付状态：
+{{tracking_url}}
+
 如有任何问题，请联系我们。
 
 最好的问候，
 enjoyyoga团队""",
-                "variables": json.dumps(["name", "email", "registration_id", "amount", "currency", "reference_number", "language", "tracking_url"]),
+                "variables": json.dumps(["name", "email", "registration_id", "amount", "currency", "reference_number", "language", "tracking_url", "class_name_en", "class_name_zh", "class_date", "class_time", "class_location"]),
                 "is_active": True
             },
             {
@@ -637,11 +676,19 @@ enjoyyoga团队""",
 
 Great news! Your payment has been confirmed and your registration is now complete.
 
+Class Details:
+- Class: {{class_name_en}}
+- Date: {{class_date}}
+- Time: {{class_time}}
+- Location: {{class_location}}
+
 Payment Details:
 - Amount: {{currency}} {{amount}}
 - Reference Number: {{reference_number}}
-- Registration ID: {{registration_id}}
 - Status: Confirmed
+
+You can view all your registrations and payment history anytime using your personal tracking link:
+{{tracking_url}}
 
 We look forward to seeing you at the class!
 
@@ -651,17 +698,25 @@ The enjoyyoga Team""",
 
 好消息！您的付款已确认，报名已完成。
 
+课程详情：
+- 课程：{{class_name_zh}}
+- 日期：{{class_date}}
+- 时间：{{class_time}}
+- 地点：{{class_location}}
+
 付款详情：
 - 金额：{{currency}} {{amount}}
 - 参考编号：{{reference_number}}
-- 报名ID：{{registration_id}}
 - 状态：已确认
+
+您可以随时通过以下个人链接查看所有报名记录和支付历史：
+{{tracking_url}}
 
 我们期待在课堂上见到您！
 
 最好的问候，
 enjoyyoga团队""",
-                "variables": json.dumps(["name", "email", "registration_id", "amount", "currency", "reference_number", "language", "tracking_url"]),
+                "variables": json.dumps(["name", "email", "registration_id", "amount", "currency", "reference_number", "language", "tracking_url", "class_name_en", "class_name_zh", "class_date", "class_time", "class_location"]),
                 "is_active": True
             },
             {

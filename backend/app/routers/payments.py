@@ -177,6 +177,7 @@ async def confirm_payment(
     from app.services.notification_service import NotificationService
     from app.services.tracking_service import TrackingService
     from app.models.registration import Registration
+    from app.models.yoga_class import YogaClass
     from sqlalchemy import select
 
     notification_service = NotificationService()
@@ -189,7 +190,22 @@ async def confirm_payment(
             tracking_token = await tracking_service.get_or_create_token(registration.email, db)
             locale = registration.preferred_language or "en"
             tracking_url = tracking_service.build_tracking_url(tracking_token.token, locale)
-            await notification_service.send_payment_confirmed_email(registration, payment, db, tracking_url=tracking_url)
+
+            # Load yoga class for email details
+            class_email_kwargs = {}
+            cls_query = select(YogaClass).where(YogaClass.id == registration.class_id)
+            cls_result = await db.execute(cls_query)
+            yoga_class = cls_result.scalar_one_or_none()
+            if yoga_class:
+                class_email_kwargs = {
+                    "class_name_en": yoga_class.name_en,
+                    "class_name_zh": yoga_class.name_zh,
+                    "class_date": registration.target_date.strftime("%A, %B %d, %Y") if registration.target_date else yoga_class.schedule,
+                    "class_time": registration.target_time.strftime("%-I:%M %p") if registration.target_time else "",
+                    "class_location": yoga_class.location or "",
+                }
+
+            await notification_service.send_payment_confirmed_email(registration, payment, db, tracking_url=tracking_url, **class_email_kwargs)
 
     return PaymentOut.model_validate(payment)
 

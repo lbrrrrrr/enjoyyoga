@@ -42,12 +42,21 @@ async def create_registration_with_schedule(
         locale = registration.preferred_language or "en"
         tracking_url = tracking_service.build_tracking_url(tracking_token.token, locale)
 
-        if registration.status == "pending_payment":
-            # Get the yoga class for payment creation
-            class_query = select(YogaClass).where(YogaClass.id == data.class_id)
-            class_result = await db.execute(class_query)
-            yoga_class = class_result.scalar_one()
+        # Load yoga class for email details
+        class_query = select(YogaClass).where(YogaClass.id == data.class_id)
+        class_result = await db.execute(class_query)
+        yoga_class = class_result.scalar_one()
 
+        # Build class info for emails
+        class_email_kwargs = {
+            "class_name_en": yoga_class.name_en,
+            "class_name_zh": yoga_class.name_zh,
+            "class_date": registration.target_date.strftime("%A, %B %d, %Y") if registration.target_date else yoga_class.schedule,
+            "class_time": registration.target_time.strftime("%-I:%M %p") if registration.target_time else "",
+            "class_location": yoga_class.location or "",
+        }
+
+        if registration.status == "pending_payment":
             # Create payment record
             payment = await payment_service.create_payment_for_registration(
                 registration, yoga_class, db,
@@ -57,14 +66,14 @@ async def create_registration_with_schedule(
 
             # Send payment instructions email instead of confirmation
             if registration.email_notifications:
-                await notification_service.send_payment_pending_email(registration, payment, db, tracking_url=tracking_url)
+                await notification_service.send_payment_pending_email(registration, payment, db, tracking_url=tracking_url, **class_email_kwargs)
 
             # Refresh to include payment relationship
             await db.refresh(registration, ["payment"])
         else:
             # Free class — existing flow
             if registration.email_notifications:
-                await notification_service.send_confirmation_email(registration, db, tracking_url=tracking_url)
+                await notification_service.send_confirmation_email(registration, db, tracking_url=tracking_url, **class_email_kwargs)
 
         # Schedule reminder if notifications are enabled
         if registration.email_notifications or registration.sms_notifications:
