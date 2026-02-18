@@ -15,8 +15,9 @@ export default async function PoliciesPage() {
           <CardHeader>
             <CardTitle className="zen-heading">{t("health.title")}</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-2">
             <p className="text-sm text-muted-foreground">{t("health.body")}</p>
+            <p className="text-sm text-muted-foreground">{t("health.consent")}</p>
           </CardContent>
         </Card>
         <Card>

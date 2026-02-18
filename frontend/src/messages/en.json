@@ -416,7 +416,8 @@
     },
     "health": {
       "title": "Health & Safety",
-      "body": "We recommend consulting your doctor before beginning any yoga practice, especially if you have pre-existing medical conditions or injuries. Please inform your instructor of any physical limitations before class begins. Participation in all classes is at your own risk."
+      "body": "We recommend consulting your doctor before beginning any yoga practice, especially if you have pre-existing medical conditions or injuries. Please inform your instructor of any physical limitations before class begins. Participation in all classes is at your own risk.",
+      "consent": "All students are required to sign a health & liability waiver before registering for their first class of each yoga type. You will be prompted to sign the waiver during the registration process."
     },
     "rules": {
       "title": "Class Rules",
