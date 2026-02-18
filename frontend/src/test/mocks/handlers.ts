@@ -779,6 +779,28 @@ export const handlers = [
     }, { status: 201 })
   }),
 
+  // Public API - Consent
+  http.get(`${API_BASE}/api/consent/check`, ({ request }) => {
+    const url = new URL(request.url)
+    const email = url.searchParams.get('email')
+    // Default: no consent found
+    return HttpResponse.json({ has_consent: false, email, yoga_type_id: url.searchParams.get('yoga_type_id') })
+  }),
+
+  http.post(`${API_BASE}/api/consent/sign`, async ({ request }) => {
+    const data = await request.json() as Record<string, unknown>
+    return HttpResponse.json({
+      id: 'consent-1',
+      email: data.email,
+      name: data.name,
+      yoga_type_id: data.yoga_type_id,
+      yoga_type_name_en: 'Hatha Yoga',
+      yoga_type_name_zh: '哈他瑜伽',
+      consent_text_version: '1.0',
+      signed_at: new Date().toISOString()
+    }, { status: 201 })
+  }),
+
   http.put(`${API_BASE}/api/admin/packages/:packageId`, async ({ params, request }) => {
     const { packageId } = params
     const data = await request.json() as Record<string, unknown>

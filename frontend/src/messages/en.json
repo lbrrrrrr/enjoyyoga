@@ -113,6 +113,7 @@
       "payments": "Payments",
       "paymentSettings": "Payment Settings",
       "notifications": "Notifications",
+      "consents": "Consents",
       "logout": "Logout"
     },
     "dashboard": {
@@ -223,6 +224,30 @@
         "errorMessage": "Error",
         "subjectPlaceholder": "Reply subject...",
         "messagePlaceholder": "Type your reply message..."
+      }
+    },
+    "consents": {
+      "title": "Consent Records",
+      "description": "View signed health & liability waivers",
+      "stats": {
+        "total": "Total Waivers"
+      },
+      "filters": {
+        "email": "Filter by Email",
+        "emailPlaceholder": "Enter email address...",
+        "yogaType": "Filter by Yoga Type",
+        "allYogaTypes": "All Yoga Types",
+        "search": "Search"
+      },
+      "list": {
+        "title": "Consent Records",
+        "loading": "Loading consents...",
+        "empty": "No consent records found",
+        "name": "Name",
+        "email": "Email",
+        "yogaType": "Yoga Type",
+        "version": "Version",
+        "signedAt": "Signed At"
       }
     },
     "payments": {
@@ -342,6 +367,37 @@
     "success": {
       "title": "Message Sent!",
       "message": "Thank you for contacting us. We'll get back to you within 24-48 hours."
+    }
+  },
+  "consent": {
+    "title": "Health & Liability Waiver",
+    "selectYogaType": "Select Yoga Type",
+    "selectYogaTypePlaceholder": "Choose the yoga type you are signing for",
+    "waiverText": "I acknowledge that yoga involves physical activity and poses that may carry risk of injury. I confirm that I am in good health and have no medical conditions that would prevent me from participating. I understand that participation is voluntary and at my own risk. I release the studio, its instructors, and staff from any liability for injuries sustained during class. I agree to inform my instructor of any health concerns or physical limitations before each session.",
+    "form": {
+      "name": "Full Name",
+      "namePlaceholder": "Enter your full name as signature",
+      "email": "Email Address",
+      "emailPlaceholder": "Enter your email address",
+      "agree": "I have read and agree to the above waiver",
+      "submit": "Sign Waiver",
+      "submitting": "Signing..."
+    },
+    "success": {
+      "title": "Waiver Signed!",
+      "message": "Thank you for signing the health & liability waiver. You can now register for classes of this yoga type.",
+      "registerButton": "Register for a Class"
+    },
+    "error": "Something went wrong. Please try again.",
+    "alreadySigned": "You have already signed the waiver for this yoga type.",
+    "check": {
+      "warning": "You need to sign a health & liability waiver before registering for this class.",
+      "signWaiver": "Sign Waiver",
+      "checking": "Checking waiver status..."
+    },
+    "modal": {
+      "title": "Sign Health & Liability Waiver",
+      "cancel": "Cancel"
     }
   },
   "policies": {

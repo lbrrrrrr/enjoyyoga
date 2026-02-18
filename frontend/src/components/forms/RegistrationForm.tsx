@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { createRegistration, createRegistrationWithSchedule, type YogaClass } from "@/lib/api";
+import { createRegistration, createRegistrationWithSchedule, checkConsent, type YogaClass } from "@/lib/api";
 import { ScheduleDisplay } from "./ScheduleDisplay";
 import { AvailableDatesSelector } from "./AvailableDatesSelector";
+import { ConsentModal } from "./ConsentModal";
 
 interface RegistrationFormProps {
   classes: YogaClass[];
@@ -20,6 +21,7 @@ interface RegistrationFormProps {
 
 export function RegistrationForm({ classes, locale, defaultClassId }: RegistrationFormProps) {
   const t = useTranslations("register");
+  const tc = useTranslations("consent");
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -29,6 +31,10 @@ export function RegistrationForm({ classes, locale, defaultClassId }: Registrati
   const [selectedPackageId, setSelectedPackageId] = useState<string>("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [consentStatus, setConsentStatus] = useState<"unchecked" | "checking" | "granted" | "missing" | "error">("unchecked");
+  const [emailValue, setEmailValue] = useState("");
+  const [nameValue, setNameValue] = useState("");
+  const [showConsentModal, setShowConsentModal] = useState(false);
 
   const currentClass = classes.find(cls => cls.id === selectedClass);
   const hasCnyPrice = currentClass?.price != null && currentClass.price > 0;
@@ -36,6 +42,27 @@ export function RegistrationForm({ classes, locale, defaultClassId }: Registrati
   const hasPrice = hasCnyPrice || hasUsdPrice;
   const hasBothPrices = hasCnyPrice && hasUsdPrice;
   const activePackages = currentClass?.packages?.filter(p => p.is_active) || [];
+
+  const checkConsentStatus = useCallback(async (email: string, yogaTypeId: string) => {
+    if (!email || !yogaTypeId) return;
+    setConsentStatus("checking");
+    try {
+      const result = await checkConsent(email, yogaTypeId);
+      setConsentStatus(result.has_consent ? "granted" : "missing");
+    } catch {
+      // Fail-open: don't block registration if check fails
+      setConsentStatus("error");
+    }
+  }, []);
+
+  // Re-check consent when email or selected class changes
+  useEffect(() => {
+    if (!emailValue || !currentClass) {
+      if (consentStatus !== "unchecked") setConsentStatus("unchecked");
+      return;
+    }
+    checkConsentStatus(emailValue, currentClass.yoga_type_id);
+  }, [emailValue, selectedClass]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -85,6 +112,9 @@ export function RegistrationForm({ classes, locale, defaultClassId }: Registrati
       setSelectedTime("");
       setSelectedPackageId("");
       setSelectedPaymentMethod("");
+      setEmailValue("");
+      setNameValue("");
+      setConsentStatus("unchecked");
     } catch (error) {
       setStatus("error");
       setErrorMessage(error instanceof Error ? error.message : "Registration failed");
@@ -97,6 +127,7 @@ export function RegistrationForm({ classes, locale, defaultClassId }: Registrati
     setSelectedTime("");
     setSelectedPackageId("");
     setSelectedPaymentMethod("");
+    setConsentStatus("unchecked");
   };
 
   const handleDateSelect = (date: string, time: string) => {
@@ -106,6 +137,13 @@ export function RegistrationForm({ classes, locale, defaultClassId }: Registrati
 
   const getName = (cls: YogaClass) =>
     locale === "zh" ? cls.name_zh : cls.name_en;
+
+  const getYogaTypeName = () => {
+    if (!currentClass?.yoga_type) return "";
+    return locale === "zh"
+      ? (currentClass.yoga_type.name_zh || currentClass.yoga_type.name_en || "")
+      : (currentClass.yoga_type.name_en || "");
+  };
 
   return (
     <Card className="mx-auto max-w-lg">
@@ -257,13 +295,45 @@ export function RegistrationForm({ classes, locale, defaultClassId }: Registrati
 
           <div className="space-y-2">
             <Label htmlFor="name">{t("name")}</Label>
-            <Input id="name" name="name" required />
+            <Input
+              id="name"
+              name="name"
+              required
+              value={nameValue}
+              onChange={(e) => setNameValue(e.target.value)}
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="email">{t("email")}</Label>
-            <Input id="email" name="email" type="email" required />
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              required
+              value={emailValue}
+              onChange={(e) => setEmailValue(e.target.value)}
+            />
           </div>
+
+          {consentStatus === "checking" && (
+            <p className="text-sm text-muted-foreground">{tc("check.checking")}</p>
+          )}
+
+          {consentStatus === "missing" && currentClass && (
+            <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 space-y-2">
+              <p className="text-sm text-amber-800 font-medium">
+                {tc("check.warning")}
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowConsentModal(true)}
+                className="inline-block text-sm text-amber-700 underline font-medium hover:text-amber-900"
+              >
+                {tc("check.signWaiver")}
+              </button>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="phone">{t("phone")}</Label>
@@ -315,7 +385,11 @@ export function RegistrationForm({ classes, locale, defaultClassId }: Registrati
             </div>
           </div>
 
-          <Button type="submit" className="w-full rounded-full">
+          <Button
+            type="submit"
+            className="w-full rounded-full"
+            disabled={consentStatus === "missing"}
+          >
             {hasPrice ? t("submitAndPay") : t("submit")}
           </Button>
 
@@ -328,6 +402,19 @@ export function RegistrationForm({ classes, locale, defaultClassId }: Registrati
             </p>
           )}
         </form>
+
+        {currentClass && (
+          <ConsentModal
+            isOpen={showConsentModal}
+            onClose={() => setShowConsentModal(false)}
+            onSuccess={() => setConsentStatus("granted")}
+            yogaTypeId={currentClass.yoga_type_id}
+            yogaTypeName={getYogaTypeName()}
+            locale={locale}
+            prefillName={nameValue}
+            prefillEmail={emailValue}
+          />
+        )}
       </CardContent>
     </Card>
   );

@@ -14,6 +14,7 @@ export function AdminSidebar() {
     { href: `/${locale}/admin/registrations`, label: t("nav.registrations") },
     { href: `/${locale}/admin/teachers`, label: t("nav.teachers") },
     { href: `/${locale}/admin/yoga-types`, label: "Yoga Types" },
+    { href: `/${locale}/admin/consents`, label: t("nav.consents") },
     { href: `/${locale}/admin/inquiries`, label: t("nav.inquiries") },
     { href: `/${locale}/admin/payments`, label: t("nav.payments") },
     { href: `/${locale}/admin/payment-settings`, label: t("nav.paymentSettings") },
