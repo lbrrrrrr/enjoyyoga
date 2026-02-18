@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-enjoyyoga is a bilingual (English/Chinese) yoga business management application with class listings, teacher profiles, yoga type descriptions, class registration system, WeChat Pay integration (static QR code), and contact inquiry management with email notifications and admin reply functionality.
+enjoyyoga is a bilingual (English/Chinese) yoga business management application with class listings, teacher profiles, yoga type descriptions, class registration system, health & liability consent form, WeChat Pay integration (static QR code), contact inquiry management with email notifications and admin reply functionality, and a policies page covering studio rules, payments, and cancellations.
 
 ## Development Commands
 
@@ -158,10 +158,10 @@ See `.github/workflows/README.md` for detailed documentation, troubleshooting, a
 **Framework**: FastAPI with async SQLAlchemy ORM, PostgreSQL database
 
 **Key Directories**:
-- `app/models/` - SQLAlchemy models (yoga_class.py, teacher.py, registration.py, payment.py, class_package.py, payment_settings.py, contact_inquiry.py, inquiry_reply.py, etc.)
-- `app/routers/` - FastAPI route handlers (classes.py, teachers.py, admin.py, payments.py, contact.py, etc.)
-- `app/schemas/` - Pydantic models for request/response validation (payment.py, contact.py, etc.)
-- `app/services/` - Business logic (registration_service.py, payment_service.py, notification_service.py, schedule_parser.py, contact_service.py)
+- `app/models/` - SQLAlchemy models (yoga_class.py, teacher.py, registration.py, payment.py, class_package.py, payment_settings.py, contact_inquiry.py, inquiry_reply.py, consent_record.py, etc.)
+- `app/routers/` - FastAPI route handlers (classes.py, teachers.py, admin.py, payments.py, contact.py, consent.py, etc.)
+- `app/schemas/` - Pydantic models for request/response validation (payment.py, contact.py, consent.py, etc.)
+- `app/services/` - Business logic (registration_service.py, payment_service.py, notification_service.py, schedule_parser.py, contact_service.py, consent_service.py)
 - `alembic/` - Database migration files
 
 **Authentication**: JWT-based admin authentication in `app/auth.py`
@@ -177,13 +177,13 @@ See `.github/workflows/README.md` for detailed documentation, troubleshooting, a
 **Internationalization**: next-intl with English/Chinese locales using `[locale]` dynamic routing
 
 **Key Directories**:
-- `src/app/[locale]/` - Internationalized pages (admin/, classes/, teachers/, payment/, admin/inquiries/, admin/payments/, admin/payment-settings/, etc.)
-- `src/components/` - Reusable UI components (built with shadcn/ui, includes contact/ and admin/ subdirectories for PaymentsClient, PaymentSettingsClient, etc.)
+- `src/app/[locale]/` - Internationalized pages (admin/, classes/, teachers/, payment/, consent/, policies/, admin/inquiries/, admin/payments/, admin/payment-settings/, admin/consents/, etc.)
+- `src/components/` - Reusable UI components (built with shadcn/ui, includes contact/ and admin/ subdirectories for PaymentsClient, PaymentSettingsClient, ConsentsClient, etc.)
 - `src/lib/` - Utility functions and API clients
 - `src/messages/` - Translation files for English/Chinese
 - `src/i18n/` - Internationalization configuration
 
-**Admin Panel**: Located at `/[locale]/admin/` with protected routes for dashboard, teachers, registrations, payments, payment settings, contact inquiries, and notifications
+**Admin Panel**: Located at `/[locale]/admin/` with protected routes for dashboard, teachers, registrations, payments, payment settings, contact inquiries, consent records, and notifications
 
 ### Database Schema
 
@@ -198,10 +198,11 @@ See `.github/workflows/README.md` for detailed documentation, troubleshooting, a
 - `PaymentSettings` - Singleton configuration for WeChat QR code URL and bilingual payment instructions
 - `ContactInquiry` - Contact form submissions with categorization, status tracking, and admin notes
 - `InquiryReply` - Admin replies to contact inquiries with email delivery tracking
+- `ConsentRecord` - Signed health & liability waivers per email + yoga type combination
 - `AdminUser` - Admin authentication
 - `NotificationTemplate` - Email template management
 
-**Relationships**: Classes belong to teachers and yoga types; classes have many packages; registrations link students to specific class sessions and have an optional payment; payments reference packages and are confirmed by admin users; contact inquiries have many replies from admin users
+**Relationships**: Classes belong to teachers and yoga types; classes have many packages; registrations link students to specific class sessions and have an optional payment; payments reference packages and are confirmed by admin users; contact inquiries have many replies from admin users; consent records link an email address to a yoga type with a unique constraint preventing duplicates
 
 ## Key Features
 
@@ -218,6 +219,22 @@ See `.github/workflows/README.md` for detailed documentation, troubleshooting, a
 - Email confirmation notifications
 - Admin dashboard for registration management
 - Payment-aware registration: free classes confirm immediately, paid classes enter `pending_payment` status
+- Consent-gated registration: displays waiver warning and blocks submission if consent is missing for the class's yoga type
+
+### Consent Form System
+- Health & liability waiver required before registering for any class
+- Consent is scoped to yoga type — users sign once per yoga type, not per class
+- Inline modal during registration with name/email pre-filled from the registration form
+- Standalone consent page at `/[locale]/consent` with yoga type selection and return URL support
+- Idempotent: re-submitting an existing consent returns the existing record without creating duplicates
+- IP address captured at signing time for audit purposes
+- Admin panel at `/admin/consents` shows all signed waivers with email/yoga type filters and statistics
+
+### Policies Page
+- Static informational page at `/[locale]/policies` covering studio rules and legal terms
+- Bilingual (English/Chinese) with full next-intl translation support
+- Seven policy sections: Health & Safety, Class Rules, Payment, Payment Verification, Multi-Session Packages, Cancellation & Refund Policy, and Contact Us
+- No backend required — server-side rendered from translation files
 
 ### Contact Inquiry System
 - Floating contact widget available site-wide for user inquiries
@@ -257,7 +274,8 @@ See `.github/workflows/README.md` for detailed documentation, troubleshooting, a
 - Payment management with confirm/cancel actions
 - Payment settings (QR code upload, bilingual instructions)
 - Contact inquiry management with reply functionality
-- Statistics dashboard for inquiries and payments
+- Consent records management with email/yoga type filtering and statistics
+- Statistics dashboard for inquiries, payments, and consents
 - Notification template editing
 
 ## Development Notes
@@ -288,6 +306,7 @@ Business logic isolated in service classes:
 - `RegistrationService` - Handles class registration with email notifications and payment-aware status
 - `PaymentService` - Payment CRUD, reference number generation, confirm/cancel flows, package management, payment settings
 - `ContactService` - Manages contact inquiries, replies, and statistics
+- `ConsentService` - Checks, creates, and lists consent records; enforces email normalisation and idempotency
 - `NotificationService` - Manages email sending (SMTP or console output) including payment and inquiry notifications
 - `ScheduleParser` - Parses complex scheduling strings into class sessions
 
@@ -302,13 +321,15 @@ Business logic isolated in service classes:
 
 The backend includes comprehensive unit tests covering all business logic:
 
-**Test Coverage (155 tests)**:
+**Test Coverage (170+ tests)**:
 - ✅ `ScheduleParserService` - Schedule parsing and validation logic (30 tests)
 - ✅ `RegistrationService` - Registration management with capacity validation (17 tests)
 - ✅ `NotificationService` - Email notifications and template management (16 tests)
 - ✅ `Authentication` - JWT tokens, password hashing, admin auth (26 tests)
 - ✅ `Admin Router` - Protected routes, dashboard stats, payment integration (39 tests)
 - ✅ `Registrations Router` - Registration endpoints, validation, payment flow (18 tests)
+- ✅ `ConsentService` - Consent creation, check, email normalisation, idempotency (10+ tests)
+- ✅ `Consent Router` - Public and admin consent endpoints (17 tests)
 
 **Key Features**:
 - In-memory SQLite database for fast test execution
@@ -326,10 +347,12 @@ backend/tests/
 │   ├── services/
 │   │   ├── test_schedule_parser.py     # Schedule parsing logic
 │   │   ├── test_registration_service.py # Registration business logic
-│   │   └── test_notification_service.py # Email notification logic
+│   │   ├── test_notification_service.py # Email notification logic
+│   │   └── test_consent_service.py     # Consent creation and lookup logic
 │   └── routers/
 │       ├── test_admin.py       # Admin API endpoints
-│       └── test_registrations.py # Registration API endpoints
+│       ├── test_registrations.py # Registration API endpoints
+│       └── test_consent.py     # Public & admin consent endpoints
 └── README.md                   # Detailed testing documentation
 ```
 
@@ -352,9 +375,9 @@ backend/tests/
 
 The frontend includes comprehensive unit tests covering all UI components and client-side logic:
 
-**Test Coverage (80 tests)**:
+**Test Coverage (105+ tests)**:
 - ✅ `API Clients` - Complete API integration testing (52 tests)
-  - Public API endpoints (classes, teachers, registrations, contact, payments)
+  - Public API endpoints (classes, teachers, registrations, contact, payments, consent)
   - Admin API endpoints with JWT authentication (payments, payment settings, packages)
   - Error handling scenarios (401, 404, 500 responses)
   - Request/response validation and header verification
@@ -363,6 +386,11 @@ The frontend includes comprehensive unit tests covering all UI components and cl
   - Modal interactions and form validation
   - Statistics display and filtering logic
   - Reply functionality with email status tracking
+- ✅ `ConsentModal` - Consent form modal testing (25+ tests)
+  - Modal visibility, waiver text rendering
+  - Checkbox enabling, name editing, read-only email
+  - Submission: API calls, success/error handling, loading states
+  - Modal closing behaviour
 - ✅ `Bilingual Support` - Internationalization testing (2 tests)
   - English/Chinese content rendering
   - Translation key validation
@@ -382,7 +410,9 @@ frontend/src/
 │   │   ├── admin/
 │   │   │   └── InquiriesClient.test.tsx  # Complex admin component (25 tests)
 │   │   ├── contact/            # Contact form components (planned)
-│   │   └── forms/              # Registration forms (planned)
+│   │   └── forms/
+│   │       ├── ConsentModal.test.tsx     # Consent modal component (25+ tests)
+│   │       └── RegistrationForm.test.tsx # Registration form with consent flow
 │   └── lib/
 │       ├── api.test.ts         # Public API client (26 tests)
 │       └── admin-api.test.ts   # Admin API client (26 tests)
@@ -390,7 +420,7 @@ frontend/src/
     ├── setup.ts               # Global test configuration
     ├── utils.tsx              # React Testing Library utilities with i18n
     └── mocks/
-        ├── handlers.ts         # MSW API handlers (472 lines)
+        ├── handlers.ts         # MSW API handlers (consent endpoints included)
         ├── server.ts          # MSW server setup
         ├── auth.ts            # Authentication testing utilities
         └── next-intl.ts       # Internationalization mocks
@@ -419,8 +449,8 @@ frontend/src/
 - **Error Boundaries** - Component error handling and recovery
 
 **Performance & Quality**:
-- **Fast Execution**: Complete test suite runs in ~1.7 seconds
-- **High Coverage**: 100% test pass rate (80/80 tests)
+- **Fast Execution**: Complete test suite runs in ~2 seconds
+- **High Coverage**: 100% test pass rate (105+/105+ tests)
 - **Modern Stack**: ESM support, TypeScript integration, React 19 compatibility
 - **Developer Experience**: Clear error messages, fast feedback loop
 - **CI/CD Ready**: Designed for automated pipeline execution
@@ -632,3 +662,116 @@ Also added to `NotificationService.create_default_templates()`.
 - Existing registrations: `status="confirmed"`, no Payment record → unchanged
 - New schema fields all have defaults (`price=None`, `currency="CNY"`)
 - Registration status extended: `"pending_payment"` added alongside existing values
+
+## Consent Form System
+
+### Complete Feature Implementation
+
+The consent form system requires users to sign a yoga-type-specific health & liability waiver before registering for any class. Consent is scoped per email + yoga type (not per class), so users sign once per yoga type and never need to re-sign for the same type.
+
+### Database Model
+
+**ConsentRecord** (`app/models/consent_record.py`):
+- **Fields**: id (UUID), email (String 300, indexed), name (String 200), yoga_type_id (FK to yoga_types), consent_text_version (String 50, default "1.0"), ip_address (String 45, nullable), user_id (UUID, nullable), signed_at (DateTime with timezone)
+- **Unique Constraint**: `(email, yoga_type_id)` — one consent per email per yoga type
+- **Migration**: `alembic/versions/b647922abf3c_add_consent_records_table.py`
+
+### Schemas (`app/schemas/consent.py`)
+
+- `ConsentCreate` — email, name, yoga_type_id, consent_text_version
+- `ConsentOut` — full record including signed_at timestamp
+- `ConsentCheckResult` — `{has_consent: bool, consent: Optional[ConsentOut]}`
+- `ConsentListItem` — for admin list view with yoga type names
+
+### API Endpoints (`app/routers/consent.py`)
+
+**Public Consent API** (`/api/consent`):
+- `GET /check?email=...&yoga_type_id=...` - Check whether a consent record exists
+- `POST /sign` - Sign the waiver (creates record if absent, returns existing if duplicate; captures client IP)
+
+**Admin Consent API** (`/api/admin/consent` - JWT protected):
+- `GET /consents` - List all consent records with optional email/yoga_type filtering and pagination
+- `GET /stats` - Consent statistics grouped by yoga type
+
+### Service Layer
+
+**ConsentService** (`app/services/consent_service.py`):
+- `check_consent(email, yoga_type_id)` — Returns `ConsentCheckResult`; emails are normalised (lowercased, stripped) before lookup
+- `create_consent(data, ip_address)` — Idempotent: returns existing record if already signed, otherwise inserts new record
+- `get_all_consents(filters, limit, offset)` — Lists consents with optional email/yoga_type filter and pagination
+- `get_consent_stats()` — Returns total count and per-yoga-type breakdown
+
+### Frontend Components
+
+**Public Interface**:
+- **ConsentForm** (`src/components/forms/ConsentForm.tsx`) — Standalone form for the dedicated consent page. Includes yoga type selector, waiver text, name/email inputs, agree checkbox, and post-sign "Register for a Class" CTA.
+- **ConsentModal** (`src/components/forms/ConsentModal.tsx`) — Modal version for inline signing during registration. Name/email are pre-filled and email is read-only. Calls `signConsent()` on submission.
+- **Consent Page** (`src/app/[locale]/consent/page.tsx`) — Route `/[locale]/consent`; accepts `yoga_type_id` and `return_url` query params; redirects to return URL after signing.
+
+**Registration Integration** (`src/components/forms/RegistrationForm.tsx`):
+- Checks consent status whenever email or class changes
+- Shows a warning banner if consent is missing for the class's yoga type
+- "Sign Waiver" button opens ConsentModal with name/email pre-filled
+- Form submission is disabled until consent is confirmed
+
+**Admin Interface**:
+- **ConsentsClient** (`src/components/admin/ConsentsClient.tsx`) — Statistics cards (total + per yoga type), email filter input, yoga type dropdown filter, consent records table (Name, Email, Yoga Type, Version, Signed At)
+- **Admin Page** (`src/app/[locale]/admin/consents/page.tsx`) — Route `/[locale]/admin/consents`
+- **AdminSidebar** — Navigation link to `/[locale]/admin/consents`
+
+**API Client** (`src/lib/api.ts`):
+- `checkConsent(email, yogaTypeId)` — GET `/api/consent/check`
+- `signConsent(data)` — POST `/api/consent/sign`
+
+### User Flow
+
+1. User begins registering for a class
+2. Registration form checks consent status for the class's yoga type against the entered email
+3. If no consent found, a warning banner appears and submission is blocked
+4. User clicks "Sign Waiver" → ConsentModal opens with name/email pre-filled
+5. User reads waiver, checks agree box, submits → `POST /api/consent/sign`
+6. Modal closes, form re-checks consent status, submission unblocked
+7. Alternatively, user visits `/[locale]/consent` directly and signs with a yoga type selector
+
+### Key Implementation Details
+
+- **Idempotency**: Submitting the same email + yoga type twice returns the existing record without error
+- **Email Normalisation**: All email addresses are lowercased and whitespace-stripped before storage and lookup
+- **IP Capture**: Client IP address is recorded at signing time for audit purposes
+- **Yoga Type Scoping**: Users must sign separately for each yoga type they register for (e.g., Hatha and Vinyasa require separate waivers)
+- **Bilingual Support**: Waiver text, form labels, and admin interface fully localised in English and Chinese
+
+### Translations
+
+`src/messages/en.json` and `src/messages/zh.json` contain keys under `"consent"` (public form) and `"admin.consents"` (admin panel):
+- Public: title, waiver text, form fields, success message, error text, modal labels, registration warning
+- Admin: statistics cards, filter labels, table column headers
+
+## Policies Page
+
+### Overview
+
+A static bilingual informational page at `/[locale]/policies` that communicates studio rules, payment procedures, and cancellation terms to users. No backend is required — all content is served from next-intl translation files.
+
+### Frontend Page
+
+**Policies Page** (`src/app/[locale]/policies/page.tsx`):
+- Route: `/en/policies` and `/zh/policies`
+- Server-side rendered with next-intl
+- Seven policy sections displayed as styled cards
+
+### Policy Sections
+
+| Section | Key Topics |
+|---------|-----------|
+| **Health & Safety** | Consult doctor before starting; inform instructor of limitations; participation at own risk |
+| **Class Rules** | Arrive 5–10 min early; silence phone; remove shoes; no recording without permission |
+| **Payment** | WeChat Pay via QR code; unique reference number per registration; admin manual verification |
+| **Payment Verification** | Admin verifies within 1 business day; confirmation email sent; contact us if no response |
+| **Multi-Session Packages** | Class-specific; non-transferable; partially used packages non-refundable; must use within validity period |
+| **Cancellation & Refund** | Full refund ≥24 h before class; no refund within 24 h; use Contact Us to cancel |
+| **Contact Us** | Floating contact widget (bottom-right); categories: scheduling, payments, general, business |
+
+### Translations
+
+`src/messages/en.json` and `src/messages/zh.json` both contain a `"policies"` key with all section titles and body text. Navigation also uses `"nav.policies"` key for the link label.
