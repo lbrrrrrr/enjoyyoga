@@ -402,6 +402,7 @@
   },
   "policies": {
     "title": "Studio Policies",
+    "subtitle": "Please review our studio guidelines before your first visit",
     "payment": {
       "title": "Accepted Payments",
       "body": "We accept WeChat Pay and Venmo via static QR code. After registering for a paid class, you will receive a unique reference number. Scan our WeChat Pay or Venmo QR code, transfer the correct amount, and include your reference number in the payment note. Our admin will manually verify and confirm your payment, after which you will receive a confirmation email."
