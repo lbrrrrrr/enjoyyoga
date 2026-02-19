@@ -57,3 +57,6 @@ alembic/versions/__pycache__/
 
 # Uploads (payment QR codes, etc)
 backend/uploads/
+
+# Production plan (local reference)
+PRODUCTION_PLAN.md
