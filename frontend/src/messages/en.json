@@ -460,6 +460,10 @@
     "paymentConfirmed": "Paid",
     "paymentPending": "Pending",
     "paymentCancelled": "Cancelled",
+    "upcomingClasses": "Upcoming Classes",
+    "pastClasses": "Past Classes",
+    "noUpcoming": "No upcoming classes",
+    "noPast": "No past classes",
     "lostLink": "Lost your tracking link?",
     "requestNewLink": "Request a new one",
     "recovery": {
