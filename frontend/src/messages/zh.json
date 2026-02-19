@@ -460,6 +460,10 @@
     "paymentConfirmed": "已支付",
     "paymentPending": "待支付",
     "paymentCancelled": "已取消",
+    "upcomingClasses": "即将到来的课程",
+    "pastClasses": "过去的课程",
+    "noUpcoming": "没有即将到来的课程",
+    "noPast": "没有过去的课程",
     "lostLink": "丢失了追踪链接？",
     "requestNewLink": "重新获取",
     "recovery": {
