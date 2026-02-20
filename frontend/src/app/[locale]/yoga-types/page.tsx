@@ -38,12 +38,12 @@ export default async function YogaTypesPage({
       ) : (
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {yogaTypes.map((yt) => (
-            <Card key={yt.id} className="transition-shadow hover:shadow-lg">
+            <Card key={yt.id} className="flex flex-col transition-shadow hover:shadow-lg">
               <CardHeader>
                 <CardTitle className="zen-heading">{name(yt)}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-base leading-relaxed text-muted-foreground">{desc(yt)}</p>
+                <p className="text-base leading-relaxed text-muted-foreground line-clamp-3">{desc(yt)}</p>
               </CardContent>
             </Card>
           ))}

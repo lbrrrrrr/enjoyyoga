@@ -41,7 +41,7 @@ export default async function TeachersPage({
       ) : (
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {teachers.map((teacher) => (
-            <Card key={teacher.id} className="transition-shadow hover:shadow-lg">
+            <Card key={teacher.id} className="flex flex-col transition-shadow hover:shadow-lg">
               <CardHeader>
                 <div className="flex items-center gap-4">
                   {teacher.photo_url && (
@@ -54,17 +54,19 @@ export default async function TeachersPage({
                   <CardTitle className="zen-heading">{name(teacher)}</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <p className="text-base leading-relaxed text-muted-foreground">{bio(teacher)}</p>
+              <CardContent className="flex flex-col flex-1 space-y-3 text-sm">
+                <p className="text-base leading-relaxed text-muted-foreground line-clamp-3">{bio(teacher)}</p>
                 <p>
                   <span className="font-medium">{t("qualifications")}:</span>{" "}
                   {teacher.qualifications}
                 </p>
-                <Button asChild variant="outline" size="sm" className="mt-2">
-                  <Link href={`/${locale}/teachers/${teacher.id}`}>
-                    {t("viewProfile")}
-                  </Link>
-                </Button>
+                <div className="mt-auto pt-3">
+                  <Button asChild variant="outline" size="sm" className="w-full">
+                    <Link href={`/${locale}/teachers/${teacher.id}`}>
+                      {t("viewProfile")}
+                    </Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}

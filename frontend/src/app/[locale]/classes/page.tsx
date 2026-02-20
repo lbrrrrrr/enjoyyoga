@@ -50,38 +50,20 @@ export default async function ClassesPage({
       ) : (
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {classes.map((cls) => (
-            <Card key={cls.id} className="transition-shadow hover:shadow-lg">
+            <Card key={cls.id} className="flex flex-col transition-shadow hover:shadow-lg">
               <CardHeader>
                 <CardTitle className="zen-heading">{name(cls)}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <p className="text-base leading-relaxed text-muted-foreground">{desc(cls)}</p>
+              <CardContent className="flex flex-col flex-1 space-y-3 text-sm">
+                <p className="text-base leading-relaxed text-muted-foreground line-clamp-2">{desc(cls)}</p>
                 <p>
                   <span className="font-medium">{t("schedule")}:</span>{" "}
                   {formatSchedule(cls.schedule, t)}
                 </p>
                 <p>
-                  <span className="font-medium">{t("duration")}:</span>{" "}
-                  {cls.duration_minutes} {t("minutes")}
-                </p>
-                <p>
-                  <span className="font-medium">{t("difficulty")}:</span>{" "}
-                  {translateDifficulty(cls.difficulty)}
-                </p>
-                <p>
                   <span className="font-medium">{t("teacher")}:</span>{" "}
                   {name(cls.teacher)}
                 </p>
-                <p>
-                  <span className="font-medium">{t("type")}:</span>{" "}
-                  {name(cls.yoga_type)}
-                </p>
-                {cls.location && (
-                  <p>
-                    <span className="font-medium">{t("location")}:</span>{" "}
-                    {cls.location}
-                  </p>
-                )}
                 <p>
                   <span className="font-medium">{t("price")}:</span>{" "}
                   {(() => {
@@ -93,16 +75,18 @@ export default async function ClassesPage({
                     return t("free");
                   })()}
                 </p>
-                {cls.packages && cls.packages.length > 0 && (
-                  <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                    {cls.packages.length} {t("packagesAvailable")}
-                  </span>
-                )}
-                <Button asChild variant="outline" size="sm" className="mt-2">
-                  <Link href={`/${locale}/classes/${cls.id}`}>
-                    {t("viewDetails")}
-                  </Link>
-                </Button>
+                <div className="mt-auto pt-3 space-y-2">
+                  {cls.packages && cls.packages.length > 0 && (
+                    <span className="inline-block px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                      {cls.packages.length} {t("packagesAvailable")}
+                    </span>
+                  )}
+                  <Button asChild variant="outline" size="sm" className="w-full">
+                    <Link href={`/${locale}/classes/${cls.id}`}>
+                      {t("viewDetails")}
+                    </Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}

@@ -53,12 +53,19 @@ export default async function TeacherDetailPage({
             <div className="h-px w-12 bg-primary/40" />
           </div>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-6">
           <p className="text-base leading-relaxed text-muted-foreground">{bio}</p>
-          <p className="text-sm">
-            <span className="font-medium">{t("qualifications")}:</span>{" "}
-            {teacher.qualifications}
-          </p>
+          <div className="border-t pt-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("qualifications")}</p>
+            <p>{teacher.qualifications}</p>
+          </div>
+          <div className="border-t pt-5">
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/${locale}/classes`}>
+                {t("viewClasses")} &rarr;
+              </Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

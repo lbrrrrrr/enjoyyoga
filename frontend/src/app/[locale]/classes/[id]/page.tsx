@@ -45,7 +45,7 @@ export default async function ClassDetailPage({
         <Link href={`/${locale}/classes`}>&larr; {tCommon("backToList")}</Link>
       </Button>
       <Card>
-        <CardHeader>
+        <CardHeader className="text-center">
           <CardTitle className="zen-heading text-2xl">{name(yogaClass)}</CardTitle>
           <div className="mt-3 flex items-center justify-center gap-3">
             <div className="h-px w-12 bg-primary/40" />
@@ -53,9 +53,9 @@ export default async function ClassDetailPage({
             <div className="h-px w-12 bg-primary/40" />
           </div>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-6">
           <p className="text-base leading-relaxed text-muted-foreground">{desc(yogaClass)}</p>
-          <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-3">
             <p>
               <span className="font-medium">{t("schedule")}:</span>{" "}
               {formatSchedule(yogaClass.schedule, t)}
@@ -80,8 +80,8 @@ export default async function ClassDetailPage({
             )}
           </div>
           {/* Pricing section */}
-          <div className="border-t pt-3">
-            <p className="text-lg font-semibold">
+          <div className="border-t pt-5">
+            <p className="text-xl font-semibold text-foreground/90">
               {t("price")}:{" "}
               {(() => {
                 const cny = yogaClass.price != null && yogaClass.price > 0;
@@ -93,7 +93,7 @@ export default async function ClassDetailPage({
               })()}
             </p>
             {yogaClass.packages && yogaClass.packages.length > 0 && (
-              <div className="mt-2 space-y-1">
+              <div className="mt-3 space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">{t("packages")}:</p>
                 {yogaClass.packages.map((pkg) => {
                   const pkgName = locale === "zh" ? pkg.name_zh : pkg.name_en;
@@ -105,7 +105,7 @@ export default async function ClassDetailPage({
                     ? ((yogaClass.price - perSessionCny) / yogaClass.price * 100).toFixed(0)
                     : null;
                   return (
-                    <div key={pkg.id} className="text-sm bg-secondary rounded p-2">
+                    <div key={pkg.id} className="text-sm bg-secondary rounded-md p-3">
                       <span className="font-medium">{pkgName}</span>
                       {" - "}
                       <span>{pkg.session_count} {t("sessions")}:</span>
@@ -133,12 +133,12 @@ export default async function ClassDetailPage({
               </div>
             )}
           </div>
-          <div className="border-t pt-3 text-sm">
+          <div className="border-t pt-5 space-y-2">
             <p>
               <span className="font-medium">{t("teacher")}:</span>{" "}
               <Link
                 href={`/${locale}/teachers/${yogaClass.teacher.id}`}
-                className="underline"
+                className="text-primary hover:underline font-medium"
               >
                 {name(yogaClass.teacher)}
               </Link>
@@ -148,7 +148,7 @@ export default async function ClassDetailPage({
               {name(yogaClass.yoga_type)}
             </p>
           </div>
-          <Button asChild className="mt-4 rounded-full">
+          <Button asChild className="mt-6 w-full rounded-full">
             <Link href={`/${locale}/register?classId=${yogaClass.id}`}>Register</Link>
           </Button>
         </CardContent>
