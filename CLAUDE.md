@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+> **Note**: For detailed development setup, SMTP configuration, troubleshooting, and internal workflows, see `DEVELOPMENT.md` (private, not committed to repo).
+
 ## Project Overview
 
 enjoyyoga is a bilingual (English/Chinese) yoga business management app built with FastAPI + PostgreSQL (backend) and Next.js 15 + TypeScript (frontend). Features: class listings, teacher profiles, class registration with consent gating, WeChat Pay integration (static QR code with manual admin confirmation), contact inquiry management, registration tracking via magic link, and a policies page.
