@@ -45,7 +45,12 @@
     "packages": "套餐",
     "packagesAvailable": "个套餐可选",
     "sessions": "节课",
-    "save": "节省"
+    "save": "节省",
+    "allTeachers": "所有老师",
+    "allTypes": "所有类型",
+    "filterByTeacher": "按老师筛选",
+    "filterByType": "按类型筛选",
+    "noMatchingClasses": "没有符合筛选条件的课程。"
   },
   "teachers": {
     "title": "我们的老师",
