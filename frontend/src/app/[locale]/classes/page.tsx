@@ -4,18 +4,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getClasses, type YogaClass } from "@/lib/api";
 import { formatSchedule } from "@/lib/format-schedule";
+import { ClassesFilterBar } from "@/components/ClassesFilterBar";
 
 export default async function ClassesPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ teacher?: string; type?: string }>;
 }) {
   const { locale } = await params;
+  const { teacher: teacherFilter, type: typeFilter } = await searchParams;
   const t = await getTranslations("classes");
 
-  let classes: YogaClass[] = [];
+  let allClasses: YogaClass[] = [];
   try {
-    classes = await getClasses();
+    allClasses = await getClasses();
   } catch {
     // API not available
   }
@@ -25,14 +29,30 @@ export default async function ClassesPage({
   const desc = (obj: { description_en: string; description_zh: string }) =>
     locale === "zh" ? obj.description_zh : obj.description_en;
 
-  const difficultyMap: Record<string, string> = {
-    beginner: t("beginner"),
-    intermediate: t("intermediate"),
-    advanced: t("advanced"),
-    "all levels": t("allLevels"),
-  };
-  const translateDifficulty = (d: string) =>
-    difficultyMap[d.toLowerCase()] || d;
+  // Extract unique teachers and yoga types for filter dropdowns
+  const teacherMap = new Map<string, string>();
+  const yogaTypeMap = new Map<string, string>();
+  for (const cls of allClasses) {
+    if (cls.teacher) {
+      teacherMap.set(cls.teacher_id, name(cls.teacher));
+    }
+    if (cls.yoga_type) {
+      yogaTypeMap.set(cls.yoga_type_id, name(cls.yoga_type));
+    }
+  }
+  const teachers = Array.from(teacherMap, ([id, label]) => ({ id, label }));
+  const yogaTypes = Array.from(yogaTypeMap, ([id, label]) => ({ id, label }));
+
+  // Apply filters
+  let classes = allClasses;
+  if (teacherFilter) {
+    classes = classes.filter((cls) => cls.teacher_id === teacherFilter);
+  }
+  if (typeFilter) {
+    classes = classes.filter((cls) => cls.yoga_type_id === typeFilter);
+  }
+
+  const hasFilters = !!(teacherFilter || typeFilter);
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -45,8 +65,18 @@ export default async function ClassesPage({
         </div>
         <p className="text-muted-foreground">{t("subtitle")}</p>
       </div>
+      {allClasses.length > 0 && (
+        <ClassesFilterBar
+          teachers={teachers}
+          yogaTypes={yogaTypes}
+          initialTeacher={teacherFilter}
+          initialType={typeFilter}
+        />
+      )}
       {classes.length === 0 ? (
-        <p className="text-muted-foreground">No classes available yet.</p>
+        <p className="text-center text-muted-foreground">
+          {hasFilters ? t("noMatchingClasses") : "No classes available yet."}
+        </p>
       ) : (
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {classes.map((cls) => (

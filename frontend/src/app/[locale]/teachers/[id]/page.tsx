@@ -61,7 +61,7 @@ export default async function TeacherDetailPage({
           </div>
           <div className="border-t pt-5">
             <Button asChild variant="outline" size="sm">
-              <Link href={`/${locale}/classes`}>
+              <Link href={`/${locale}/classes?teacher=${teacher.id}`}>
                 {t("viewClasses")} &rarr;
               </Link>
             </Button>

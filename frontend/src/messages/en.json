@@ -45,7 +45,12 @@
     "packages": "Packages",
     "packagesAvailable": "packages available",
     "sessions": "sessions",
-    "save": "Save"
+    "save": "Save",
+    "allTeachers": "All Teachers",
+    "allTypes": "All Types",
+    "filterByTeacher": "Filter by teacher",
+    "filterByType": "Filter by type",
+    "noMatchingClasses": "No classes match the selected filters."
   },
   "teachers": {
     "title": "Our Teachers",
