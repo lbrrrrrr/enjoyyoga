@@ -92,13 +92,13 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
           </div>
         ) : (
           <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
-            <div>
+            <div className="space-y-1.5">
               <Label htmlFor="category">{t("form.category.label")}</Label>
               <select
                 id="category"
                 name="category"
                 required
-                className="w-full mt-1 px-3 py-2 border border-input rounded-lg bg-background focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring transition-colors"
+                className="w-full px-3 py-2 border border-input rounded-lg bg-background focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring transition-colors"
               >
                 <option value="">{t("form.category.placeholder")}</option>
                 <option value="scheduling">{t("form.category.options.scheduling")}</option>
@@ -108,7 +108,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
               </select>
             </div>
 
-            <div>
+            <div className="space-y-1.5">
               <Label htmlFor="name">{t("form.name.label")}</Label>
               <Input
                 type="text"
@@ -120,7 +120,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
               />
             </div>
 
-            <div>
+            <div className="space-y-1.5">
               <Label htmlFor="email">{t("form.email.label")}</Label>
               <Input
                 type="email"
@@ -132,7 +132,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
               />
             </div>
 
-            <div>
+            <div className="space-y-1.5">
               <Label htmlFor="phone">{t("form.phone.label")}</Label>
               <Input
                 type="tel"
@@ -143,7 +143,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
               />
             </div>
 
-            <div>
+            <div className="space-y-1.5">
               <Label htmlFor="subject">{t("form.subject.label")}</Label>
               <Input
                 type="text"
@@ -155,7 +155,7 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
               />
             </div>
 
-            <div>
+            <div className="space-y-1.5">
               <Label htmlFor="message">{t("form.message.label")}</Label>
               <Textarea
                 id="message"
