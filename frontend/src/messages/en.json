@@ -61,7 +61,8 @@
   },
   "yogaTypes": {
     "title": "Yoga Types",
-    "subtitle": "Explore different styles of yoga"
+    "subtitle": "Explore different styles of yoga",
+    "viewClasses": "Browse Classes"
   },
   "register": {
     "title": "Register for a Class",

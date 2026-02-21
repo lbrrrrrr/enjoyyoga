@@ -61,7 +61,8 @@
   },
   "yogaTypes": {
     "title": "瑜伽类型",
-    "subtitle": "探索不同风格的瑜伽"
+    "subtitle": "探索不同风格的瑜伽",
+    "viewClasses": "浏览课程"
   },
   "register": {
     "title": "课程报名",
