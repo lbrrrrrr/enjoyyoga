@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
 import { getYogaTypes, type YogaType } from "@/lib/api";
 
 export default async function YogaTypesPage({
@@ -23,7 +23,7 @@ export default async function YogaTypesPage({
     locale === "zh" ? obj.description_zh : obj.description_en;
 
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto max-w-3xl px-4 py-12">
       <div className="mb-10 text-center">
         <h1 className="zen-heading mb-3 text-3xl">{t("title")}</h1>
         <div className="mb-3 flex items-center justify-center gap-3">
@@ -34,18 +34,25 @@ export default async function YogaTypesPage({
         <p className="text-muted-foreground">{t("subtitle")}</p>
       </div>
       {yogaTypes.length === 0 ? (
-        <p className="text-muted-foreground">No yoga types available yet.</p>
+        <p className="text-center text-muted-foreground">No yoga types available yet.</p>
       ) : (
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-6">
           {yogaTypes.map((yt) => (
-            <Card key={yt.id} className="flex flex-col transition-shadow hover:shadow-lg">
-              <CardHeader>
-                <CardTitle className="zen-heading">{name(yt)}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-base leading-relaxed text-muted-foreground line-clamp-3">{desc(yt)}</p>
-              </CardContent>
-            </Card>
+            <div
+              key={yt.id}
+              className="rounded-xl border bg-card p-6 transition-shadow hover:shadow-lg"
+            >
+              <h2 className="zen-heading text-xl mb-3">{name(yt)}</h2>
+              <p className="text-base leading-relaxed text-muted-foreground">{desc(yt)}</p>
+              <div className="mt-4">
+                <Link
+                  href={`/${locale}/classes?type=${yt.id}`}
+                  className="inline-block text-sm text-primary/80 hover:text-primary transition-colors"
+                >
+                  {t("viewClasses")}
+                </Link>
+              </div>
+            </div>
           ))}
         </div>
       )}

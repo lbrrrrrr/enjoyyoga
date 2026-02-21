@@ -55,85 +55,8 @@ export default async function ClassDetailPage({
         </CardHeader>
         <CardContent className="space-y-6">
           <p className="text-base leading-relaxed text-muted-foreground">{desc(yogaClass)}</p>
-          <div className="grid grid-cols-2 gap-x-8 gap-y-3">
-            <p>
-              <span className="font-medium">{t("schedule")}:</span>{" "}
-              {formatSchedule(yogaClass.schedule, t)}
-            </p>
-            <p>
-              <span className="font-medium">{t("duration")}:</span>{" "}
-              {yogaClass.duration_minutes} {t("minutes")}
-            </p>
-            <p>
-              <span className="font-medium">{t("difficulty")}:</span>{" "}
-              {translateDifficulty(yogaClass.difficulty)}
-            </p>
-            <p>
-              <span className="font-medium">{t("capacity")}:</span>{" "}
-              {yogaClass.capacity}
-            </p>
-            {yogaClass.location && (
-              <p className="col-span-2">
-                <span className="font-medium">{t("location")}:</span>{" "}
-                {yogaClass.location}
-              </p>
-            )}
-          </div>
-          {/* Pricing section */}
-          <div className="border-t pt-5">
-            <p className="text-xl font-semibold text-foreground/90">
-              {t("price")}:{" "}
-              {(() => {
-                const cny = yogaClass.price != null && yogaClass.price > 0;
-                const usd = yogaClass.price_usd != null && yogaClass.price_usd > 0;
-                if (cny && usd) return `\u00a5${yogaClass.price} / $${yogaClass.price_usd} ${t("perSession")}`;
-                if (cny) return `\u00a5${yogaClass.price}/${t("perSession")}`;
-                if (usd) return `$${yogaClass.price_usd}/${t("perSession")}`;
-                return t("free");
-              })()}
-            </p>
-            {yogaClass.packages && yogaClass.packages.length > 0 && (
-              <div className="mt-3 space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">{t("packages")}:</p>
-                {yogaClass.packages.map((pkg) => {
-                  const pkgName = locale === "zh" ? pkg.name_zh : pkg.name_en;
-                  const hasCnyPkg = yogaClass.price != null && yogaClass.price > 0;
-                  const hasUsdPkg = pkg.price_usd != null;
-                  const perSessionCny = pkg.price / pkg.session_count;
-                  const perSessionUsd = hasUsdPkg ? pkg.price_usd! / pkg.session_count : 0;
-                  const savingsCny = hasCnyPkg && yogaClass.price
-                    ? ((yogaClass.price - perSessionCny) / yogaClass.price * 100).toFixed(0)
-                    : null;
-                  return (
-                    <div key={pkg.id} className="text-sm bg-secondary rounded-md p-3">
-                      <span className="font-medium">{pkgName}</span>
-                      {" - "}
-                      <span>{pkg.session_count} {t("sessions")}:</span>
-                      {hasCnyPkg && (
-                        <>
-                          {" "}<span>\u00a5{pkg.price}</span>
-                          {" "}<span className="text-muted-foreground">(\u00a5{perSessionCny.toFixed(0)}/{t("perSession")})</span>
-                        </>
-                      )}
-                      {hasCnyPkg && hasUsdPkg && " / "}
-                      {hasUsdPkg && (
-                        <>
-                          <span>${pkg.price_usd}</span>
-                          {" "}<span className="text-muted-foreground">(${perSessionUsd.toFixed(0)}/{t("perSession")})</span>
-                        </>
-                      )}
-                      {savingsCny && Number(savingsCny) > 0 && (
-                        <span className="ml-1 text-primary font-medium">
-                          {t("save")} {savingsCny}%
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          <div className="border-t pt-5 space-y-2">
+
+          <div className="rounded-lg bg-secondary/50 p-4 space-y-2.5 text-sm">
             <p>
               <span className="font-medium">{t("teacher")}:</span>{" "}
               <Link
@@ -147,10 +70,88 @@ export default async function ClassDetailPage({
               <span className="font-medium">{t("type")}:</span>{" "}
               {name(yogaClass.yoga_type)}
             </p>
+            <p>
+              <span className="font-medium">{t("schedule")}:</span>{" "}
+              {formatSchedule(yogaClass.schedule, t)}
+            </p>
+            <p>
+              <span className="font-medium">{t("duration")}:</span>{" "}
+              {yogaClass.duration_minutes} {t("minutes")}
+            </p>
+            <div className="flex gap-x-8">
+              <p>
+                <span className="font-medium">{t("difficulty")}:</span>{" "}
+                {translateDifficulty(yogaClass.difficulty)}
+              </p>
+              <p>
+                <span className="font-medium">{t("capacity")}:</span>{" "}
+                {yogaClass.capacity}
+              </p>
+            </div>
+            {yogaClass.location && (
+              <p>
+                <span className="font-medium">{t("location")}:</span>{" "}
+                {yogaClass.location}
+              </p>
+            )}
           </div>
-          <Button asChild className="mt-6 w-full rounded-full">
-            <Link href={`/${locale}/register?classId=${yogaClass.id}`}>Register</Link>
-          </Button>
+
+          <div className="text-center space-y-3">
+            <p className="text-xl font-semibold text-foreground/90">
+              {(() => {
+                const cny = yogaClass.price != null && yogaClass.price > 0;
+                const usd = yogaClass.price_usd != null && yogaClass.price_usd > 0;
+                if (cny && usd) return `\u00a5${yogaClass.price} / $${yogaClass.price_usd} ${t("perSession")}`;
+                if (cny) return `\u00a5${yogaClass.price}/${t("perSession")}`;
+                if (usd) return `$${yogaClass.price_usd}/${t("perSession")}`;
+                return t("free");
+              })()}
+            </p>
+            <Button asChild className="rounded-full px-8">
+              <Link href={`/${locale}/register?classId=${yogaClass.id}`}>Register</Link>
+            </Button>
+          </div>
+
+          {yogaClass.packages && yogaClass.packages.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("packages")}</p>
+              {yogaClass.packages.map((pkg) => {
+                const pkgName = locale === "zh" ? pkg.name_zh : pkg.name_en;
+                const hasCnyPkg = yogaClass.price != null && yogaClass.price > 0;
+                const hasUsdPkg = pkg.price_usd != null;
+                const perSessionCny = pkg.price / pkg.session_count;
+                const perSessionUsd = hasUsdPkg ? pkg.price_usd! / pkg.session_count : 0;
+                const savingsCny = hasCnyPkg && yogaClass.price
+                  ? ((yogaClass.price - perSessionCny) / yogaClass.price * 100).toFixed(0)
+                  : null;
+                return (
+                  <div key={pkg.id} className="text-sm bg-secondary/50 rounded-lg p-3">
+                    <span className="font-medium">{pkgName}</span>
+                    {" - "}
+                    <span>{pkg.session_count} {t("sessions")}:</span>
+                    {hasCnyPkg && (
+                      <>
+                        {" "}<span>\u00a5{pkg.price}</span>
+                        {" "}<span className="text-muted-foreground">(\u00a5{perSessionCny.toFixed(0)}/{t("perSession")})</span>
+                      </>
+                    )}
+                    {hasCnyPkg && hasUsdPkg && " / "}
+                    {hasUsdPkg && (
+                      <>
+                        <span>${pkg.price_usd}</span>
+                        {" "}<span className="text-muted-foreground">(${perSessionUsd.toFixed(0)}/{t("perSession")})</span>
+                      </>
+                    )}
+                    {savingsCny && Number(savingsCny) > 0 && (
+                      <span className="ml-1 text-primary font-medium">
+                        {t("save")} {savingsCny}%
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
